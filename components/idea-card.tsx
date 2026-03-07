@@ -1,13 +1,6 @@
-export type DifficultyLevel = "Easy" | "Medium" | "Hard";
+import type { Idea, DifficultyLevel } from "@/types";
 
-export interface Idea {
-  title: string;
-  description: string;
-  problem: string;
-  audience: string;
-  tags: string[];
-  difficulty: DifficultyLevel;
-}
+export type { Idea, DifficultyLevel };
 
 const difficultyStyles: Record<DifficultyLevel, string> = {
   Easy: "text-emerald-400 border-emerald-400/30",

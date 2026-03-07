@@ -1,49 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Select } from "@/components/ui/select";
-import { IdeaCard, type Idea, type DifficultyLevel } from "@/components/idea-card";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import { IdeaCard } from "@/components/idea-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { Idea } from "@/types";
 
 export type ProductType = "SaaS" | "AI Tool" | "Chrome Extension" | "Dev Tool";
 export type Difficulty = "Easy" | "Medium" | "Hard";
-type Phase = "idle" | "thinking" | "generating" | "streaming";
+type Phase = "idle" | "thinking" | "generating" | "streaming" | "done" | "error";
 
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
-
-const MOCK_IDEAS: Idea[] = [
-  {
-    title: "DevLog — Automated Progress Reports",
-    description:
-      "Analyzes GitHub commits, PRs, and Jira tickets to auto-generate readable weekly summaries for engineering teams — no meetings required.",
-    problem: "Developers spend hours writing status updates that nobody reads carefully.",
-    audience: "Engineering managers and remote dev teams.",
-    tags: ["SaaS", "Dev Tool"],
-    difficulty: "Medium",
-  },
-  {
-    title: "StackMatch — Job Fit Analyzer",
-    description:
-      "A Chrome extension that scans job postings and highlights skill gaps in real time, then suggests targeted resources to close them fast.",
-    problem: "Developers apply to roles without knowing exactly what skills they're missing.",
-    audience: "Junior to mid-level developers actively job hunting.",
-    tags: ["Chrome Extension", "AI Tool"],
-    difficulty: "Easy",
-  },
-  {
-    title: "PairAI — AI Code Review Assistant",
-    description:
-      "Reviews pull requests like a senior engineer — catching logic errors, suggesting cleaner patterns, and explaining the reasoning behind every comment.",
-    problem: "Code reviews are slow, inconsistent, and often skipped under deadline pressure.",
-    audience: "Small engineering teams without dedicated senior reviewers.",
-    tags: ["AI Tool", "Dev Tool"],
-    difficulty: "Hard",
-  },
-];
 
 // Pulsing dots — shown during the "thinking" phase
 function ThinkingIndicator() {
@@ -116,24 +93,42 @@ export function PromptForm() {
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [phase, setPhase] = useState<Phase>("idle");
   const [visibleCount, setVisibleCount] = useState(0);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  const isGenerating = phase !== "idle";
+  const isGenerating = phase === "thinking" || phase === "generating" || phase === "streaming";
 
   async function handleGenerate() {
     if (!prompt.trim()) return;
 
-    // Phase 1 — thinking dots
     setPhase("thinking");
     setIdeas([]);
     setVisibleCount(0);
+    setErrorMsg("");
     await wait(800);
 
-    // Phase 2 — skeleton cards (simulates API latency)
     setPhase("generating");
-    await wait(1400);
 
-    // Phase 3 — stream cards one by one
-    const results = MOCK_IDEAS;
+    let results: Idea[];
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, productType, difficulty }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? "Something went wrong");
+      }
+
+      const data = await res.json();
+      results = data.ideas as Idea[];
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "Something went wrong");
+      setPhase("error");
+      return;
+    }
+
     setIdeas(results);
     setPhase("streaming");
 
@@ -141,6 +136,8 @@ export function PromptForm() {
       if (i > 0) await wait(420);
       setVisibleCount(i + 1);
     }
+
+    setPhase("done");
   }
 
   return (
@@ -159,25 +156,33 @@ export function PromptForm() {
         <div className="flex flex-1 gap-2.5">
           <div className="flex-1">
             <Select
-              value={productType}
-              onChange={(e) => setProductType(e.target.value as ProductType)}
+              value={productType || undefined}
+              onValueChange={(v) => setProductType(v as ProductType)}
             >
-              <option value="">Product type</option>
-              <option value="SaaS">SaaS</option>
-              <option value="AI Tool">AI Tool</option>
-              <option value="Chrome Extension">Chrome Extension</option>
-              <option value="Dev Tool">Dev Tool</option>
+              <SelectTrigger>
+                <SelectValue placeholder="Product type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="SaaS">SaaS</SelectItem>
+                <SelectItem value="AI Tool">AI Tool</SelectItem>
+                <SelectItem value="Chrome Extension">Chrome Extension</SelectItem>
+                <SelectItem value="Dev Tool">Dev Tool</SelectItem>
+              </SelectContent>
             </Select>
           </div>
           <div className="flex-1">
             <Select
-              value={difficulty}
-              onChange={(e) => setDifficulty(e.target.value as Difficulty)}
+              value={difficulty || undefined}
+              onValueChange={(v) => setDifficulty(v as Difficulty)}
             >
-              <option value="">Difficulty</option>
-              <option value="Easy">Easy</option>
-              <option value="Medium">Medium</option>
-              <option value="Hard">Hard</option>
+              <SelectTrigger>
+                <SelectValue placeholder="Difficulty" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Easy">Easy</SelectItem>
+                <SelectItem value="Medium">Medium</SelectItem>
+                <SelectItem value="Hard">Hard</SelectItem>
+              </SelectContent>
             </Select>
           </div>
         </div>
@@ -256,8 +261,8 @@ export function PromptForm() {
           </motion.div>
         )}
 
-        {/* streaming — real cards appear one by one */}
-        {phase === "streaming" && (
+        {/* streaming / done — real cards appear one by one, then stay */}
+        {(phase === "streaming" || phase === "done") && (
           <motion.div
             key="streaming"
             initial={{ opacity: 0 }}
@@ -283,6 +288,32 @@ export function PromptForm() {
                 ))}
               </AnimatePresence>
             </div>
+          </motion.div>
+        )}
+
+        {/* error */}
+        {phase === "error" && (
+          <motion.div
+            key="error"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.35 }}
+            className="mt-10 flex flex-col items-center gap-4 rounded-xl border border-brand/20 bg-brand/5 px-8 py-12 text-center"
+          >
+            <div className="flex h-11 w-11 items-center justify-center rounded-full border border-brand/30 bg-brand/10">
+              <AlertTriangle className="h-4 w-4 text-brand" />
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-sm font-semibold text-zinc-300">Generation failed</p>
+              <p className="text-xs leading-relaxed text-zinc-500">{errorMsg}</p>
+            </div>
+            <button
+              onClick={handleGenerate}
+              className="mt-1 text-xs font-bold uppercase tracking-widest text-brand hover:brightness-125 transition-all"
+            >
+              Try again →
+            </button>
           </motion.div>
         )}
 
