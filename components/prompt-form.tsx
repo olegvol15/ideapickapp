@@ -8,9 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
-import { OpportunityCard } from "@/components/opportunity-card";
-import { MarketInsights } from "@/components/market-insights";
-import { CompetitorsList } from "@/components/competitors-list";
+import { ResultsTabs } from "@/components/results-tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { GenerateResponse, ProductType, Difficulty } from "@/types";
 
@@ -38,76 +36,43 @@ function ThinkingIndicator({ label }: { label: string }) {
   );
 }
 
-function SectionLabel({ label, icon }: { label: string; icon?: React.ReactNode }) {
-  return (
-    <div className="mb-4 flex items-center gap-4">
-      <div className="h-px flex-1 bg-zinc-800/80" />
-      <div className="flex items-center gap-1.5">
-        {icon}
-        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">{label}</span>
-      </div>
-      <div className="h-px flex-1 bg-zinc-800/80" />
-    </div>
-  );
-}
-
-// Skeleton shown while the API runs — mirrors the result layout exactly
 function ResearchSkeletons() {
   return (
-    <div className="space-y-8">
-      {/* Opportunities skeleton */}
-      <div>
-        <SectionLabel label="Opportunities Found" icon={<Sparkles className="h-3 w-3 text-brand/50" />} />
-        <div className="grid gap-3">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="rounded-xl border border-zinc-800/80 bg-[#0d0d0d] p-5">
-              <div className="flex items-start justify-between gap-3 mb-2">
-                <Skeleton className="h-4 w-2/5" />
-                <Skeleton className="h-4 w-12 shrink-0" />
-              </div>
-              <Skeleton className="h-3 w-3/4 mb-3" />
-              <div className="space-y-2 mb-4">
-                <div className="flex gap-2"><Skeleton className="h-3 w-14 shrink-0" /><Skeleton className="h-3 flex-1" /></div>
-                <div className="flex gap-2"><Skeleton className="h-3 w-14 shrink-0" /><Skeleton className="h-3 flex-1" /></div>
-              </div>
-              <div className="flex gap-2">
-                <Skeleton className="h-6 w-24" />
-                <Skeleton className="h-6 w-28" />
-                <Skeleton className="h-6 w-20" />
-              </div>
+    <div>
+      {/* Skeleton tab bar */}
+      <div className="flex border-b border-zinc-800/80 mb-6">
+        {["Opportunities", "Market", "Competitors"].map((label, i) => (
+          <div
+            key={label}
+            className={`px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest ${
+              i === 0 ? "text-brand border-b-2 border-brand" : "text-zinc-700"
+            }`}
+          >
+            {label}
+          </div>
+        ))}
+      </div>
+
+      {/* Skeleton opportunity cards */}
+      <div className="grid gap-3">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="rounded-xl border border-zinc-800/80 bg-[#0d0d0d] p-5">
+            <div className="flex items-start justify-between gap-3 mb-2">
+              <Skeleton className="h-4 w-2/5" />
+              <Skeleton className="h-4 w-12 shrink-0" />
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Market insights skeleton */}
-      <div>
-        <SectionLabel label="Market Insights" />
-        <div className="rounded-xl border border-zinc-800/80 bg-[#0d0d0d] p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Skeleton className="h-3 w-28" />
-            <Skeleton className="ml-auto h-3 w-16" />
+            <Skeleton className="h-3 w-3/4 mb-3" />
+            <div className="space-y-2 mb-4">
+              <div className="flex gap-2"><Skeleton className="h-3 w-14 shrink-0" /><Skeleton className="h-3 flex-1" /></div>
+              <div className="flex gap-2"><Skeleton className="h-3 w-14 shrink-0" /><Skeleton className="h-3 flex-1" /></div>
+            </div>
+            <div className="flex gap-2">
+              <Skeleton className="h-6 w-24" />
+              <Skeleton className="h-6 w-28" />
+              <Skeleton className="h-6 w-20" />
+            </div>
           </div>
-          <div className="space-y-2">
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="flex gap-3">
-                <Skeleton className="h-3 w-16 shrink-0" />
-                <Skeleton className="h-3 flex-1" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Competitors skeleton */}
-      <div>
-        <SectionLabel label="Competitors" />
-        <div className="rounded-xl border border-zinc-800/80 bg-[#0d0d0d] p-5">
-          <div className="flex flex-wrap gap-2 mb-3">
-            {[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-7 w-20" />)}
-          </div>
-          <Skeleton className="h-3 w-28" />
-        </div>
+        ))}
       </div>
     </div>
   );
@@ -271,48 +236,16 @@ export function PromptForm() {
           </motion.div>
         )}
 
-        {/* Results — opportunities first, then insights, then competitors */}
+        {/* Results — tab layout */}
         {(phase === "streaming" || phase === "done") && result && (
           <motion.div
             key="results"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.2 }}
-            className="mt-8 space-y-8"
+            className="mt-8"
           >
-            {/* 1. Opportunities — most prominent, streamed */}
-            <div>
-              <SectionLabel
-                label="Opportunities Found"
-                icon={<Sparkles className="h-3 w-3 text-brand/70" />}
-              />
-              <div className="grid gap-3">
-                <AnimatePresence>
-                  {result.ideas.slice(0, visibleCount).map((idea) => (
-                    <motion.div
-                      key={idea.title}
-                      initial={{ opacity: 0, y: 14 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, ease: "easeOut" }}
-                    >
-                      <OpportunityCard {...idea} />
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </div>
-            </div>
-
-            {/* 2. Market Insights — compact */}
-            <div>
-              <SectionLabel label="Market Insights" />
-              <MarketInsights marketContext={result.marketContext} gaps={result.gaps} />
-            </div>
-
-            {/* 3. Competitors — collapsed by default */}
-            <div>
-              <SectionLabel label="Competitors" />
-              <CompetitorsList competitors={result.competitors} />
-            </div>
+            <ResultsTabs result={result} visibleCount={visibleCount} />
           </motion.div>
         )}
 

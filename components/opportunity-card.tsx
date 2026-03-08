@@ -49,8 +49,7 @@ export function OpportunityCard(idea: Idea) {
 
   const {
     title, pitch, problem, audience, gap, differentiation,
-    closestCompetitors, mvpFeatures, difficulty,
-    marketDemand, competitionLevel, confidence,
+    mvpFeatures, difficulty, marketDemand, competitionLevel, confidence,
   } = idea;
 
   return (
@@ -139,20 +138,7 @@ export function OpportunityCard(idea: Idea) {
                 </div>
               )}
 
-              {/* Closest competitors + confidence */}
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                {closestCompetitors?.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-600">Competes with</span>
-                    {closestCompetitors.map((c) => (
-                      <span key={c} className="rounded border border-zinc-800 bg-zinc-900 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-zinc-400">
-                        {c}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <span className="ml-auto text-[10px] text-zinc-600">{confidence}% confidence</span>
-              </div>
+              <p className="text-[10px] text-zinc-600">{confidence}% confidence</p>
 
             </div>
           </motion.div>
