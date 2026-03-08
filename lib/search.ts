@@ -2,36 +2,46 @@ import type { Competitor } from "@/types";
 
 const TAVILY_URL = "https://api.tavily.com/search";
 
-// ─── Digital-only filtering ───────────────────────────────────────────────────
+// ─── Blocklists ───────────────────────────────────────────────────────────────
 
-// Strong ecommerce/physical-product signals in the page content
-const PHYSICAL_SNIPPET_SIGNALS = [
-  "add to cart",
-  "add to bag",
-  "free shipping",
-  "in stock",
-  "out of stock",
-  "buy now",
-  "shop now",
-  "order now",
-  "ships in",
-  "fast delivery",
+// Domains that are never actual products
+const BLOCKED_DOMAINS = new Set([
+  "youtube.com", "youtu.be",
+  "reddit.com",
+  "medium.com",
+  "dev.to",
+  "news.ycombinator.com", "hackernews.com",
+  "quora.com",
+  "twitter.com", "x.com",
+  "linkedin.com",
+  "facebook.com", "instagram.com", "tiktok.com",
+  "apkpure.com", "apkmirror.com", "apk-dl.com",
+  "alternativeto.net",
+  "g2.com", "capterra.com", "getapp.com", "trustradius.com",
+  "techradar.com", "pcmag.com", "cnet.com", "tomsguide.com",
+  "wikipedia.org",
+]);
+
+// URL path patterns that indicate articles / list posts, not products
+const BLOCKED_PATH_RE = /\/(blog|article|articles|post|posts|news|wiki|tutorial|guide|review|reviews|top-\d+|best-\d+|versus|vs)\b/i;
+
+// Snippet signals that strongly indicate non-product content
+const ARTICLE_SIGNALS = [
+  "in this article",
+  "in this post",
+  "subscribe to our newsletter",
+  "read more",
+  "published by",
+  "last updated",
 ];
 
-// Domain-level signals that strongly indicate a shop/store
-const PHYSICAL_DOMAIN_SIGNALS = ["shop.", "store.", "gear.", "equipment.", "merch."];
+const ECOMMERCE_SIGNALS = [
+  "add to cart", "add to bag",
+  "free shipping", "in stock", "out of stock",
+  "buy now", "shop now", "order now", "ships in",
+];
 
-function isDigitalCompetitor(c: Competitor): boolean {
-  const snippetLower = c.snippet.toLowerCase();
-  const sourceLower = c.source.toLowerCase();
-
-  if (PHYSICAL_DOMAIN_SIGNALS.some((s) => sourceLower.includes(s))) return false;
-  if (PHYSICAL_SNIPPET_SIGNALS.some((s) => snippetLower.includes(s))) return false;
-
-  return true;
-}
-
-// ─── Source normalisation ─────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function extractSource(url: string): string {
   try {
@@ -41,9 +51,21 @@ function extractSource(url: string): string {
   }
 }
 
+function isDigitalProduct(c: Competitor): boolean {
+  const source = c.source.toLowerCase();
+  const path = (() => { try { return new URL(c.url).pathname.toLowerCase(); } catch { return ""; } })();
+  const snippet = c.snippet.toLowerCase();
+
+  if (BLOCKED_DOMAINS.has(source)) return false;
+  if (BLOCKED_PATH_RE.test(path)) return false;
+  if (ARTICLE_SIGNALS.some((s) => snippet.includes(s))) return false;
+  if (ECOMMERCE_SIGNALS.some((s) => snippet.includes(s))) return false;
+
+  return true;
+}
+
 // ─── Search ───────────────────────────────────────────────────────────────────
 
-/** Single focused query → normalized + filtered competitor list */
 export async function searchCompetitors(query: string): Promise<Competitor[]> {
   const key = process.env.TAVILY_API_KEY;
   if (!key) return [];
@@ -74,13 +96,12 @@ export async function searchCompetitors(query: string): Promise<Competitor[]> {
       })
     );
 
-    return normalized.filter(isDigitalCompetitor);
+    return normalized.filter(isDigitalProduct);
   } catch {
     return [];
   }
 }
 
-/** Run multiple queries in parallel, deduplicate by URL, keep only digital results */
 export async function searchAll(queries: string[]): Promise<Competitor[]> {
   const batches = await Promise.all(queries.map(searchCompetitors));
   const seen = new Set<string>();

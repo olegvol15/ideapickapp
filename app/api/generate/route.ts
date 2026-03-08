@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { openai } from "@/lib/openai";
-import { searchAll } from "@/lib/search";
+import { discoverCompetitors } from "@/lib/discovery/router";
 import { buildQueryGenerationMessages, buildAnalysisMessages } from "@/lib/prompts";
 import type { GenerateRequest, GenerateResponse } from "@/types";
 
@@ -32,15 +32,15 @@ export async function POST(req: NextRequest) {
       queryCompletion.choices[0]?.message?.content ?? "{}"
     );
 
-    // Step 2: Run all queries through Tavily in parallel, deduplicate by URL
-    const competitors = await searchAll(queries.slice(0, 3));
+    // Step 2: Discover competitors using product-type-aware strategy
+    const competitors = await discoverCompetitors(queries.slice(0, 3), productType);
 
     // Step 3: Analyze landscape + generate grounded ideas
     const analysisCompletion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: buildAnalysisMessages(prompt, competitors, productType, difficulty),
       temperature: 0.7,
-      max_tokens: 3000,
+      max_tokens: 4500,
       response_format: { type: "json_object" },
     });
 
