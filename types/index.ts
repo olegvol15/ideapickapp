@@ -1,5 +1,5 @@
 export type DifficultyLevel = "Easy" | "Medium" | "Hard";
-export type ProductType = "SaaS" | "AI Tool" | "Chrome Extension" | "Dev Tool";
+export type ProductType = "SaaS" | "AI Tool" | "Mobile App" | "Chrome Extension" | "Dev Tool";
 export type Difficulty = "Easy" | "Medium" | "Hard";
 export type SignalLevel = "Low" | "Medium" | "High";
 

@@ -2,6 +2,37 @@ import type { Competitor } from "@/types";
 
 const TAVILY_URL = "https://api.tavily.com/search";
 
+// ─── Digital-only filtering ───────────────────────────────────────────────────
+
+// Strong ecommerce/physical-product signals in the page content
+const PHYSICAL_SNIPPET_SIGNALS = [
+  "add to cart",
+  "add to bag",
+  "free shipping",
+  "in stock",
+  "out of stock",
+  "buy now",
+  "shop now",
+  "order now",
+  "ships in",
+  "fast delivery",
+];
+
+// Domain-level signals that strongly indicate a shop/store
+const PHYSICAL_DOMAIN_SIGNALS = ["shop.", "store.", "gear.", "equipment.", "merch."];
+
+function isDigitalCompetitor(c: Competitor): boolean {
+  const snippetLower = c.snippet.toLowerCase();
+  const sourceLower = c.source.toLowerCase();
+
+  if (PHYSICAL_DOMAIN_SIGNALS.some((s) => sourceLower.includes(s))) return false;
+  if (PHYSICAL_SNIPPET_SIGNALS.some((s) => snippetLower.includes(s))) return false;
+
+  return true;
+}
+
+// ─── Source normalisation ─────────────────────────────────────────────────────
+
 function extractSource(url: string): string {
   try {
     return new URL(url).hostname.replace(/^www\./, "");
@@ -10,7 +41,9 @@ function extractSource(url: string): string {
   }
 }
 
-/** Single focused query → normalized competitor list */
+// ─── Search ───────────────────────────────────────────────────────────────────
+
+/** Single focused query → normalized + filtered competitor list */
 export async function searchCompetitors(query: string): Promise<Competitor[]> {
   const key = process.env.TAVILY_API_KEY;
   if (!key) return [];
@@ -32,7 +65,7 @@ export async function searchCompetitors(query: string): Promise<Competitor[]> {
     if (!res.ok) return [];
 
     const data = await res.json();
-    return (data.results ?? []).map(
+    const normalized: Competitor[] = (data.results ?? []).map(
       (r: { title: string; url: string; content: string }) => ({
         name: r.title,
         url: r.url,
@@ -40,12 +73,14 @@ export async function searchCompetitors(query: string): Promise<Competitor[]> {
         source: extractSource(r.url),
       })
     );
+
+    return normalized.filter(isDigitalCompetitor);
   } catch {
     return [];
   }
 }
 
-/** Run multiple queries in parallel, deduplicate by URL */
+/** Run multiple queries in parallel, deduplicate by URL, keep only digital results */
 export async function searchAll(queries: string[]): Promise<Competitor[]> {
   const batches = await Promise.all(queries.map(searchCompetitors));
   const seen = new Set<string>();

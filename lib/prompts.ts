@@ -2,27 +2,53 @@ import type { Competitor } from "@/types";
 
 // ─── Query Generation ─────────────────────────────────────────────────────────
 
+// Maps product type selections to search-friendly terms
+const PRODUCT_TYPE_TERMS: Record<string, string[]> = {
+  "SaaS":             ["SaaS", "web app"],
+  "AI Tool":          ["AI tool", "AI app"],
+  "Mobile App":       ["mobile app", "iOS app", "Android app"],
+  "Chrome Extension": ["Chrome extension", "browser extension"],
+  "Dev Tool":         ["developer tool", "CLI tool"],
+};
+
+// Fallback terms when no product type is selected
+const DEFAULT_DIGITAL_TERMS = ["software", "SaaS", "app"];
+
+function getSearchTerms(productType: string): string[] {
+  return PRODUCT_TYPE_TERMS[productType] ?? DEFAULT_DIGITAL_TERMS;
+}
+
 export function buildQueryGenerationMessages(
   prompt: string,
   productType: string
 ): { role: "system" | "user"; content: string }[] {
-  const typeHint = productType ? ` The user prefers a ${productType}.` : "";
+  const terms = getSearchTerms(productType);
+  const termsHint = `Each query MUST include one of these product-type keywords: ${terms.map((t) => `"${t}"`).join(", ")}.`;
 
   return [
     {
       role: "system",
-      content: `You generate short, focused web search queries for competitor discovery.
+      content: `You generate short, focused web search queries to discover existing SOFTWARE products in a market.
+
+IdeaPick is a digital-product tool. All queries must target software, apps, SaaS, or digital platforms — never physical goods, gear, ecommerce stores, or hardware.
+
 Output ONLY a JSON object: { "queries": ["query1", "query2", "query3"] }
+
 Rules:
 - 2 to 3 queries maximum
 - Each query must be 3–6 words
-- Target real product categories, not the user's description
-- Think: what would someone Google to find tools in this market?
-- Do not use the word "competitors" — search like a user would`,
+- Every query must include a software/digital keyword (app, SaaS, software, tool, platform, AI)
+- Search like a user looking for a product to use, not to buy physically
+- Bad example: "soccer training gear" or "running equipment shop"
+- Good example: "soccer coaching app" or "sports training SaaS"`,
     },
     {
       role: "user",
-      content: `User's goal: ${prompt}${typeHint}\n\nGenerate search queries to find existing products in this market.`,
+      content: `User's goal: ${prompt}
+
+${termsHint}
+
+Generate 2–3 search queries to find existing digital products in this market.`,
     },
   ];
 }
@@ -81,7 +107,7 @@ export function buildAnalysisMessages(
               `${i + 1}. ${c.name} [${c.source}]\n   ${c.snippet}\n   ${c.url}`
           )
           .join("\n\n")
-      : "No competitors found via search. Use your training knowledge to map the competitive landscape.";
+      : "No competitors found via search. Use your training knowledge to map the competitive landscape of software products in this space.";
 
   const filterLines: string[] = [];
   if (productType) filterLines.push(`Preferred product type: ${productType}`);
@@ -93,18 +119,22 @@ export function buildAnalysisMessages(
   return [
     {
       role: "system",
-      content: `You are a startup opportunity analyst. Study the competitive landscape, identify market gaps, and generate grounded startup ideas that exploit those gaps.
+      content: `You are a startup opportunity analyst specializing in DIGITAL SOFTWARE products.
 
-Every insight must be grounded in the competitor data provided — not invented from thin air. Scan for:
-- Underserved audiences (solo devs, small teams, specific verticals)
+CRITICAL RULE: Only generate ideas for digital products — SaaS, AI tools, apps, developer tools, platforms, browser extensions, or software services. NEVER suggest physical products, ecommerce stores, gear, equipment, merchandise, or hardware businesses.
+
+If the user's prompt touches a physical or offline market (e.g. sports, fitness, food, fashion), redirect the opportunity toward the SOFTWARE layer of that market: the apps, platforms, AI assistants, analytics tools, or workflow tools that serve it.
+
+Every insight must be grounded in the competitor data provided. Scan for:
+- Underserved audiences (solo builders, small teams, specific verticals)
 - Tools that are too broad, too expensive, or too complex
 - Outdated workflows ripe for an AI-first approach
-- Crowded categories with no clear winner
-- Missing niche-specific versions of general tools
+- Crowded categories with no clear winner for a specific niche
+- Missing software tools that serve an offline market digitally
 
-closestCompetitors for each idea must be real names pulled from the competitor list provided.
-confidence (40–95) should reflect how strongly the competitor evidence supports the idea.
-mainPatterns must be specific observations from the data, not generic statements.
+closestCompetitors must be real names pulled from the competitor list.
+confidence (40–95) should reflect how strongly the evidence supports the idea.
+mainPatterns must be specific observations from the data, not generic filler.
 
 Respond ONLY with valid JSON matching this schema exactly. No markdown, no extra keys.
 
@@ -114,10 +144,10 @@ ${RESPONSE_SCHEMA}`,
       role: "user",
       content: `User's goal: ${prompt}${filterBlock}
 
-Competitor landscape (${competitors.length} found):
+Competitor landscape (${competitors.length} digital products found):
 ${competitorBlock}
 
-Analyze this market and generate 3 grounded startup ideas.`,
+Analyze this market and generate 3 grounded digital product ideas.`,
     },
   ];
 }
