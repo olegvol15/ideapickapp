@@ -1,4 +1,4 @@
-import { searchAll } from "@/lib/search";
+  import { searchAll } from "@/lib/search";
 import type { Competitor } from "@/types";
 
 // ─── Pricing signal extraction ────────────────────────────────────────────────

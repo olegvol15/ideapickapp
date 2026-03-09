@@ -28,21 +28,20 @@ export function ResultsTabs({ result, visibleCount }: ResultsTabsProps) {
   return (
     <>
       <div>
-        {/* Tab bar */}
-        <div className="flex border-b border-zinc-800/80 mb-6">
+        <div className="flex mb-6" style={{ borderBottom: "1px solid var(--border)" }}>
           {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActive(tab.id)}
-              className={`relative px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-colors duration-150 ${
-                active === tab.id ? "text-brand" : "text-zinc-500 hover:text-zinc-300"
-              }`}
+              className="relative px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-colors duration-150"
+              style={{ color: active === tab.id ? "var(--accent)" : "var(--text-4)" }}
             >
               {tab.label}
               {active === tab.id && (
                 <motion.span
                   layoutId="tab-indicator"
-                  className="absolute bottom-[-1px] left-0 right-0 h-[2px] bg-brand rounded-t-full"
+                  className="absolute bottom-[-1px] left-0 right-0 h-[2px] rounded-t-full"
+                  style={{ backgroundColor: "var(--accent)" }}
                   transition={{ type: "spring", stiffness: 500, damping: 40 }}
                 />
               )}
@@ -50,47 +49,25 @@ export function ResultsTabs({ result, visibleCount }: ResultsTabsProps) {
           ))}
         </div>
 
-        {/* Tab content */}
         <AnimatePresence mode="wait">
-          <motion.div
-            key={active}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-          >
+          <motion.div key={active} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18, ease: "easeOut" }}>
             {active === "opportunities" && (
               <div className="grid gap-3">
                 <AnimatePresence>
                   {result.ideas.slice(0, visibleCount).map((idea) => (
-                    <motion.div
-                      key={idea.title}
-                      initial={{ opacity: 0, y: 14 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.38, ease: "easeOut" }}
-                    >
+                    <motion.div key={idea.title} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.38, ease: "easeOut" }}>
                       <OpportunityCard {...idea} onExplore={() => setSelectedIdea(idea)} />
                     </motion.div>
                   ))}
                 </AnimatePresence>
               </div>
             )}
-
-            {active === "market" && (
-              <MarketDashboard
-                marketContext={result.marketContext}
-                gaps={result.gaps}
-              />
-            )}
-
-            {active === "competitors" && (
-              <CompetitorsList competitors={result.competitorAnalysis} />
-            )}
+            {active === "market" && <MarketDashboard marketContext={result.marketContext} gaps={result.gaps} />}
+            {active === "competitors" && <CompetitorsList competitors={result.competitorAnalysis} />}
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {/* Modal — portal-level, outside the tab container */}
       <OpportunityModal idea={selectedIdea} onClose={() => setSelectedIdea(null)} />
     </>
   );

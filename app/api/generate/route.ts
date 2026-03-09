@@ -4,6 +4,18 @@ import { discoverCompetitors } from "@/lib/discovery/router";
 import { buildQueryGenerationMessages, buildAnalysisMessages } from "@/lib/prompts";
 import type { GenerateRequest, GenerateResponse } from "@/types";
 
+export async function OPTIONS() {
+  const allowedOrigin = process.env.LANDING_ORIGIN ?? "*";
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": allowedOrigin,
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
+}
+
 export async function POST(req: NextRequest) {
   let body: GenerateRequest;
   try {
@@ -58,7 +70,14 @@ export async function POST(req: NextRequest) {
       },
     };
 
-    return NextResponse.json(result);
+    const allowedOrigin = process.env.LANDING_ORIGIN ?? "*";
+    return NextResponse.json(result, {
+      headers: {
+        "Access-Control-Allow-Origin": allowedOrigin,
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    });
   } catch (err) {
     console.error("[/api/generate]", err);
     return NextResponse.json(

@@ -1,63 +1,47 @@
 import { TrendingUp, ArrowRight } from "lucide-react";
 import type { MarketContext, Gap } from "@/types";
 
-interface MarketDashboardProps {
-  marketContext: MarketContext;
-  gaps: Gap[];
-}
-
 function ScoreBar({ value }: { value: number }) {
   const pct = Math.max(0, Math.min(100, value));
-  const color = pct >= 70 ? "bg-emerald-400" : pct >= 45 ? "bg-amber-400" : "bg-brand";
-
+  const color = pct >= 70 ? "bg-emerald-500" : pct >= 45 ? "bg-amber-500" : "bg-rose-500";
   return (
-    <div className="mt-2 h-1.5 w-full rounded-full bg-zinc-800">
-      <div
-        className={`h-1.5 rounded-full transition-all duration-700 ${color}`}
-        style={{ width: `${pct}%` }}
-      />
+    <div className="mt-2 h-1.5 w-full rounded-full" style={{ backgroundColor: "var(--border)" }}>
+      <div className={`h-1.5 rounded-full transition-all duration-700 ${color}`} style={{ width: `${pct}%` }} />
     </div>
   );
 }
 
 function StatBox({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/30 p-4">
-      <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-600 mb-1.5">{label}</p>
-      <p className="text-base font-bold text-zinc-200 leading-none">{value}</p>
-      {sub && <p className="mt-1 text-[10px] text-zinc-600">{sub}</p>}
+    <div className="rounded-xl p-4" style={{ border: "1px solid var(--border-soft)", backgroundColor: "var(--bg-subtle)" }}>
+      <p className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "var(--text-4)" }}>{label}</p>
+      <p className="text-base font-bold leading-none" style={{ color: "var(--text-1)" }}>{value}</p>
+      {sub && <p className="mt-1 text-[10px]" style={{ color: "var(--text-3)" }}>{sub}</p>}
     </div>
   );
 }
 
-export function MarketDashboard({ marketContext, gaps }: MarketDashboardProps) {
+export function MarketDashboard({ marketContext, gaps }: { marketContext: MarketContext; gaps: Gap[] }) {
   const { theme, marketCondition, opportunityScore, marketSize, growthRate, signals, mainPatterns, competitorsFound } = marketContext;
   const topGap = gaps?.[0];
 
   return (
     <div className="space-y-4">
-
-      {/* Overview header */}
-      <div className="rounded-xl border border-zinc-800/80 bg-[#0d0d0d] p-5">
+      <div className="rounded-xl p-5" style={{ border: "1px solid var(--border)", backgroundColor: "var(--bg-card)" }}>
         <div className="flex items-center gap-2 mb-4">
-          <TrendingUp className="h-3.5 w-3.5 text-brand/70" />
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Market Overview</span>
-          <span className="ml-auto text-[10px] text-zinc-600">{competitorsFound} sources</span>
+          <TrendingUp className="h-3.5 w-3.5" style={{ color: "var(--accent)" }} />
+          <span className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "var(--text-3)" }}>Market Overview</span>
+          <span className="ml-auto text-[10px]" style={{ color: "var(--text-4)" }}>{competitorsFound} sources</span>
         </div>
-
-        <p className="text-sm font-bold text-zinc-200 mb-0.5">{theme}</p>
-        <p className="text-xs text-zinc-500 mb-4">{marketCondition}</p>
-
-        {/* Opportunity score */}
+        <p className="text-sm font-bold mb-0.5" style={{ color: "var(--text-1)" }}>{theme}</p>
+        <p className="text-xs mb-4" style={{ color: "var(--text-3)" }}>{marketCondition}</p>
         <div className="mb-1">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-600">Opportunity Score</span>
-            <span className="text-xs font-bold text-zinc-300">{opportunityScore}/100</span>
+            <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: "var(--text-4)" }}>Opportunity Score</span>
+            <span className="text-xs font-bold" style={{ color: "var(--text-1)" }}>{opportunityScore}/100</span>
           </div>
           <ScoreBar value={opportunityScore} />
         </div>
-
-        {/* Stat grid */}
         <div className="grid grid-cols-3 gap-2.5 mt-4">
           <StatBox label="Market Size" value={marketSize} />
           <StatBox label="Growth Rate" value={growthRate} />
@@ -65,14 +49,13 @@ export function MarketDashboard({ marketContext, gaps }: MarketDashboardProps) {
         </div>
       </div>
 
-      {/* Market Signals */}
       {signals?.length > 0 && (
-        <div className="rounded-xl border border-zinc-800/80 bg-[#0d0d0d] p-5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-3">Market Signals</p>
+        <div className="rounded-xl p-5" style={{ border: "1px solid var(--border)", backgroundColor: "var(--bg-card)" }}>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-3" style={{ color: "var(--text-3)" }}>Market Signals</p>
           <ul className="space-y-2.5">
             {signals.map((s, i) => (
-              <li key={i} className="flex items-start gap-2.5 text-xs text-zinc-400 leading-relaxed">
-                <ArrowRight className="h-3 w-3 shrink-0 mt-0.5 text-brand/60" />
+              <li key={i} className="flex items-start gap-2.5 text-xs leading-relaxed" style={{ color: "var(--text-2)" }}>
+                <ArrowRight className="h-3 w-3 shrink-0 mt-0.5" style={{ color: "var(--accent)", opacity: 0.6 }} />
                 {s}
               </li>
             ))}
@@ -80,14 +63,13 @@ export function MarketDashboard({ marketContext, gaps }: MarketDashboardProps) {
         </div>
       )}
 
-      {/* Key Patterns */}
       {mainPatterns?.length > 0 && (
-        <div className="rounded-xl border border-zinc-800/80 bg-[#0d0d0d] p-5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-3">Key Patterns</p>
+        <div className="rounded-xl p-5" style={{ border: "1px solid var(--border)", backgroundColor: "var(--bg-card)" }}>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-3" style={{ color: "var(--text-3)" }}>Key Patterns</p>
           <ul className="space-y-2">
             {mainPatterns.map((p, i) => (
-              <li key={i} className="flex items-start gap-2.5 text-xs text-zinc-500 leading-relaxed">
-                <span className="mt-[5px] h-[4px] w-[4px] shrink-0 rounded-full bg-zinc-700" />
+              <li key={i} className="flex items-start gap-2.5 text-xs leading-relaxed" style={{ color: "var(--text-3)" }}>
+                <span className="mt-[5px] h-[4px] w-[4px] shrink-0 rounded-full" style={{ backgroundColor: "var(--border)" }} />
                 {p}
               </li>
             ))}
@@ -95,19 +77,18 @@ export function MarketDashboard({ marketContext, gaps }: MarketDashboardProps) {
         </div>
       )}
 
-      {/* Top Gap */}
       {topGap && (
-        <div className="rounded-xl border border-brand/15 bg-brand/[0.03] p-5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand/60 mb-2">Top Opportunity Gap</p>
-          <p className="text-sm font-semibold text-zinc-300 mb-3">{topGap.title}</p>
+        <div className="rounded-xl p-5" style={{ border: "1px solid var(--accent-hi)", backgroundColor: "var(--accent-lo)" }}>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-2" style={{ color: "var(--accent)", opacity: 0.7 }}>Top Opportunity Gap</p>
+          <p className="text-sm font-semibold mb-3" style={{ color: "var(--text-1)" }}>{topGap.title}</p>
           <dl className="space-y-1.5">
             <div className="flex gap-3">
-              <dt className="w-20 shrink-0 text-[9px] font-bold uppercase tracking-widest text-zinc-600 pt-[1px]">Currently</dt>
-              <dd className="text-xs text-zinc-500 leading-snug">{topGap.currentMarket}</dd>
+              <dt className="w-20 shrink-0 text-[9px] font-bold uppercase tracking-widest pt-[1px]" style={{ color: "var(--text-4)" }}>Currently</dt>
+              <dd className="text-xs leading-snug" style={{ color: "var(--text-3)" }}>{topGap.currentMarket}</dd>
             </div>
             <div className="flex gap-3">
-              <dt className="w-20 shrink-0 text-[9px] font-bold uppercase tracking-widest text-zinc-600 pt-[1px]">Missing</dt>
-              <dd className="text-xs text-zinc-500 leading-snug">{topGap.missing}</dd>
+              <dt className="w-20 shrink-0 text-[9px] font-bold uppercase tracking-widest pt-[1px]" style={{ color: "var(--text-4)" }}>Missing</dt>
+              <dd className="text-xs leading-snug" style={{ color: "var(--text-3)" }}>{topGap.missing}</dd>
             </div>
           </dl>
         </div>
