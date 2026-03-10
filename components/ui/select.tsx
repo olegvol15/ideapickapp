@@ -5,7 +5,7 @@ import * as SelectPrimitive from '@radix-ui/react-select';
 import { ChevronDown, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const Select = SelectPrimitive.Root;
+const Select      = SelectPrimitive.Root;
 const SelectValue = SelectPrimitive.Value;
 const SelectGroup = SelectPrimitive.Group;
 
@@ -16,22 +16,14 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      'flex w-full items-center justify-between rounded-xl border px-4 py-2.5 text-xs uppercase tracking-widest transition-colors duration-200 focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer',
-      className
+      'flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-2.5 text-xs uppercase tracking-widest text-muted-foreground transition-colors duration-200 hover:border-primary/30 focus:outline-none focus:ring-2 focus:ring-accent/10 focus:border-primary/40 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer',
+      className,
     )}
-    style={{
-      borderColor: 'var(--border)',
-      backgroundColor: 'var(--bg-card)',
-      color: 'var(--text-3)',
-    }}
     {...props}
   >
     {children}
     <SelectPrimitive.Icon asChild>
-      <ChevronDown
-        className="h-4 w-4 shrink-0"
-        style={{ color: 'var(--text-4)' }}
-      />
+      <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground/60" />
     </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
 ));
@@ -45,24 +37,15 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        'relative z-50 min-w-[8rem] overflow-hidden rounded-xl border shadow-[0_8px_32px_rgba(0,0,0,0.15)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2',
-        position === 'popper' &&
-          'data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1',
-        className
+        'relative z-50 min-w-[8rem] overflow-hidden rounded-xl border border-border bg-card shadow-[0_8px_32px_rgba(0,0,0,0.15)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2',
+        position === 'popper' && 'data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1',
+        className,
       )}
-      style={{
-        borderColor: 'var(--border)',
-        backgroundColor: 'var(--bg-card)',
-      }}
       position={position}
       {...props}
     >
       <SelectPrimitive.Viewport
-        className={cn(
-          'p-1',
-          position === 'popper' &&
-            'w-full min-w-[var(--radix-select-trigger-width)]'
-        )}
+        className={cn('p-1', position === 'popper' && 'w-full min-w-[var(--radix-select-trigger-width)]')}
       >
         {children}
       </SelectPrimitive.Viewport>
@@ -78,15 +61,14 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      'relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-8 pr-4 text-xs uppercase tracking-widest outline-none transition-colors duration-150 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
-      className
+      'relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-8 pr-4 text-xs uppercase tracking-widest text-muted-foreground outline-none transition-colors duration-150 focus:bg-muted focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+      className,
     )}
-    style={{ color: 'var(--text-3)' }}
     {...props}
   >
     <span className="absolute left-2.5 flex h-3.5 w-3.5 items-center justify-center">
       <SelectPrimitive.ItemIndicator>
-        <Check className="h-3 w-3" style={{ color: 'var(--accent)' }} />
+        <Check className="h-3 w-3 text-primary" />
       </SelectPrimitive.ItemIndicator>
     </span>
     <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
@@ -94,11 +76,4 @@ const SelectItem = React.forwardRef<
 ));
 SelectItem.displayName = SelectPrimitive.Item.displayName;
 
-export {
-  Select,
-  SelectValue,
-  SelectGroup,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-};
+export { Select, SelectValue, SelectGroup, SelectTrigger, SelectContent, SelectItem };

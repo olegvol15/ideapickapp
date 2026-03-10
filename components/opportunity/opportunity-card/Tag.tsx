@@ -1,15 +1,18 @@
+import { Badge, type BadgeProps } from '@/components/ui/badge';
+
 export interface TagProps {
-  label: string;
-  value: string;
-  cls:   string;
+  label:   string;
+  value:   string;
+  variant: BadgeProps['variant'];
 }
 
-export function Tag({ label, value, cls }: TagProps) {
+/** Signal tag — wraps <Badge> with the label·value pattern. */
+export function Tag({ label, value, variant }: TagProps) {
   return (
-    <span className={`inline-flex items-center gap-1 rounded border px-2 py-1 text-[9px] font-bold uppercase tracking-widest ${cls}`}>
+    <Badge variant={variant}>
       <span className="opacity-50">{label}</span>
       <span className="opacity-30">·</span>
       {value}
-    </span>
+    </Badge>
   );
 }

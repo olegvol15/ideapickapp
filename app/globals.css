@@ -1,68 +1,151 @@
 @import 'tailwindcss';
 
+/* ── Tailwind theme tokens ──────────────────────────────────────────────────────
+   All tokens use @theme inline so generated utilities reference CSS vars
+   directly — they resolve at runtime and respond to .dark class.
+   ─────────────────────────────────────────────────────────────────────────── */
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Fonts */
+  --font-sans:    var(--font-geist-sans);
+  --font-mono:    var(--font-geist-mono);
   --font-display: var(--font-anton);
-  --color-brand: #0077b6;
+
+  /* ── shadcn/ui standard tokens ────────────────────────────────────────────
+     These map to shadcn's CSS variable names so every shadcn component works
+     out of the box. bg-background, text-foreground, bg-card, bg-primary, etc.
+     ──────────────────────────────────────────────────────────────────────── */
+  --color-background:           var(--background);
+  --color-foreground:           var(--foreground);
+  --color-card:                 var(--card);
+  --color-card-foreground:      var(--card-foreground);
+  --color-popover:              var(--popover);
+  --color-popover-foreground:   var(--popover-foreground);
+  --color-primary:              var(--primary);
+  --color-primary-foreground:   var(--primary-foreground);
+  --color-secondary:            var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted:                var(--muted);
+  --color-muted-foreground:     var(--muted-foreground);
+  --color-accent:               var(--accent-subtle); /* shadcn accent = subtle hover bg */
+  --color-accent-foreground:    var(--accent-foreground);
+  --color-destructive:          var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border:               var(--border);
+  --color-input:                var(--input);
+  --color-ring:                 var(--ring);
+
+  /* ── Our semantic aliases (backward-compatible with existing components) ──
+     text-ink, bg-surface, border-edge, text-brand, etc. keep working.
+     ──────────────────────────────────────────────────────────────────────── */
+  /* Surfaces */
+  --color-surface:   var(--background);
+  --color-subtle:    var(--muted);
+  --color-input-bg:  var(--background);
+  /* Borders */
+  --color-edge:      var(--border);
+  --color-edge-soft: var(--border-soft);
+  /* Text */
+  --color-ink:       var(--foreground);
+  --color-ink-2:     var(--text-2);
+  --color-ink-3:     var(--muted-foreground);
+  --color-ink-4:     var(--text-4);
+  /* Brand (maps to --primary so text-brand = text-primary) */
+  --color-brand:     var(--primary);
+  /* Accent = BRAND color in our design system (kept for backward compat) */
+  --color-accent-brand:  var(--primary);      /* text-accent-brand */
+  --color-accent-hi: var(--brand-hi);
+  --color-accent-lo: var(--brand-lo);
 }
 
 /* ── Light tokens ────────────────────────────────────────────────────────────── */
 :root {
-  --bg: #eaf5fc;
-  --bg-card: #ffffff;
-  --bg-subtle: #f0f7ff;
-  --bg-input: #f8fdff;
-  --border: rgba(2, 62, 138, 0.12);
-  --border-soft: rgba(2, 62, 138, 0.08);
-  --text-1: #0c3f75;
-  --text-2: #557293;
-  --text-3: #6d89a9;
-  --text-4: #8dafc8;
-  --accent: #0077b6;
-  --accent-2: #0368a0;
-  --accent-hi: rgba(0, 119, 182, 0.15);
-  --accent-lo: rgba(0, 119, 182, 0.06);
-  --grid-line: rgba(2, 62, 138, 0.05);
+  /* Raw design values */
+  --bg:          #eaf5fc;
+  --bg-card:     #ffffff;
+  --bg-subtle:   #f0f7ff;
+  --text-1:      #0c3f75;
+  --text-2:      #557293;
+  --text-3:      #6d89a9;
+  --text-4:      #8dafc8;
+  --brand-color: #0077b6;
+  --brand-2:     #0368a0;
+  --brand-hi:    rgba(0, 119, 182, 0.15);
+  --brand-lo:    rgba(0, 119, 182, 0.06);
+  --grid-line:   rgba(2, 62, 138, 0.05);
+
+  /* ── shadcn CSS variables ───────────────────────────────────────────────── */
+  --background:             var(--bg);
+  --foreground:             var(--text-1);
+  --card:                   var(--bg-card);
+  --card-foreground:        var(--text-1);
+  --popover:                var(--bg-card);
+  --popover-foreground:     var(--text-1);
+  --primary:                var(--brand-color);
+  --primary-foreground:     #ffffff;
+  --secondary:              var(--bg-subtle);
+  --secondary-foreground:   var(--text-1);
+  --muted:                  var(--bg-subtle);
+  --muted-foreground:       var(--text-3);
+  --accent-subtle:          var(--bg-subtle);  /* shadcn hover/active subtle bg */
+  --accent-foreground:      var(--text-1);
+  --destructive:            #ef4444;
+  --destructive-foreground: #ffffff;
+  --border:                 rgba(2, 62, 138, 0.12);
+  --border-soft:            rgba(2, 62, 138, 0.08);
+  --input:                  rgba(2, 62, 138, 0.12);
+  --ring:                   var(--brand-color);
+  --radius:                 0.75rem;
 }
 
 /* ── Dark tokens ─────────────────────────────────────────────────────────────── */
 .dark {
-  --bg: #060d19;
-  --bg-card: #0a1829;
-  --bg-subtle: #081527;
-  --bg-input: #081527;
-  --border: rgba(255, 255, 255, 0.07);
-  --border-soft: rgba(255, 255, 255, 0.04);
-  --text-1: #c0daf5;
-  --text-2: #7ba8c8;
-  --text-3: #4e6f8a;
-  --text-4: #3a5a75;
-  --accent: #38c5e8;
-  --accent-2: #0ea5cc;
-  --accent-hi: rgba(56, 197, 232, 0.14);
-  --accent-lo: rgba(56, 197, 232, 0.06);
-  --grid-line: rgba(255, 255, 255, 0.04);
+  --bg:          #060d19;
+  --bg-card:     #0a1829;
+  --bg-subtle:   #081527;
+  --text-1:      #c0daf5;
+  --text-2:      #7ba8c8;
+  --text-3:      #4e6f8a;
+  --text-4:      #3a5a75;
+  --brand-color: #38c5e8;
+  --brand-2:     #0ea5cc;
+  --brand-hi:    rgba(56, 197, 232, 0.14);
+  --brand-lo:    rgba(56, 197, 232, 0.06);
+  --grid-line:   rgba(255, 255, 255, 0.04);
+
+  --background:             var(--bg);
+  --foreground:             var(--text-1);
+  --card:                   var(--bg-card);
+  --card-foreground:        var(--text-1);
+  --popover:                var(--bg-card);
+  --popover-foreground:     var(--text-1);
+  --primary:                var(--brand-color);
+  --primary-foreground:     var(--bg);
+  --secondary:              var(--bg-subtle);
+  --secondary-foreground:   var(--text-1);
+  --muted:                  var(--bg-subtle);
+  --muted-foreground:       var(--text-3);
+  --accent-subtle:          var(--bg-subtle);
+  --accent-foreground:      var(--text-1);
+  --destructive:            #ef4444;
+  --destructive-foreground: #ffffff;
+  --border:                 rgba(255, 255, 255, 0.07);
+  --border-soft:            rgba(255, 255, 255, 0.04);
+  --input:                  rgba(255, 255, 255, 0.07);
+  --ring:                   var(--brand-color);
 }
 
 body {
-  background-color: var(--bg);
-  color: var(--text-1);
+  background-color: var(--background);
+  color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* ── Textarea ────────────────────────────────────────────────────────────────── */
-.textarea-depth {
-  box-shadow: inset 0 2px 8px rgba(2, 62, 138, 0.06);
-}
-.dark .textarea-depth {
-  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.4);
-}
+/* ── Textarea depth / focus glow ─────────────────────────────────────────────── */
+.textarea-depth { box-shadow: inset 0 2px 8px rgba(2, 62, 138, 0.06); }
+.dark .textarea-depth { box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.4); }
 
 .brand-focus:focus {
   outline: none;
@@ -82,14 +165,9 @@ body {
 
 /* ── Skeleton shimmer ────────────────────────────────────────────────────────── */
 @keyframes shimmer {
-  0% {
-    background-position: -400% 0;
-  }
-  100% {
-    background-position: 400% 0;
-  }
+  0%   { background-position: -400% 0; }
+  100% { background-position:  400% 0; }
 }
-
 .skeleton-shimmer {
   background: linear-gradient(90deg, #dbeeff 25%, #c8e6ff 50%, #dbeeff 75%);
   background-size: 400% 100%;
@@ -98,4 +176,23 @@ body {
 .dark .skeleton-shimmer {
   background: linear-gradient(90deg, #0d1f36 25%, #132840 50%, #0d1f36 75%);
   background-size: 400% 100%;
+}
+
+/* ── Decorative page utilities ───────────────────────────────────────────────── */
+@layer utilities {
+  .bg-dot-grid {
+    background-image: radial-gradient(circle, var(--grid-line) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+  .bg-page-grid {
+    background-image:
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 90% 80% at 50% 35%, black 20%, transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse 90% 80% at 50% 35%, black 20%, transparent 70%);
+  }
+  .bg-surface-frosted {
+    background-color: color-mix(in srgb, var(--background) 90%, transparent);
+  }
 }

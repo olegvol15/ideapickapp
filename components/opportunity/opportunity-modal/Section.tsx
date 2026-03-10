@@ -7,8 +7,8 @@ export interface SectionProps {
 
 export function Section({ title, children }: SectionProps) {
   return (
-    <div className="pt-5" style={{ borderTop: '1px solid var(--border)' }}>
-      <p className="text-[9px] font-bold uppercase tracking-[0.2em] mb-3" style={{ color: 'var(--text-4)' }}>
+    <div className="border-t border-border pt-5">
+      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 mb-3">
         {title}
       </p>
       {children}

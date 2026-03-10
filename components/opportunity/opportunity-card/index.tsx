@@ -1,11 +1,15 @@
 'use client';
 
 import { Bookmark } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import type { Idea, SignalLevel } from '@/types';
 import { computeOpportunityScore } from '@/lib/scoring';
 import { useSavedIdea } from '@/hooks/use-saved-idea';
 import { Tag } from './Tag';
-import { DIFFICULTY_COLOR, SIGNAL_TAG, COMPETITION_TAG } from './constants';
+import { DIFFICULTY_VARIANT, SIGNAL_VARIANT, COMPETITION_VARIANT } from './constants';
 
 interface OpportunityCardProps extends Idea {
   onExplore: () => void;
@@ -20,68 +24,61 @@ export function OpportunityCard({ onExplore, ...ideaProps }: OpportunityCardProp
     idea.difficulty === 'Easy' ? 'High' : idea.difficulty === 'Medium' ? 'Medium' : 'Low';
 
   return (
-    <div
-      className="group rounded-xl p-5 transition-colors duration-200 cursor-pointer hover:border-[var(--accent)]/30"
-      style={{ border: '1px solid var(--border)', backgroundColor: 'var(--bg-card)' }}
+    <Card
+      className="cursor-pointer transition-colors duration-200 hover:border-primary/30"
       onClick={onExplore}
     >
-      {/* Header */}
-      <div className="flex items-start justify-between gap-3 mb-2">
-        <h3 className="text-[14px] font-bold uppercase tracking-wide leading-snug" style={{ color: 'var(--text-1)' }}>
-          {idea.title}
-        </h3>
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="text-[10px] font-bold" style={{ color: 'var(--text-4)' }}>
-            <span style={{ color: 'var(--text-1)' }}>{score}</span>/10
-          </span>
-          <span className={`rounded-sm border px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest ${DIFFICULTY_COLOR[idea.difficulty]}`}>
-            {idea.difficulty}
-          </span>
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <h3 className="text-[14px] font-bold uppercase tracking-wide leading-snug text-foreground">
+            {idea.title}
+          </h3>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[10px] font-bold text-muted-foreground">
+              <span className="text-foreground">{score}</span>/10
+            </span>
+            <Badge variant={DIFFICULTY_VARIANT[idea.difficulty]}>
+              {idea.difficulty}
+            </Badge>
+          </div>
         </div>
-      </div>
 
-      {/* Pitch */}
-      <p className="text-xs leading-relaxed line-clamp-1 mb-3" style={{ color: 'var(--text-3)' }}>
-        {idea.pitch}
-      </p>
+        <p className="text-xs leading-relaxed line-clamp-1 mb-3 text-muted-foreground">
+          {idea.pitch}
+        </p>
 
-      {/* Problem + Audience */}
-      <dl className="space-y-1.5 mb-4">
-        <div className="flex gap-2">
-          <dt className="w-16 shrink-0 text-[9px] font-bold uppercase tracking-widest pt-[1px]" style={{ color: 'var(--text-4)' }}>Problem</dt>
-          <dd className="text-xs leading-snug" style={{ color: 'var(--text-2)' }}>{idea.problem}</dd>
+        <dl className="space-y-1.5 mb-4">
+          <div className="flex gap-2">
+            <dt className="w-16 shrink-0 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60 pt-[1px]">Problem</dt>
+            <dd className="text-xs leading-snug text-foreground/70">{idea.problem}</dd>
+          </div>
+          <div className="flex gap-2">
+            <dt className="w-16 shrink-0 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60 pt-[1px]">Audience</dt>
+            <dd className="text-xs leading-snug text-foreground/70">{idea.audience}</dd>
+          </div>
+        </dl>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Tag label="Demand"      value={idea.marketDemand}    variant={SIGNAL_VARIANT[idea.marketDemand]} />
+          <Tag label="Competition" value={idea.competitionLevel} variant={COMPETITION_VARIANT[idea.competitionLevel]} />
+          <Tag label="Build"       value={idea.difficulty}       variant={SIGNAL_VARIANT[buildSignal]} />
+
+          <div className="ml-auto flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn('h-7 w-7', saved ? 'text-primary' : 'text-muted-foreground hover:text-foreground')}
+              onClick={(e) => { e.stopPropagation(); toggleSave(); }}
+              title={saved ? 'Unsave' : 'Save idea'}
+            >
+              <Bookmark className="h-3.5 w-3.5" fill={saved ? 'currentColor' : 'none'} />
+            </Button>
+            <span className="group-hover:text-primary text-[10px] font-bold uppercase tracking-widest text-muted-foreground transition-colors duration-150">
+              Explore →
+            </span>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <dt className="w-16 shrink-0 text-[9px] font-bold uppercase tracking-widest pt-[1px]" style={{ color: 'var(--text-4)' }}>Audience</dt>
-          <dd className="text-xs leading-snug" style={{ color: 'var(--text-2)' }}>{idea.audience}</dd>
-        </div>
-      </dl>
-
-      {/* Signal tags + actions */}
-      <div className="flex flex-wrap items-center gap-2">
-        <Tag label="Demand"      value={idea.marketDemand}    cls={SIGNAL_TAG[idea.marketDemand]} />
-        <Tag label="Competition" value={idea.competitionLevel} cls={COMPETITION_TAG[idea.competitionLevel]} />
-        <Tag label="Build"       value={idea.difficulty}       cls={SIGNAL_TAG[buildSignal]} />
-
-        <div className="ml-auto flex items-center gap-3">
-          <button
-            onClick={(e) => { e.stopPropagation(); toggleSave(); }}
-            className="transition-colors duration-150"
-            style={{ color: saved ? 'var(--accent)' : 'var(--text-4)' }}
-            title={saved ? 'Unsave' : 'Save idea'}
-          >
-            <Bookmark className="h-3.5 w-3.5" fill={saved ? 'currentColor' : 'none'} />
-          </button>
-          <span
-            className="text-[10px] font-bold uppercase tracking-widest transition-colors duration-150"
-            style={{ color: 'var(--text-4)' }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent)')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-4)')}
-          >
-            Explore →
-          </span>
-        </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

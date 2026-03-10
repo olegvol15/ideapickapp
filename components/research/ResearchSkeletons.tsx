@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const TAB_LABELS = ['Opportunities', 'Market', 'Competitors'] as const;
@@ -5,36 +6,23 @@ const TAB_LABELS = ['Opportunities', 'Market', 'Competitors'] as const;
 export function ResearchSkeletons() {
   return (
     <div>
-      {/* Skeleton tab bar */}
-      <div
-        className="flex mb-6"
-        style={{ borderBottom: '1px solid var(--border)' }}
-      >
+      <div className="flex border-b border-border mb-6">
         {TAB_LABELS.map((label, i) => (
           <div
             key={label}
-            className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest"
-            style={{
-              color: i === 0 ? 'var(--accent)' : 'var(--text-4)',
-              borderBottom: i === 0 ? '2px solid var(--accent)' : undefined,
-            }}
+            className={cn(
+              'px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest',
+              i === 0 ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground/60',
+            )}
           >
             {label}
           </div>
         ))}
       </div>
 
-      {/* Skeleton cards */}
       <div className="grid gap-3">
         {[0, 1, 2].map((i) => (
-          <div
-            key={i}
-            className="rounded-xl p-5"
-            style={{
-              border: '1px solid var(--border)',
-              backgroundColor: 'var(--bg-card)',
-            }}
-          >
+          <div key={i} className="rounded-xl border border-border bg-card p-5">
             <div className="flex items-start justify-between gap-3 mb-2">
               <Skeleton className="h-4 w-2/5" />
               <Skeleton className="h-4 w-12 shrink-0" />

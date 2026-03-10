@@ -69,11 +69,13 @@ export function RoadmapMap({ idea }: RoadmapMapProps) {
   return (
     <div
       ref={containerRef}
-      className="relative w-full rounded-2xl overflow-hidden"
-      style={{ minHeight: 460, border: '1px solid var(--border)', backgroundColor: 'var(--bg-card)' }}
+      className="relative w-full min-h-[460px] rounded-2xl border border-border bg-card overflow-hidden"
     >
-      {/* SVG bezier connectors */}
-      <svg className="absolute inset-0 pointer-events-none" width={svgSize.w} height={svgSize.h} style={{ zIndex: 1 }}>
+      <svg
+        className="absolute inset-0 pointer-events-none z-[1]"
+        width={svgSize.w}
+        height={svgSize.h}
+      >
         {paths.map((p, i) => (
           <motion.path
             key={i} d={p.d} fill="none"
@@ -85,27 +87,24 @@ export function RoadmapMap({ idea }: RoadmapMapProps) {
         ))}
       </svg>
 
-      {/* Centre MVP node */}
-      <div ref={centerRef} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style={{ zIndex: 10 }}>
+      <div ref={centerRef} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
         <motion.div
           initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.35, ease: 'easeOut' }}
-          className="rounded-2xl px-5 py-4 text-center"
-          style={{ minWidth: 156, border: '2px solid var(--accent-hi)', backgroundColor: 'var(--accent-lo)' }}
+          className="min-w-[156px] rounded-2xl border-2 border-primary/20 bg-primary/[0.06] px-5 py-4 text-center"
         >
-          <p className="text-[7px] font-bold uppercase tracking-[0.25em] mb-1.5" style={{ color: 'var(--accent)', opacity: 0.6 }}>MVP</p>
-          <p className="text-[13px] font-bold leading-snug" style={{ color: 'var(--text-1)' }}>
+          <p className="text-[7px] font-bold uppercase tracking-[0.25em] text-primary opacity-60 mb-1.5">MVP</p>
+          <p className="text-[13px] font-bold leading-snug text-foreground">
             {idea.title.split(/\s*[—–-]\s*/)[0].trim()}
           </p>
-          <div className="mt-2.5 h-px" style={{ backgroundColor: 'var(--border)' }} />
-          <p className="mt-1.5 text-[9px]" style={{ color: 'var(--text-4)' }}>
+          <div className="mt-2.5 h-px bg-border" />
+          <p className="mt-1.5 text-[9px] text-muted-foreground/60">
             {idea.difficulty} · {idea.marketDemand} demand
           </p>
         </motion.div>
       </div>
 
-      {/* Left branches */}
-      <div className="absolute top-0 bottom-0 left-6 flex flex-col justify-around py-10" style={{ zIndex: 10 }}>
+      <div className="absolute top-0 bottom-0 left-6 z-10 flex flex-col justify-around py-10">
         {leftBranches.map((branch, i) => (
           <motion.div
             key={branch.id}
@@ -118,8 +117,7 @@ export function RoadmapMap({ idea }: RoadmapMapProps) {
         ))}
       </div>
 
-      {/* Right branches */}
-      <div className="absolute top-0 bottom-0 right-6 flex flex-col justify-around py-10" style={{ zIndex: 10 }}>
+      <div className="absolute top-0 bottom-0 right-6 z-10 flex flex-col justify-around py-10">
         {rightBranches.map((branch, i) => (
           <motion.div
             key={branch.id}
@@ -132,11 +130,7 @@ export function RoadmapMap({ idea }: RoadmapMapProps) {
         ))}
       </div>
 
-      {/* Dot grid */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{ backgroundImage: 'radial-gradient(circle, var(--grid-line) 1px, transparent 1px)', backgroundSize: '28px 28px', zIndex: 0 }}
-      />
+      <div className="absolute inset-0 pointer-events-none z-0 bg-dot-grid" />
     </div>
   );
 }

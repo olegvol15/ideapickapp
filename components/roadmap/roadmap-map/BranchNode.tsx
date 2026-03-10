@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils';
 import type { Branch } from './constants';
 import { BRANCH_STYLE } from './constants';
 
@@ -19,8 +20,10 @@ export function BranchNode({ branch, align }: BranchNodeProps) {
         {branch.items.map((item, i) => (
           <li
             key={i}
-            className={`flex items-start gap-1.5 text-[10px] leading-snug ${isRight ? 'flex-row-reverse' : ''}`}
-            style={{ color: 'var(--text-2)' }}
+            className={cn(
+              'flex items-start gap-1.5 text-[10px] leading-snug text-foreground/70',
+              isRight && 'flex-row-reverse',
+            )}
           >
             <span className={`mt-[5px] h-[3px] w-[3px] shrink-0 rounded-full ${s.dot}`} />
             <span className="leading-[1.4]">{item}</span>

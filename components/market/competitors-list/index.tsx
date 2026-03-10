@@ -8,7 +8,7 @@ interface CompetitorsListProps {
 export function CompetitorsList({ competitors }: CompetitorsListProps) {
   if (!competitors?.length) {
     return (
-      <p className="text-xs py-6 text-center" style={{ color: 'var(--text-3)' }}>
+      <p className="text-xs py-6 text-center text-muted-foreground">
         No competitor data available — analysis based on training knowledge
       </p>
     );

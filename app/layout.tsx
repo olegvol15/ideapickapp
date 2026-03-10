@@ -20,10 +20,6 @@ export const metadata: Metadata = {
     'Describe your skills, interests, or problems and get product ideas you can actually build.',
 };
 
-/**
- * RootLayout stays a Server Component — it imports no client hooks.
- * All client-side providers are delegated to <Providers>.
- */
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
