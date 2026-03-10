@@ -3,7 +3,7 @@ import { Providers } from './providers';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'IdeaPick — Generate startup ideas with AI',
+  title: 'IdeaPick',
   description:
     'Describe your skills, interests, or problems and get product ideas you can actually build.',
 };

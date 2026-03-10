@@ -7,7 +7,6 @@ import type { Idea } from '@/types';
 import { getPlan } from '@/services/storage.service';
 import { computeOpportunityScore } from '@/lib/scoring';
 import { RoadmapMap } from '@/components/roadmap/roadmap-map';
-import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 export default function PlanPage() {
   const { id }   = useParams<{ id: string }>();
@@ -55,7 +54,6 @@ export default function PlanPage() {
           <span className="text-[10px] font-bold text-muted-foreground/60">
             <span className="text-sm text-foreground">{score}</span>/10
           </span>
-          <ThemeToggle />
         </div>
       </header>
 

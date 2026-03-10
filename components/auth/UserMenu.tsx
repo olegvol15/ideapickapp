@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronsUpDown, LogOut } from 'lucide-react';
+import { useTheme } from 'next-themes';
+import { ChevronsUpDown, LogOut, Moon, Sun } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '@/context/auth';
 import { cn } from '@/lib/utils';
@@ -15,8 +16,14 @@ interface UserMenuProps {
 export function UserMenu({ variant = 'compact' }: UserMenuProps) {
   const { user, signOut } = useAuth();
   const router = useRouter();
+  const { resolvedTheme, setTheme, theme } = useTheme();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -47,10 +54,23 @@ export function UserMenu({ variant = 'compact' }: UserMenuProps) {
   const email = user.email ?? '';
   const initials = email[0]?.toUpperCase() ?? '?';
   const displayName = email.split('@')[0] || 'Account';
+  const isDark = resolvedTheme === 'dark';
+  const appearanceLabel = !mounted
+    ? 'Theme'
+    : theme === 'system'
+      ? `System (${isDark ? 'Dark' : 'Light'})`
+      : isDark
+        ? 'Dark'
+        : 'Light';
 
   async function handleSignOut() {
     await signOut();
     router.push('/');
+  }
+
+  function handleToggleTheme() {
+    if (!mounted) return;
+    setTheme(isDark ? 'light' : 'dark');
   }
 
   return (
@@ -109,13 +129,19 @@ export function UserMenu({ variant = 'compact' }: UserMenuProps) {
             </div>
 
             <div className="p-1">
-              <Link
-                href="/ideas"
-                onClick={() => setOpen(false)}
-                className="flex items-center rounded-lg px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+              <button
+                type="button"
+                onClick={handleToggleTheme}
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-muted"
               >
-                Saved ideas
-              </Link>
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium text-foreground">Appearance</span>
+                  <span className="block text-xs text-muted-foreground">{appearanceLabel}</span>
+                </span>
+              </button>
             </div>
 
             <div className="border-t border-border p-1">

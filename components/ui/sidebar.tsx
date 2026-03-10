@@ -56,17 +56,18 @@ function Sidebar({
         data-slot="sidebar"
         initial={false}
         animate={{
-          width: openDesktop ? 232 : 0,
-          opacity: openDesktop ? 1 : 0,
+          width: openDesktop ? 232 : 76,
+          opacity: 1,
         }}
         transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
         className={cn(
-          'relative hidden shrink-0 overflow-hidden border-r border-border/70 bg-card/70 lg:block',
-          !openDesktop && 'pointer-events-none border-r-transparent',
+          'relative hidden shrink-0 overflow-visible border-r border-border/70 bg-card/70 lg:block',
           className,
         )}
       >
-        <div className="sticky top-0 flex h-screen w-[232px] flex-col">{children}</div>
+        <div className="sticky top-0 flex h-screen w-full min-w-0 flex-col overflow-visible">
+          {children}
+        </div>
       </motion.aside>
 
       <AnimatePresence>
@@ -177,7 +178,7 @@ function SidebarFooter({
   return (
     <div
       data-slot="sidebar-footer"
-      className={cn('mt-auto shrink-0 px-4 pb-4', className)}
+      className={cn('relative mt-auto shrink-0 px-4 pb-4 overflow-visible', className)}
     >
       {children}
     </div>
