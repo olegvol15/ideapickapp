@@ -13,12 +13,18 @@ import { DIFFICULTY_VARIANT, SIGNAL_VARIANT, COMPETITION_VARIANT } from './const
 
 interface OpportunityCardProps extends Idea {
   onExplore: () => void;
+  onUnsave?: () => void;
 }
 
-export function OpportunityCard({ onExplore, ...ideaProps }: OpportunityCardProps) {
+export function OpportunityCard({ onExplore, onUnsave, ...ideaProps }: OpportunityCardProps) {
   const idea  = ideaProps as Idea;
   const score = computeOpportunityScore(idea);
   const { saved, toggle: toggleSave } = useSavedIdea(idea);
+
+  function handleSaveToggle() {
+    const isNowSaved = toggleSave();
+    if (!isNowSaved) onUnsave?.();
+  }
 
   const buildSignal: SignalLevel =
     idea.difficulty === 'Easy' ? 'High' : idea.difficulty === 'Medium' ? 'Medium' : 'Low';
@@ -68,7 +74,7 @@ export function OpportunityCard({ onExplore, ...ideaProps }: OpportunityCardProp
               variant="ghost"
               size="icon"
               className={cn('h-7 w-7', saved ? 'text-primary' : 'text-muted-foreground hover:text-foreground')}
-              onClick={(e) => { e.stopPropagation(); toggleSave(); }}
+              onClick={(e) => { e.stopPropagation(); handleSaveToggle(); }}
               title={saved ? 'Unsave' : 'Save idea'}
             >
               <Bookmark className="h-3.5 w-3.5" fill={saved ? 'currentColor' : 'none'} />

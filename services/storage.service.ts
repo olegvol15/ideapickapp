@@ -3,7 +3,7 @@ import type { Idea } from '@/types';
 const SAVED_KEY   = 'ideapick:saved';
 const PLAN_PREFIX = 'ideapick:plan:';
 
-function getSaved(): Idea[] {
+export function getSaved(): Idea[] {
   try { return JSON.parse(localStorage.getItem(SAVED_KEY) ?? '[]') as Idea[]; }
   catch { return []; }
 }

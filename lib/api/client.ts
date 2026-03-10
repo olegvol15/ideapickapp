@@ -31,7 +31,7 @@ function getToken(): string | null {
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
-  timeout: 10_000,
+  timeout: 60_000, // LLM + search calls can take 20–40 s
   headers: { 'Content-Type': 'application/json' },
 });
 

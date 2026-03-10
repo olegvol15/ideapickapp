@@ -1,6 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { Bookmark } from 'lucide-react';
 import { PromptForm } from '@/components/research/PromptForm';
 import { ThemeToggle } from '@/components/theme-toggle';
 
@@ -26,7 +28,14 @@ export default function Home() {
         className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-[linear-gradient(to_bottom,transparent,var(--bg))]"
       />
 
-      <div className="absolute right-5 top-5 z-10">
+      <div className="absolute right-5 top-5 z-10 flex items-center gap-2">
+        <Link
+          href="/saved"
+          className="flex h-8 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-[11px] font-bold uppercase tracking-widest text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary"
+        >
+          <Bookmark className="h-3 w-3" />
+          Saved
+        </Link>
         <ThemeToggle />
       </div>
 
