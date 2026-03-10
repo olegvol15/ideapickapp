@@ -1,11 +1,11 @@
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 
-function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+function Skeleton({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div
-      className={cn("skeleton-shimmer rounded-sm", className)}
-      {...props}
-    />
+    <div className={cn('skeleton-shimmer rounded-sm', className)} {...props} />
   );
 }
 

@@ -1,7 +1,12 @@
-export type DifficultyLevel = "Easy" | "Medium" | "Hard";
-export type ProductType = "SaaS" | "AI Tool" | "Mobile App" | "Chrome Extension" | "Dev Tool";
+export type DifficultyLevel = 'Easy' | 'Medium' | 'Hard';
+export type ProductType =
+  | 'SaaS'
+  | 'AI Tool'
+  | 'Mobile App'
+  | 'Chrome Extension'
+  | 'Dev Tool';
 export type Difficulty = DifficultyLevel;
-export type SignalLevel = "Low" | "Medium" | "High";
+export type SignalLevel = 'Low' | 'Medium' | 'High';
 
 export interface StackItem {
   layer: string;

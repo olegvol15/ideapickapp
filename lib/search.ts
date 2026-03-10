@@ -1,51 +1,71 @@
-import type { Competitor } from "@/types";
+import type { Competitor } from '@/types';
 
-const TAVILY_URL = "https://api.tavily.com/search";
+const TAVILY_URL = 'https://api.tavily.com/search';
 
 // ─── Blocklists ───────────────────────────────────────────────────────────────
 
 // Domains that are never actual products
 const BLOCKED_DOMAINS = new Set([
-  "youtube.com", "youtu.be",
-  "reddit.com",
-  "medium.com",
-  "dev.to",
-  "news.ycombinator.com", "hackernews.com",
-  "quora.com",
-  "twitter.com", "x.com",
-  "linkedin.com",
-  "facebook.com", "instagram.com", "tiktok.com",
-  "apkpure.com", "apkmirror.com", "apk-dl.com",
-  "alternativeto.net",
-  "g2.com", "capterra.com", "getapp.com", "trustradius.com",
-  "techradar.com", "pcmag.com", "cnet.com", "tomsguide.com",
-  "wikipedia.org",
+  'youtube.com',
+  'youtu.be',
+  'reddit.com',
+  'medium.com',
+  'dev.to',
+  'news.ycombinator.com',
+  'hackernews.com',
+  'quora.com',
+  'twitter.com',
+  'x.com',
+  'linkedin.com',
+  'facebook.com',
+  'instagram.com',
+  'tiktok.com',
+  'apkpure.com',
+  'apkmirror.com',
+  'apk-dl.com',
+  'alternativeto.net',
+  'g2.com',
+  'capterra.com',
+  'getapp.com',
+  'trustradius.com',
+  'techradar.com',
+  'pcmag.com',
+  'cnet.com',
+  'tomsguide.com',
+  'wikipedia.org',
 ]);
 
 // URL path patterns that indicate articles / list posts, not products
-const BLOCKED_PATH_RE = /\/(blog|article|articles|post|posts|news|wiki|tutorial|guide|review|reviews|top-\d+|best-\d+|versus|vs)\b/i;
+const BLOCKED_PATH_RE =
+  /\/(blog|article|articles|post|posts|news|wiki|tutorial|guide|review|reviews|top-\d+|best-\d+|versus|vs)\b/i;
 
 // Snippet signals that strongly indicate non-product content
 const ARTICLE_SIGNALS = [
-  "in this article",
-  "in this post",
-  "subscribe to our newsletter",
-  "read more",
-  "published by",
-  "last updated",
+  'in this article',
+  'in this post',
+  'subscribe to our newsletter',
+  'read more',
+  'published by',
+  'last updated',
 ];
 
 const ECOMMERCE_SIGNALS = [
-  "add to cart", "add to bag",
-  "free shipping", "in stock", "out of stock",
-  "buy now", "shop now", "order now", "ships in",
+  'add to cart',
+  'add to bag',
+  'free shipping',
+  'in stock',
+  'out of stock',
+  'buy now',
+  'shop now',
+  'order now',
+  'ships in',
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function extractSource(url: string): string {
   try {
-    return new URL(url).hostname.replace(/^www\./, "");
+    return new URL(url).hostname.replace(/^www\./, '');
   } catch {
     return url;
   }
@@ -53,7 +73,13 @@ function extractSource(url: string): string {
 
 function isDigitalProduct(c: Competitor): boolean {
   const source = c.source.toLowerCase();
-  const path = (() => { try { return new URL(c.url).pathname.toLowerCase(); } catch { return ""; } })();
+  const path = (() => {
+    try {
+      return new URL(c.url).pathname.toLowerCase();
+    } catch {
+      return '';
+    }
+  })();
   const snippet = c.snippet.toLowerCase();
 
   if (BLOCKED_DOMAINS.has(source)) return false;
@@ -72,12 +98,12 @@ export async function searchCompetitors(query: string): Promise<Competitor[]> {
 
   try {
     const res = await fetch(TAVILY_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         api_key: key,
         query,
-        search_depth: "basic",
+        search_depth: 'basic',
         max_results: 5,
         include_answer: false,
         include_raw_content: false,
@@ -91,7 +117,7 @@ export async function searchCompetitors(query: string): Promise<Competitor[]> {
       (r: { title: string; url: string; content: string }) => ({
         name: r.title,
         url: r.url,
-        snippet: (r.content ?? "").slice(0, 300),
+        snippet: (r.content ?? '').slice(0, 300),
         source: extractSource(r.url),
       })
     );

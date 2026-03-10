@@ -1,11 +1,11 @@
-import type { Idea } from "@/types";
+import type { Idea } from '@/types';
 
-type ChatMessage = { role: "system" | "user"; content: string };
+type ChatMessage = { role: 'system' | 'user'; content: string };
 
 export function buildValidateMessages(idea: Idea): ChatMessage[] {
   return [
     {
-      role: "system",
+      role: 'system',
       content: `You are a startup idea validator. Analyze a digital product idea and return a validation report as valid JSON:
 {
   "score": <integer 1–100>,
@@ -17,7 +17,7 @@ Be honest, specific, and grounded. Score reflects overall viability.
 Respond ONLY with valid JSON. No markdown.`,
     },
     {
-      role: "user",
+      role: 'user',
       content: `Validate this idea:
 Title: ${idea.title}
 Pitch: ${idea.pitch}

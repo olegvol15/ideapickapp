@@ -3,7 +3,7 @@ export interface Competitor {
   url: string;
   snippet: string;
   source: string;
-  platform?: "iOS" | "Android" | "Web";
+  platform?: 'iOS' | 'Android' | 'Web';
   rating?: number;
   reviewCount?: number;
   category?: string;

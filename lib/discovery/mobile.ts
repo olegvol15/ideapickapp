@@ -1,12 +1,12 @@
-import type { Competitor } from "@/types";
+import type { Competitor } from '@/types';
 
-const TAVILY_URL = "https://api.tavily.com/search";
+const TAVILY_URL = 'https://api.tavily.com/search';
 
 // Strip platform noise so iTunes gets a clean search term
 function coreSearchTerm(query: string): string {
   return query
-    .replace(/\b(ios|android|mobile|app)\b/gi, "")
-    .replace(/\s+/g, " ")
+    .replace(/\b(ios|android|mobile|app)\b/gi, '')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
@@ -34,12 +34,13 @@ async function searchAppStore(query: string): Promise<Competitor[]> {
       (r: ItunesResult): Competitor => ({
         name: r.trackName,
         url: r.trackViewUrl,
-        snippet: (r.description ?? "").slice(0, 280),
-        source: "appstore",
-        platform: "iOS",
-        rating: r.averageUserRating != null
-          ? Math.round(r.averageUserRating * 10) / 10
-          : undefined,
+        snippet: (r.description ?? '').slice(0, 280),
+        source: 'appstore',
+        platform: 'iOS',
+        rating:
+          r.averageUserRating != null
+            ? Math.round(r.averageUserRating * 10) / 10
+            : undefined,
         reviewCount: r.userRatingCount,
         category: r.primaryGenreName,
       })
@@ -57,12 +58,12 @@ async function searchGooglePlay(query: string): Promise<Competitor[]> {
 
   try {
     const res = await fetch(TAVILY_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         api_key: key,
         query: `site:play.google.com/store/apps ${coreSearchTerm(query)}`,
-        search_depth: "basic",
+        search_depth: 'basic',
         max_results: 4,
         include_answer: false,
         include_raw_content: false,
@@ -72,14 +73,16 @@ async function searchGooglePlay(query: string): Promise<Competitor[]> {
 
     const data = await res.json();
     return (data.results ?? [])
-      .filter((r: { url: string }) => r.url.includes("play.google.com/store/apps/details"))
+      .filter((r: { url: string }) =>
+        r.url.includes('play.google.com/store/apps/details')
+      )
       .map(
         (r: { title: string; url: string; content: string }): Competitor => ({
-          name: r.title.replace(/\s*[-–|]\s*Apps on Google Play$/i, "").trim(),
+          name: r.title.replace(/\s*[-–|]\s*Apps on Google Play$/i, '').trim(),
           url: r.url,
-          snippet: (r.content ?? "").slice(0, 280),
-          source: "googleplay",
-          platform: "Android",
+          snippet: (r.content ?? '').slice(0, 280),
+          source: 'googleplay',
+          platform: 'Android',
         })
       );
   } catch {
@@ -89,8 +92,13 @@ async function searchGooglePlay(query: string): Promise<Competitor[]> {
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
-export async function discoverMobileApps(queries: string[]): Promise<Competitor[]> {
-  const searches = queries.flatMap((q) => [searchAppStore(q), searchGooglePlay(q)]);
+export async function discoverMobileApps(
+  queries: string[]
+): Promise<Competitor[]> {
+  const searches = queries.flatMap((q) => [
+    searchAppStore(q),
+    searchGooglePlay(q),
+  ]);
   const batches = await Promise.all(searches);
 
   const seen = new Set<string>();
@@ -98,7 +106,7 @@ export async function discoverMobileApps(queries: string[]): Promise<Competitor[
 
   for (const batch of batches) {
     for (const c of batch) {
-      const key = c.url.split("?")[0];
+      const key = c.url.split('?')[0];
       if (!seen.has(key)) {
         seen.add(key);
         results.push(c);

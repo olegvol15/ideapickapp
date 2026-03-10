@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useMutation } from "@tanstack/react-query";
-import { validateIdea } from "@/services/idea.service";
-import type { Idea, ValidationResult } from "@/types";
+import { useMutation } from '@tanstack/react-query';
+import { validateIdea } from '@/services/idea.service';
+import type { Idea, ValidationResult } from '@/types';
 
 /**
  * Typed mutation for POST /api/validate.

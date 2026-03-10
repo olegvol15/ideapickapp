@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useMutation } from "@tanstack/react-query";
-import { refineIdea } from "@/services/idea.service";
-import type { Idea } from "@/types";
+import { useMutation } from '@tanstack/react-query';
+import { refineIdea } from '@/services/idea.service';
+import type { Idea } from '@/types';
 
 interface RefineVariables {
-  idea:        Idea;
+  idea: Idea;
   instruction: string;
 }
 

@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import type { Idea } from "@/types";
-import { isSaved, toggleSave } from "@/services/storage.service";
+import { useState } from 'react';
+import type { Idea } from '@/types';
+import { isSaved, toggleSave } from '@/services/storage.service';
 
 export interface UseSavedIdeaReturn {
-  saved:  boolean;
+  saved: boolean;
   toggle: () => void;
 }
 

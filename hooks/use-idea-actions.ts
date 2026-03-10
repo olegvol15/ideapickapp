@@ -1,22 +1,22 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import type { Idea, ValidationResult } from "@/types";
-import { useValidateMutation } from "@/hooks/mutations/use-validate-mutation";
-import { useRefineMutation } from "@/hooks/mutations/use-refine-mutation";
+import { useEffect, useState } from 'react';
+import type { Idea, ValidationResult } from '@/types';
+import { useValidateMutation } from '@/hooks/mutations/use-validate-mutation';
+import { useRefineMutation } from '@/hooks/mutations/use-refine-mutation';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface UseIdeaActionsReturn {
-  displayIdea:    Idea | null;
-  validation:     ValidationResult | null;
+  displayIdea: Idea | null;
+  validation: ValidationResult | null;
   // Loading states derived from mutation.isPending — no separate useState
-  refining:       boolean;
-  validating:     boolean;
+  refining: boolean;
+  validating: boolean;
   // Actions — synchronous callers; mutations manage their own async lifecycle
-  refine:         (instruction: string) => void;
-  validate:       () => void;
-  clearValidation:() => void;
+  refine: (instruction: string) => void;
+  validate: () => void;
+  clearValidation: () => void;
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -34,10 +34,10 @@ export interface UseIdeaActionsReturn {
  */
 export function useIdeaActions(idea: Idea | null): UseIdeaActionsReturn {
   const [displayIdea, setDisplayIdea] = useState<Idea | null>(idea);
-  const [validation,  setValidation]  = useState<ValidationResult | null>(null);
+  const [validation, setValidation] = useState<ValidationResult | null>(null);
 
   const validateMutation = useValidateMutation();
-  const refineMutation   = useRefineMutation();
+  const refineMutation = useRefineMutation();
 
   // Sync local display state when the selected idea changes, and reset
   // any stale mutation state from the previous idea.
@@ -65,7 +65,7 @@ export function useIdeaActions(idea: Idea | null): UseIdeaActionsReturn {
           setDisplayIdea(refined);
           setValidation(null);
         },
-      },
+      }
     );
   }
 
@@ -73,7 +73,7 @@ export function useIdeaActions(idea: Idea | null): UseIdeaActionsReturn {
     displayIdea,
     validation,
     // isPending is TanStack Query's canonical loading flag for mutations
-    refining:  refineMutation.isPending,
+    refining: refineMutation.isPending,
     validating: validateMutation.isPending,
     refine,
     validate,

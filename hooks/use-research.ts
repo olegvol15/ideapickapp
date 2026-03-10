@@ -1,35 +1,35 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import type { GenerateResponse, ProductType, Difficulty } from "@/types";
-import { useGenerateMutation } from "@/hooks/mutations/use-generate-mutation";
+import { useState } from 'react';
+import type { GenerateResponse, ProductType, Difficulty } from '@/types';
+import { useGenerateMutation } from '@/hooks/mutations/use-generate-mutation';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type ResearchPhase =
-  | "idle"
-  | "thinking"
-  | "generating"
-  | "streaming"
-  | "done"
-  | "error";
+  | 'idle'
+  | 'thinking'
+  | 'generating'
+  | 'streaming'
+  | 'done'
+  | 'error';
 
 export interface UseResearchReturn {
   // Form state
-  prompt:        string;
-  productType:   ProductType | "";
-  difficulty:    Difficulty  | "";
+  prompt: string;
+  productType: ProductType | '';
+  difficulty: Difficulty | '';
   // Result state (derived from mutation)
-  result:        GenerateResponse | null;
-  errorMsg:      string;
+  result: GenerateResponse | null;
+  errorMsg: string;
   // Animation state
-  phase:         ResearchPhase;
-  visibleCount:  number;
-  isGenerating:  boolean;
+  phase: ResearchPhase;
+  visibleCount: number;
+  isGenerating: boolean;
   // Actions
-  setPrompt:      (v: string) => void;
-  setProductType: (v: ProductType | "") => void;
-  setDifficulty:  (v: Difficulty  | "") => void;
+  setPrompt: (v: string) => void;
+  setProductType: (v: ProductType | '') => void;
+  setDifficulty: (v: Difficulty | '') => void;
   handleGenerate: () => Promise<void>;
 }
 
@@ -56,27 +56,27 @@ const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
  * separate useState for them.
  */
 export function useResearch(): UseResearchReturn {
-  const [prompt,       setPrompt]      = useState("");
-  const [productType,  setProductType] = useState<ProductType | "">("");
-  const [difficulty,   setDifficulty]  = useState<Difficulty  | "">("");
-  const [phase,        setPhase]       = useState<ResearchPhase>("idle");
-  const [visibleCount, setVisibleCount]= useState(0);
+  const [prompt, setPrompt] = useState('');
+  const [productType, setProductType] = useState<ProductType | ''>('');
+  const [difficulty, setDifficulty] = useState<Difficulty | ''>('');
+  const [phase, setPhase] = useState<ResearchPhase>('idle');
+  const [visibleCount, setVisibleCount] = useState(0);
 
   const mutation = useGenerateMutation();
 
   const isGenerating =
-    phase === "thinking" || phase === "generating" || phase === "streaming";
+    phase === 'thinking' || phase === 'generating' || phase === 'streaming';
 
   async function handleGenerate(): Promise<void> {
     if (!prompt.trim() || isGenerating) return;
 
     // Reset mutation state from any previous run before starting a new one
     mutation.reset();
-    setPhase("thinking");
+    setPhase('thinking');
     setVisibleCount(0);
     await wait(THINKING_DELAY_MS);
 
-    setPhase("generating");
+    setPhase('generating');
 
     let data: GenerateResponse;
     try {
@@ -84,26 +84,33 @@ export function useResearch(): UseResearchReturn {
       data = await mutation.mutateAsync({ prompt, productType, difficulty });
     } catch {
       // Error message is stored in mutation.error — we just set the phase
-      setPhase("error");
+      setPhase('error');
       return;
     }
 
     // Staggered card reveal
-    setPhase("streaming");
+    setPhase('streaming');
     for (let i = 0; i < data.ideas.length; i++) {
       if (i > 0) await wait(CARD_STAGGER_MS);
       setVisibleCount(i + 1);
     }
 
-    setPhase("done");
+    setPhase('done');
   }
 
   return {
-    prompt, productType, difficulty,
+    prompt,
+    productType,
+    difficulty,
     // Derived from mutation — no separate state needed
-    result:   mutation.data  ?? null,
-    errorMsg: mutation.error?.message ?? "Something went wrong",
-    phase, visibleCount, isGenerating,
-    setPrompt, setProductType, setDifficulty, handleGenerate,
+    result: mutation.data ?? null,
+    errorMsg: mutation.error?.message ?? 'Something went wrong',
+    phase,
+    visibleCount,
+    isGenerating,
+    setPrompt,
+    setProductType,
+    setDifficulty,
+    handleGenerate,
   };
 }

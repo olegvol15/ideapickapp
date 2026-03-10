@@ -1,5 +1,10 @@
-import type { Idea } from "./idea.types";
-import type { Competitor, CompetitorAnalysis, MarketContext, Gap } from "./market.types";
+import type { Idea } from './idea.types';
+import type {
+  Competitor,
+  CompetitorAnalysis,
+  MarketContext,
+  Gap,
+} from './market.types';
 
 export interface GenerateRequest {
   prompt: string;

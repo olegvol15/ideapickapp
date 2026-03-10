@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion } from 'framer-motion';
 
 interface ThinkingIndicatorProps {
   label: string;
@@ -12,13 +12,20 @@ export function ThinkingIndicator({ label }: ThinkingIndicatorProps) {
           <motion.span
             key={i}
             className="block h-[7px] w-[7px] rounded-full"
-            style={{ backgroundColor: "var(--accent)" }}
+            style={{ backgroundColor: 'var(--accent)' }}
             animate={{ opacity: [0.25, 1, 0.25], scale: [0.75, 1, 0.75] }}
-            transition={{ duration: 1.1, repeat: Infinity, delay: i * 0.18, ease: "easeInOut" }}
+            transition={{
+              duration: 1.1,
+              repeat: Infinity,
+              delay: i * 0.18,
+              ease: 'easeInOut',
+            }}
           />
         ))}
       </div>
-      <span className="text-sm" style={{ color: "var(--text-3)" }}>{label}</span>
+      <span className="text-sm" style={{ color: 'var(--text-3)' }}>
+        {label}
+      </span>
     </div>
   );
 }

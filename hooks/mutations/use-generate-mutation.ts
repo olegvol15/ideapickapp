@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useMutation } from "@tanstack/react-query";
-import { generateIdeas } from "@/services/generate.service";
-import type { GenerateRequest, GenerateResponse } from "@/types";
+import { useMutation } from '@tanstack/react-query';
+import { generateIdeas } from '@/services/generate.service';
+import type { GenerateRequest, GenerateResponse } from '@/types';
 
 /**
  * Typed mutation for POST /api/generate.

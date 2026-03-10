@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme inline {
   --font-sans: var(--font-geist-sans);
@@ -9,40 +9,40 @@
 
 /* ── Light tokens ────────────────────────────────────────────────────────────── */
 :root {
-  --bg:          #eaf5fc;
-  --bg-card:     #ffffff;
-  --bg-subtle:   #f0f7ff;
-  --bg-input:    #f8fdff;
-  --border:      rgba(2, 62, 138, 0.12);
+  --bg: #eaf5fc;
+  --bg-card: #ffffff;
+  --bg-subtle: #f0f7ff;
+  --bg-input: #f8fdff;
+  --border: rgba(2, 62, 138, 0.12);
   --border-soft: rgba(2, 62, 138, 0.08);
-  --text-1:      #0c3f75;
-  --text-2:      #557293;
-  --text-3:      #6d89a9;
-  --text-4:      #8dafc8;
-  --accent:      #0077b6;
-  --accent-2:    #0368a0;
-  --accent-hi:   rgba(0, 119, 182, 0.15);
-  --accent-lo:   rgba(0, 119, 182, 0.06);
-  --grid-line:   rgba(2, 62, 138, 0.05);
+  --text-1: #0c3f75;
+  --text-2: #557293;
+  --text-3: #6d89a9;
+  --text-4: #8dafc8;
+  --accent: #0077b6;
+  --accent-2: #0368a0;
+  --accent-hi: rgba(0, 119, 182, 0.15);
+  --accent-lo: rgba(0, 119, 182, 0.06);
+  --grid-line: rgba(2, 62, 138, 0.05);
 }
 
 /* ── Dark tokens ─────────────────────────────────────────────────────────────── */
 .dark {
-  --bg:          #060d19;
-  --bg-card:     #0a1829;
-  --bg-subtle:   #081527;
-  --bg-input:    #081527;
-  --border:      rgba(255, 255, 255, 0.07);
+  --bg: #060d19;
+  --bg-card: #0a1829;
+  --bg-subtle: #081527;
+  --bg-input: #081527;
+  --border: rgba(255, 255, 255, 0.07);
   --border-soft: rgba(255, 255, 255, 0.04);
-  --text-1:      #c0daf5;
-  --text-2:      #7ba8c8;
-  --text-3:      #4e6f8a;
-  --text-4:      #3a5a75;
-  --accent:      #38c5e8;
-  --accent-2:    #0ea5cc;
-  --accent-hi:   rgba(56, 197, 232, 0.14);
-  --accent-lo:   rgba(56, 197, 232, 0.06);
-  --grid-line:   rgba(255, 255, 255, 0.04);
+  --text-1: #c0daf5;
+  --text-2: #7ba8c8;
+  --text-3: #4e6f8a;
+  --text-4: #3a5a75;
+  --accent: #38c5e8;
+  --accent-2: #0ea5cc;
+  --accent-hi: rgba(56, 197, 232, 0.14);
+  --accent-lo: rgba(56, 197, 232, 0.06);
+  --grid-line: rgba(255, 255, 255, 0.04);
 }
 
 body {
@@ -51,7 +51,9 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 /* ── Textarea ────────────────────────────────────────────────────────────────── */
@@ -80,8 +82,12 @@ body {
 
 /* ── Skeleton shimmer ────────────────────────────────────────────────────────── */
 @keyframes shimmer {
-  0%   { background-position: -400% 0; }
-  100% { background-position:  400% 0; }
+  0% {
+    background-position: -400% 0;
+  }
+  100% {
+    background-position: 400% 0;
+  }
 }
 
 .skeleton-shimmer {

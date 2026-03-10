@@ -1,19 +1,20 @@
-import type { ProductType } from "@/types";
+import type { ProductType } from '@/types';
 
 /** Search terms appended to queries per product type. */
-export const PRODUCT_TYPE_TERMS: Partial<Record<ProductType, string[]>> & Record<string, string[]> = {
-  "SaaS":             ["SaaS", "web app"],
-  "AI Tool":          ["AI tool", "AI app"],
-  "Mobile App":       ["mobile app", "iOS app", "Android app"],
-  "Chrome Extension": ["Chrome extension", "browser extension"],
-  "Dev Tool":         ["developer tool", "CLI tool"],
+export const PRODUCT_TYPE_TERMS: Partial<Record<ProductType, string[]>> &
+  Record<string, string[]> = {
+  SaaS: ['SaaS', 'web app'],
+  'AI Tool': ['AI tool', 'AI app'],
+  'Mobile App': ['mobile app', 'iOS app', 'Android app'],
+  'Chrome Extension': ['Chrome extension', 'browser extension'],
+  'Dev Tool': ['developer tool', 'CLI tool'],
 };
 
-export const DEFAULT_DIGITAL_TERMS = ["software", "SaaS", "app"];
+export const DEFAULT_DIGITAL_TERMS = ['software', 'SaaS', 'app'];
 
 /** Ecosystem-aware context injected into the analysis prompt per product type. */
 export const ECOSYSTEM_CONTEXT: Partial<Record<string, string>> = {
-  "Mobile App": `Ecosystem: Mobile App market (iOS + Android).
+  'Mobile App': `Ecosystem: Mobile App market (iOS + Android).
 Analyze with awareness of:
 - Platform dominance — which platform leads in this niche, and whether cross-platform coverage is a gap
 - Rating/review volume as proxy for market satisfaction — low ratings or sparse reviews signal opportunity
@@ -22,7 +23,7 @@ Analyze with awareness of:
 For marketContext.signals: include platform distribution, rating benchmarks, review volume patterns.
 For competitorAnalysis.weaknesses: note outdated UI, missing platform, poor onboarding, rating gaps.`,
 
-  "SaaS": `Ecosystem: SaaS / Web application market.
+  SaaS: `Ecosystem: SaaS / Web application market.
 Analyze with awareness of:
 - Pricing model patterns — freemium trap (hard to convert), per-seat complexity, flat-rate simplicity
 - Target team size — solo founder tools vs SMB vs enterprise; niche gaps exist between these tiers

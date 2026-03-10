@@ -1,18 +1,23 @@
-import type { Competitor } from "@/types";
-import { PRODUCT_TYPE_TERMS, DEFAULT_DIGITAL_TERMS, ECOSYSTEM_CONTEXT, RESPONSE_SCHEMA } from "./constants";
-import { formatCompetitorBlock } from "./formatters";
+import type { Competitor } from '@/types';
+import {
+  PRODUCT_TYPE_TERMS,
+  DEFAULT_DIGITAL_TERMS,
+  ECOSYSTEM_CONTEXT,
+  RESPONSE_SCHEMA,
+} from './constants';
+import { formatCompetitorBlock } from './formatters';
 
-type ChatMessage = { role: "system" | "user"; content: string };
+type ChatMessage = { role: 'system' | 'user'; content: string };
 
 export function buildQueryGenerationMessages(
   prompt: string,
-  productType: string,
+  productType: string
 ): ChatMessage[] {
   const terms = PRODUCT_TYPE_TERMS[productType] ?? DEFAULT_DIGITAL_TERMS;
 
   return [
     {
-      role: "system",
+      role: 'system',
       content: `You generate short, focused web search queries to discover SOFTWARE PRODUCTS in a market.
 Only target apps, SaaS, platforms, and digital tools — never articles, YouTube videos, Reddit posts, or physical goods.
 Output ONLY valid JSON: { "queries": ["query1", "query2", "query3"] }
@@ -24,9 +29,9 @@ Rules:
 - Good: "dance choreography app", "AI coaching platform"`,
     },
     {
-      role: "user",
+      role: 'user',
       content: `User's goal: ${prompt}
-Each query MUST include one of: ${terms.map((t) => `"${t}"`).join(", ")}.
+Each query MUST include one of: ${terms.map((t) => `"${t}"`).join(', ')}.
 Generate 2–3 queries to find real digital products in this market.`,
     },
   ];
@@ -36,24 +41,24 @@ export function buildAnalysisMessages(
   prompt: string,
   competitors: Competitor[],
   productType: string,
-  difficulty: string,
+  difficulty: string
 ): ChatMessage[] {
   const competitorBlock = formatCompetitorBlock(competitors);
 
   const filterParts: string[] = [];
   if (productType) filterParts.push(`Product type: ${productType}`);
-  if (difficulty)  filterParts.push(`Difficulty: ${difficulty}`);
+  if (difficulty) filterParts.push(`Difficulty: ${difficulty}`);
   const filterBlock = filterParts.length
-    ? `\nConstraints: ${filterParts.join(", ")}`
-    : "";
+    ? `\nConstraints: ${filterParts.join(', ')}`
+    : '';
 
   const ecosystemBlock = ECOSYSTEM_CONTEXT[productType]
     ? `\n${ECOSYSTEM_CONTEXT[productType]}\n`
-    : "";
+    : '';
 
   return [
     {
-      role: "system",
+      role: 'system',
       content: `You are a startup opportunity analyst for DIGITAL SOFTWARE products only.
 
 NEVER suggest physical goods, ecommerce stores, or hardware. If the market touches physical goods, redirect toward the software layer: apps, platforms, AI tools, SaaS, workflow tools.
@@ -73,7 +78,7 @@ Respond ONLY with valid JSON. No markdown, no extra keys.
 ${RESPONSE_SCHEMA}`,
     },
     {
-      role: "user",
+      role: 'user',
       content: `Goal: ${prompt}${filterBlock}
 
 Competitors found (${competitors.length}):
