@@ -6,7 +6,7 @@ import { ArrowLeft } from 'lucide-react';
 import type { Idea } from '@/types';
 import { getPlan } from '@/services/storage.service';
 import { computeOpportunityScore } from '@/lib/scoring';
-import { RoadmapMap } from '@/components/roadmap/RoadmapMap';
+import { RoadmapMap } from '@/components/roadmap/roadmap-map';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function PlanPage() {

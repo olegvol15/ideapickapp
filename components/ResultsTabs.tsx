@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { OpportunityCard } from '@/components/opportunity/OpportunityCard';
-import { OpportunityModal } from '@/components/opportunity/OpportunityModal';
-import { MarketDashboard } from '@/components/market/MarketDashboard';
-import { CompetitorsList } from '@/components/market/CompetitorsList';
+import { OpportunityCard } from '@/components/opportunity/opportunity-card';
+import { OpportunityModal } from '@/components/opportunity/opportunity-modal';
+import { MarketDashboard } from '@/components/market/market-dashboard';
+import { CompetitorsList } from '@/components/market/competitors-list';
 import type { GenerateResponse, Idea } from '@/types';
 
 type Tab = 'opportunities' | 'market' | 'competitors';
