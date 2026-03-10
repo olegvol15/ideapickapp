@@ -16,7 +16,7 @@ export function PromptForm() {
     prompt, setPrompt,
     productType, setProductType,
     difficulty, setDifficulty,
-    result, phase, visibleCount, errorMsg, isGenerating,
+    result, phase, visibleCount, errorMsg, isGenerating, generationId,
     handleGenerate,
   } = useResearch();
 
@@ -109,7 +109,11 @@ export function PromptForm() {
 
         {(phase === 'streaming' || phase === 'done') && result && (
           <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className="mt-8">
-            <ResultsTabs result={result} visibleCount={visibleCount} />
+            <ResultsTabs
+              result={result}
+              visibleCount={visibleCount}
+              generationId={generationId}
+            />
           </motion.div>
         )}
 

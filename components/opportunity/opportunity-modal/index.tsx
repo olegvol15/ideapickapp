@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { AuthGate } from '@/components/auth/AuthGate';
 import type { Idea, DifficultyLevel, SignalLevel } from '@/types';
 import { computeOpportunityScore } from '@/lib/scoring';
 import { useSavedIdea } from '@/hooks/use-saved-idea';
@@ -39,14 +40,20 @@ const COMPETITION_COLOR: Record<SignalLevel, string> = {
 
 interface OpportunityModalProps {
   idea:    Idea | null;
+  generationId?: string | null;
   onClose: () => void;
 }
 
-export function OpportunityModal({ idea, onClose }: OpportunityModalProps) {
+export function OpportunityModal({ idea, generationId, onClose }: OpportunityModalProps) {
   const router = useRouter();
   const { displayIdea, validation, refining, validating, refine, validate, clearValidation } =
     useIdeaActions(idea);
-  const { saved, toggle: toggleSave } = useSavedIdea(displayIdea ?? ({} as Idea));
+  const {
+    saved,
+    toggle: toggleSave,
+    requiresAuth,
+    clearAuthRequired,
+  } = useSavedIdea(displayIdea);
 
   useEffect(() => {
     if (!idea) return;
@@ -103,7 +110,7 @@ export function OpportunityModal({ idea, onClose }: OpportunityModalProps) {
                           variant="outline"
                           size="icon"
                           className={cn('h-8 w-8', saved && 'text-primary border-primary/30')}
-                          onClick={toggleSave}
+                          onClick={() => toggleSave(generationId)}
                           title={saved ? 'Unsave' : 'Save idea'}
                         >
                           <Bookmark className="h-3.5 w-3.5" fill={saved ? 'currentColor' : 'none'} />
@@ -260,6 +267,7 @@ export function OpportunityModal({ idea, onClose }: OpportunityModalProps) {
           </div>
         </motion.div>
       )}
+      <AuthGate open={requiresAuth} onClose={clearAuthRequired} />
     </AnimatePresence>
   );
 }

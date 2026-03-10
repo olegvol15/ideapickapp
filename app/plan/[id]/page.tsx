@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import type { Idea } from '@/types';
@@ -12,16 +12,9 @@ import { Button } from '@/components/ui/button';
 export default function PlanPage() {
   const { id }   = useParams<{ id: string }>();
   const router   = useRouter();
-  const [idea,     setIdea]     = useState<Idea | null>(null);
-  const [notFound, setNotFound] = useState(false);
+  const idea = useMemo<Idea | null>(() => getPlan(id), [id]);
 
-  useEffect(() => {
-    const found = getPlan(id);
-    if (found) setIdea(found);
-    else       setNotFound(true);
-  }, [id]);
-
-  if (notFound) {
+  if (!idea) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-3">
@@ -36,8 +29,6 @@ export default function PlanPage() {
       </div>
     );
   }
-
-  if (!idea) return null;
 
   const score = computeOpportunityScore(idea);
 

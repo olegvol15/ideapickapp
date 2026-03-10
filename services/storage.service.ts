@@ -1,25 +1,6 @@
 import type { Idea } from '@/types';
 
-const SAVED_KEY   = 'ideapick:saved';
 const PLAN_PREFIX = 'ideapick:plan:';
-
-export function getSaved(): Idea[] {
-  try { return JSON.parse(localStorage.getItem(SAVED_KEY) ?? '[]') as Idea[]; }
-  catch { return []; }
-}
-
-export function isSaved(title: string): boolean {
-  return getSaved().some((i) => i.title === title);
-}
-
-/** Returns the new saved state: `true` = now saved, `false` = now unsaved. */
-export function toggleSave(idea: Idea): boolean {
-  const saved  = getSaved();
-  const exists = saved.some((i) => i.title === idea.title);
-  const next   = exists ? saved.filter((i) => i.title !== idea.title) : [...saved, idea];
-  localStorage.setItem(SAVED_KEY, JSON.stringify(next));
-  return !exists;
-}
 
 function slugify(title: string): string {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);

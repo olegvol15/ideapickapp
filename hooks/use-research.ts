@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import type { GenerateResponse, ProductType, Difficulty } from '@/types';
 import { useGenerateMutation } from '@/hooks/mutations/use-generate-mutation';
+import { useAuth } from '@/context/auth';
+import { saveGeneration } from '@/services/db.service';
 
 export type ResearchPhase =
   | 'idle'
@@ -21,6 +23,7 @@ export interface UseResearchReturn {
   phase:         ResearchPhase;
   visibleCount:  number;
   isGenerating:  boolean;
+  generationId:  string | null;
   setPrompt:      (v: string) => void;
   setProductType: (v: ProductType | '') => void;
   setDifficulty:  (v: Difficulty  | '') => void;
@@ -34,11 +37,14 @@ const CARD_STAGGER_MS   = 380;
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 export function useResearch(): UseResearchReturn {
+  const { user } = useAuth();
+
   const [prompt,       setPrompt]      = useState('');
   const [productType,  setProductType] = useState<ProductType | ''>('');
   const [difficulty,   setDifficulty]  = useState<Difficulty  | ''>('');
   const [phase,        setPhase]       = useState<ResearchPhase>('idle');
   const [visibleCount, setVisibleCount]= useState(0);
+  const [generationId, setGenerationId]= useState<string | null>(null);
 
   const mutation = useGenerateMutation();
 
@@ -51,6 +57,7 @@ export function useResearch(): UseResearchReturn {
     mutation.reset();
     setPhase('thinking');
     setVisibleCount(0);
+    setGenerationId(null);
     await wait(THINKING_DELAY_MS);
 
     setPhase('generating');
@@ -62,6 +69,14 @@ export function useResearch(): UseResearchReturn {
     } catch {
       setPhase('error');
       return;
+    }
+
+    // Persist the generation in the background if the user is logged in.
+    if (user) {
+      saveGeneration({ userId: user.id, prompt, productType, difficulty, result: data })
+        .then((id) => {
+          setGenerationId(id);
+        });
     }
 
     setPhase('streaming');
@@ -77,7 +92,7 @@ export function useResearch(): UseResearchReturn {
     prompt, productType, difficulty,
     result:   mutation.data  ?? null,
     errorMsg: mutation.error?.message ?? 'Something went wrong',
-    phase, visibleCount, isGenerating,
+    phase, visibleCount, isGenerating, generationId,
     setPrompt, setProductType, setDifficulty, handleGenerate,
   };
 }

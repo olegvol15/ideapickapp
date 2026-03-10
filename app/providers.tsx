@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from 'sonner';
+import { AuthProvider } from '@/context/auth';
 
 // QueryClient is created inside useState so each SSR request gets its own
 // instance, preventing cross-request state sharing.
@@ -21,11 +22,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        {children}
-      </ThemeProvider>
-      <Toaster position="bottom-right" richColors closeButton />
-      <ReactQueryDevtools initialIsOpen={false} />
+      <AuthProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          {children}
+        </ThemeProvider>
+        <Toaster position="bottom-right" richColors closeButton />
+        <ReactQueryDevtools initialIsOpen={false} />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

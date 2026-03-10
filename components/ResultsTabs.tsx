@@ -25,9 +25,10 @@ const TABS: TabDefinition[] = [
 interface ResultsTabsProps {
   result:       GenerateResponse;
   visibleCount: number;
+  generationId?: string | null;
 }
 
-export function ResultsTabs({ result, visibleCount }: ResultsTabsProps) {
+export function ResultsTabs({ result, visibleCount, generationId }: ResultsTabsProps) {
   const [active,       setActive]       = useState<Tab>('opportunities');
   const [selectedIdea, setSelectedIdea] = useState<Idea | null>(null);
 
@@ -74,7 +75,11 @@ export function ResultsTabs({ result, visibleCount }: ResultsTabsProps) {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.38, ease: 'easeOut' }}
                     >
-                      <OpportunityCard {...idea} onExplore={() => setSelectedIdea(idea)} />
+                      <OpportunityCard
+                        {...idea}
+                        generationId={generationId}
+                        onExplore={() => setSelectedIdea(idea)}
+                      />
                     </motion.div>
                   ))}
                 </AnimatePresence>
@@ -92,7 +97,11 @@ export function ResultsTabs({ result, visibleCount }: ResultsTabsProps) {
         </AnimatePresence>
       </div>
 
-      <OpportunityModal idea={selectedIdea} onClose={() => setSelectedIdea(null)} />
+      <OpportunityModal
+        idea={selectedIdea}
+        generationId={generationId}
+        onClose={() => setSelectedIdea(null)}
+      />
     </>
   );
 }

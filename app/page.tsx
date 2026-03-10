@@ -1,10 +1,9 @@
 'use client';
 
-import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Bookmark } from 'lucide-react';
+import { IdeaPickLogo } from '@/components/brand/IdeaPickLogo';
+import { AppShell } from '@/components/layout/AppShell';
 import { PromptForm } from '@/components/research/PromptForm';
-import { ThemeToggle } from '@/components/theme-toggle';
 
 const fadeUp = (delay: number) =>
   ({
@@ -15,35 +14,10 @@ const fadeUp = (delay: number) =>
 
 export default function Home() {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-[700px] bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(0,119,182,0.18)_0%,rgba(144,224,239,0.08)_45%,transparent_70%)]"
-      />
-
-      <div aria-hidden className="pointer-events-none absolute inset-0 bg-page-grid" />
-
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-[linear-gradient(to_bottom,transparent,var(--bg))]"
-      />
-
-      <div className="absolute right-5 top-5 z-10 flex items-center gap-2">
-        <Link
-          href="/saved"
-          className="flex h-8 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-[11px] font-bold uppercase tracking-widest text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary"
-        >
-          <Bookmark className="h-3 w-3" />
-          Saved
-        </Link>
-        <ThemeToggle />
-      </div>
-
-      <main className="relative mx-auto max-w-3xl px-5 pb-32 pt-20 sm:pt-28">
+    <AppShell>
+      <main className="relative mx-auto max-w-3xl px-5 pb-24 pt-14 sm:px-8 sm:pt-20">
         <motion.div {...fadeUp(0)} className="mb-16 flex items-center justify-center">
-          <span className="font-display text-sm uppercase tracking-[0.25em] text-foreground">
-            IDEA<span className="text-primary">PICK</span>
-          </span>
+          <IdeaPickLogo compact />
         </motion.div>
 
         <div className="mx-auto max-w-xl text-center">
@@ -56,7 +30,10 @@ export default function Home() {
             <span className="text-primary">with AI</span>
           </motion.h1>
 
-          <motion.p {...fadeUp(0.2)} className="mt-7 text-[1.0625rem] leading-[1.7] text-foreground/70">
+          <motion.p
+            {...fadeUp(0.2)}
+            className="mt-7 text-[1.0625rem] leading-[1.7] text-foreground/70"
+          >
             Describe your skills, interests, or problems and get product ideas
             you can actually build.
           </motion.p>
@@ -66,6 +43,6 @@ export default function Home() {
           <PromptForm />
         </motion.div>
       </main>
-    </div>
+    </AppShell>
   );
 }
