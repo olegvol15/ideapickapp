@@ -1,8 +1,8 @@
 import { Badge, type BadgeProps } from '@/components/ui/badge';
 
 export interface TagProps {
-  label:   string;
-  value:   string;
+  label: string;
+  value: string;
   variant: BadgeProps['variant'];
 }
 

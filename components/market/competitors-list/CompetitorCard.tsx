@@ -19,12 +19,24 @@ export function CompetitorCard({
           <CompetitorLogo domain={domain} name={name} />
 
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold leading-snug text-foreground">{name}</p>
+            <p className="text-sm font-bold leading-snug text-foreground">
+              {name}
+            </p>
             <p className="text-[11px] mt-0.5 text-muted-foreground">{domain}</p>
           </div>
 
-          <Button variant="ghost" size="icon" asChild className="h-8 w-8 shrink-0 text-muted-foreground hover:text-primary">
-            <a href={url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
+          <Button
+            variant="ghost"
+            size="icon"
+            asChild
+            className="h-8 w-8 shrink-0 text-muted-foreground hover:text-primary"
+          >
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+            >
               <ExternalLink className="h-3.5 w-3.5" />
               <span className="sr-only">Visit {name}</span>
             </a>
@@ -40,7 +52,10 @@ export function CompetitorCard({
             </p>
             <ul className="space-y-1.5">
               {strengths.map((s) => (
-                <li key={s} className="flex items-start gap-2 text-[11px] leading-snug text-foreground/70">
+                <li
+                  key={s}
+                  className="flex items-start gap-2 text-[11px] leading-snug text-foreground/70"
+                >
                   <span className="mt-[4px] h-[3px] w-[3px] shrink-0 rounded-full bg-emerald-500/50" />
                   {s}
                 </li>
@@ -53,7 +68,10 @@ export function CompetitorCard({
             </p>
             <ul className="space-y-1.5">
               {weaknesses.map((w) => (
-                <li key={w} className="flex items-start gap-2 text-[11px] leading-snug text-foreground/70">
+                <li
+                  key={w}
+                  className="flex items-start gap-2 text-[11px] leading-snug text-foreground/70"
+                >
                   <span className="mt-[4px] h-[3px] w-[3px] shrink-0 rounded-full bg-rose-500/50" />
                   {w}
                 </li>

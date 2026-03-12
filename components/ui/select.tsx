@@ -5,7 +5,7 @@ import * as SelectPrimitive from '@radix-ui/react-select';
 import { ChevronDown, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const Select      = SelectPrimitive.Root;
+const Select = SelectPrimitive.Root;
 const SelectValue = SelectPrimitive.Value;
 const SelectGroup = SelectPrimitive.Group;
 
@@ -17,7 +17,7 @@ const SelectTrigger = React.forwardRef<
     ref={ref}
     className={cn(
       'flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-2.5 text-xs uppercase tracking-widest text-muted-foreground transition-colors duration-200 hover:border-primary/30 focus:outline-none focus:ring-2 focus:ring-accent/10 focus:border-primary/40 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer',
-      className,
+      className
     )}
     {...props}
   >
@@ -38,14 +38,19 @@ const SelectContent = React.forwardRef<
       ref={ref}
       className={cn(
         'relative z-50 min-w-[8rem] overflow-hidden rounded-xl border border-border bg-card shadow-[0_8px_32px_rgba(0,0,0,0.15)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2',
-        position === 'popper' && 'data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1',
-        className,
+        position === 'popper' &&
+          'data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1',
+        className
       )}
       position={position}
       {...props}
     >
       <SelectPrimitive.Viewport
-        className={cn('p-1', position === 'popper' && 'w-full min-w-[var(--radix-select-trigger-width)]')}
+        className={cn(
+          'p-1',
+          position === 'popper' &&
+            'w-full min-w-[var(--radix-select-trigger-width)]'
+        )}
       >
         {children}
       </SelectPrimitive.Viewport>
@@ -62,7 +67,7 @@ const SelectItem = React.forwardRef<
     ref={ref}
     className={cn(
       'relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-8 pr-4 text-xs uppercase tracking-widest text-muted-foreground outline-none transition-colors duration-150 focus:bg-muted focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
-      className,
+      className
     )}
     {...props}
   >
@@ -76,4 +81,11 @@ const SelectItem = React.forwardRef<
 ));
 SelectItem.displayName = SelectPrimitive.Item.displayName;
 
-export { Select, SelectValue, SelectGroup, SelectTrigger, SelectContent, SelectItem };
+export {
+  Select,
+  SelectValue,
+  SelectGroup,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+};

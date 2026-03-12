@@ -12,24 +12,28 @@ import type { GenerateResponse, Idea } from '@/types';
 type Tab = 'opportunities' | 'market' | 'competitors';
 
 interface TabDefinition {
-  id:    Tab;
+  id: Tab;
   label: string;
 }
 
 const TABS: TabDefinition[] = [
   { id: 'opportunities', label: 'Opportunities' },
-  { id: 'market',        label: 'Market' },
-  { id: 'competitors',   label: 'Competitors' },
+  { id: 'market', label: 'Market' },
+  { id: 'competitors', label: 'Competitors' },
 ];
 
 interface ResultsTabsProps {
-  result:       GenerateResponse;
+  result: GenerateResponse;
   visibleCount: number;
   generationId?: string | null;
 }
 
-export function ResultsTabs({ result, visibleCount, generationId }: ResultsTabsProps) {
-  const [active,       setActive]       = useState<Tab>('opportunities');
+export function ResultsTabs({
+  result,
+  visibleCount,
+  generationId,
+}: ResultsTabsProps) {
+  const [active, setActive] = useState<Tab>('opportunities');
   const [selectedIdea, setSelectedIdea] = useState<Idea | null>(null);
 
   return (
@@ -42,7 +46,9 @@ export function ResultsTabs({ result, visibleCount, generationId }: ResultsTabsP
               onClick={() => setActive(tab.id)}
               className={cn(
                 'relative px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-colors duration-150',
-                active === tab.id ? 'text-primary' : 'text-muted-foreground/60 hover:text-foreground',
+                active === tab.id
+                  ? 'text-primary'
+                  : 'text-muted-foreground/60 hover:text-foreground'
               )}
             >
               {tab.label}
@@ -87,7 +93,10 @@ export function ResultsTabs({ result, visibleCount, generationId }: ResultsTabsP
             )}
 
             {active === 'market' && (
-              <MarketDashboard marketContext={result.marketContext} gaps={result.gaps} />
+              <MarketDashboard
+                marketContext={result.marketContext}
+                gaps={result.gaps}
+              />
             )}
 
             {active === 'competitors' && (

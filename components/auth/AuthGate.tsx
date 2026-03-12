@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { AuthForm } from './AuthForm';
 
 interface AuthGateProps {
-  open:    boolean;
+  open: boolean;
   onClose: () => void;
 }
 
@@ -17,7 +17,9 @@ export function AuthGate({ open, onClose }: AuthGateProps) {
       {open && (
         <motion.div
           key="overlay"
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm"
           onClick={onClose}
@@ -32,7 +34,8 @@ export function AuthGate({ open, onClose }: AuthGateProps) {
             onClick={(e) => e.stopPropagation()}
           >
             <Button
-              variant="ghost" size="icon"
+              variant="ghost"
+              size="icon"
               className="absolute right-3 top-3 h-7 w-7 text-muted-foreground"
               onClick={onClose}
             >
@@ -51,7 +54,7 @@ export function useAuthGate() {
   const [open, setOpen] = useState(false);
   return {
     open,
-    openGate:  () => setOpen(true),
+    openGate: () => setOpen(true),
     closeGate: () => setOpen(false),
   };
 }

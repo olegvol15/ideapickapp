@@ -16,15 +16,15 @@ interface AuthFormProps {
 }
 
 export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
-  const router            = useRouter();
-  const { signIn, signUp }= useAuth();
+  const router = useRouter();
+  const { signIn, signUp } = useAuth();
 
-  const [mode,     setMode]    = useState<Mode>(defaultMode);
-  const [email,    setEmail]   = useState('');
-  const [password, setPassword]= useState('');
-  const [error,    setError]   = useState<string | null>(null);
-  const [success,  setSuccess] = useState<string | null>(null);
-  const [loading,  setLoading] = useState(false);
+  const [mode, setMode] = useState<Mode>(defaultMode);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,13 +32,17 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
     setSuccess(null);
     setLoading(true);
 
-    const result = mode === 'signin'
-      ? await signIn(email, password)
-      : await signUp(email, password);
+    const result =
+      mode === 'signin'
+        ? await signIn(email, password)
+        : await signUp(email, password);
 
     setLoading(false);
 
-    if (result.error) { setError(result.error); return; }
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
 
     if (mode === 'signup' && result.requiresEmailConfirmation) {
       setSuccess('Check your email to confirm your account, then sign in.');
@@ -86,13 +90,9 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
           autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
         />
 
-        {error && (
-          <p className="text-xs text-red-500">{error}</p>
-        )}
+        {error && <p className="text-xs text-red-500">{error}</p>}
 
-        {success && (
-          <p className="text-xs text-emerald-500">{success}</p>
-        )}
+        {success && <p className="text-xs text-emerald-500">{success}</p>}
 
         <Button type="submit" className="w-full" disabled={loading}>
           {loading && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -101,7 +101,9 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
       </form>
 
       <p className="mt-6 text-center text-xs text-muted-foreground">
-        {mode === 'signin' ? "Don't have an account?" : 'Already have an account?'}{' '}
+        {mode === 'signin'
+          ? "Don't have an account?"
+          : 'Already have an account?'}{' '}
         <button
           type="button"
           className="font-bold text-primary hover:underline"

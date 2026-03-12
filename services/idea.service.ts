@@ -8,6 +8,9 @@ export async function validateIdea(idea: Idea): Promise<ValidationResult> {
   return typedApi.post<ValidationResult>('/api/validate', { idea });
 }
 
-export async function refineIdea(idea: Idea, instruction: string): Promise<Idea> {
+export async function refineIdea(
+  idea: Idea,
+  instruction: string
+): Promise<Idea> {
   return typedApi.post<Idea>('/api/refine', { idea, instruction });
 }

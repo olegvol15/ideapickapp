@@ -10,21 +10,34 @@ import type { Idea, SignalLevel } from '@/types';
 import { computeOpportunityScore } from '@/lib/scoring';
 import { useSavedIdea } from '@/hooks/use-saved-idea';
 import { Tag } from './Tag';
-import { DIFFICULTY_VARIANT, SIGNAL_VARIANT, COMPETITION_VARIANT } from './constants';
+import {
+  DIFFICULTY_VARIANT,
+  SIGNAL_VARIANT,
+  COMPETITION_VARIANT,
+} from './constants';
 
 interface OpportunityCardProps extends Idea {
-  onExplore:    () => void;
-  onUnsave?:    () => void;
+  onExplore: () => void;
+  onUnsave?: () => void;
   generationId?: string | null;
 }
 
-export function OpportunityCard({ onExplore, onUnsave, generationId, ...ideaProps }: OpportunityCardProps) {
-  const idea  = ideaProps as Idea;
+export function OpportunityCard({
+  onExplore,
+  onUnsave,
+  generationId,
+  ...ideaProps
+}: OpportunityCardProps) {
+  const idea = ideaProps as Idea;
   const score = computeOpportunityScore(idea);
   const { saved, toggle, requiresAuth, clearAuthRequired } = useSavedIdea(idea);
 
   const buildSignal: SignalLevel =
-    idea.difficulty === 'Easy' ? 'High' : idea.difficulty === 'Medium' ? 'Medium' : 'Low';
+    idea.difficulty === 'Easy'
+      ? 'High'
+      : idea.difficulty === 'Medium'
+        ? 'Medium'
+        : 'Low';
 
   function handleSaveToggle() {
     const isNowSaved = toggle(generationId);
@@ -58,29 +71,60 @@ export function OpportunityCard({ onExplore, onUnsave, generationId, ...ideaProp
 
           <dl className="space-y-1.5 mb-4">
             <div className="flex gap-2">
-              <dt className="w-16 shrink-0 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60 pt-[1px]">Problem</dt>
-              <dd className="text-xs leading-snug text-foreground/70">{idea.problem}</dd>
+              <dt className="w-16 shrink-0 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60 pt-[1px]">
+                Problem
+              </dt>
+              <dd className="text-xs leading-snug text-foreground/70">
+                {idea.problem}
+              </dd>
             </div>
             <div className="flex gap-2">
-              <dt className="w-16 shrink-0 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60 pt-[1px]">Audience</dt>
-              <dd className="text-xs leading-snug text-foreground/70">{idea.audience}</dd>
+              <dt className="w-16 shrink-0 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60 pt-[1px]">
+                Audience
+              </dt>
+              <dd className="text-xs leading-snug text-foreground/70">
+                {idea.audience}
+              </dd>
             </div>
           </dl>
 
           <div className="flex flex-wrap items-center gap-2">
-            <Tag label="Demand"      value={idea.marketDemand}    variant={SIGNAL_VARIANT[idea.marketDemand]} />
-            <Tag label="Competition" value={idea.competitionLevel} variant={COMPETITION_VARIANT[idea.competitionLevel]} />
-            <Tag label="Build"       value={idea.difficulty}       variant={SIGNAL_VARIANT[buildSignal]} />
+            <Tag
+              label="Demand"
+              value={idea.marketDemand}
+              variant={SIGNAL_VARIANT[idea.marketDemand]}
+            />
+            <Tag
+              label="Competition"
+              value={idea.competitionLevel}
+              variant={COMPETITION_VARIANT[idea.competitionLevel]}
+            />
+            <Tag
+              label="Build"
+              value={idea.difficulty}
+              variant={SIGNAL_VARIANT[buildSignal]}
+            />
 
             <div className="ml-auto flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
-                className={cn('h-7 w-7', saved ? 'text-primary' : 'text-muted-foreground hover:text-foreground')}
-                onClick={(e) => { e.stopPropagation(); handleSaveToggle(); }}
+                className={cn(
+                  'h-7 w-7',
+                  saved
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSaveToggle();
+                }}
                 title={saved ? 'Unsave' : 'Save idea'}
               >
-                <Bookmark className="h-3.5 w-3.5" fill={saved ? 'currentColor' : 'none'} />
+                <Bookmark
+                  className="h-3.5 w-3.5"
+                  fill={saved ? 'currentColor' : 'none'}
+                />
               </Button>
               <span className="group-hover:text-primary text-[10px] font-bold uppercase tracking-widest text-muted-foreground transition-colors duration-150">
                 Explore →

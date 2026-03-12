@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 export interface ApiError {
   message: string;
-  code?:   string;
+  code?: string;
   errors?: Record<string, string[]>;
 }
 
@@ -41,7 +41,7 @@ api.interceptors.request.use(
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
-  (error: AxiosError) => Promise.reject(error),
+  (error: AxiosError) => Promise.reject(error)
 );
 
 api.interceptors.response.use(
@@ -89,21 +89,30 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  },
+  }
 );
 
 // TypeScript infers api.post<T>() as Promise<AxiosResponse<T>>, but the
 // response interceptor above already unwraps it to T at runtime. This wrapper
 // re-declares each method with Promise<T> so service functions stay fully typed.
 export const typedApi = {
-  get:    <T>(url: string, config?: AxiosRequestConfig): Promise<T> =>
+  get: <T>(url: string, config?: AxiosRequestConfig): Promise<T> =>
     api.get<T>(url, config) as unknown as Promise<T>,
-  post:   <T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> =>
-    api.post<T>(url, data, config) as unknown as Promise<T>,
-  put:    <T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> =>
-    api.put<T>(url, data, config) as unknown as Promise<T>,
-  patch:  <T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> =>
-    api.patch<T>(url, data, config) as unknown as Promise<T>,
+  post: <T>(
+    url: string,
+    data?: unknown,
+    config?: AxiosRequestConfig
+  ): Promise<T> => api.post<T>(url, data, config) as unknown as Promise<T>,
+  put: <T>(
+    url: string,
+    data?: unknown,
+    config?: AxiosRequestConfig
+  ): Promise<T> => api.put<T>(url, data, config) as unknown as Promise<T>,
+  patch: <T>(
+    url: string,
+    data?: unknown,
+    config?: AxiosRequestConfig
+  ): Promise<T> => api.patch<T>(url, data, config) as unknown as Promise<T>,
   delete: <T>(url: string, config?: AxiosRequestConfig): Promise<T> =>
     api.delete<T>(url, config) as unknown as Promise<T>,
 };

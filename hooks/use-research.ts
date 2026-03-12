@@ -15,48 +15,56 @@ export type ResearchPhase =
   | 'error';
 
 export interface UseResearchReturn {
-  prompt:        string;
-  productType:   ProductType | '';
-  difficulty:    Difficulty  | '';
-  result:        GenerateResponse | null;
-  errorMsg:      string;
-  phase:         ResearchPhase;
-  visibleCount:  number;
-  isGenerating:  boolean;
-  generationId:  string | null;
-  setPrompt:      (v: string) => void;
+  prompt: string;
+  productType: ProductType | '';
+  difficulty: Difficulty | '';
+  result: GenerateResponse | null;
+  errorMsg: string;
+  phase: ResearchPhase;
+  visibleCount: number;
+  isGenerating: boolean;
+  generationId: string | null;
+  setPrompt: (v: string) => void;
   setProductType: (v: ProductType | '') => void;
-  setDifficulty:  (v: Difficulty  | '') => void;
+  setDifficulty: (v: Difficulty | '') => void;
   handleGenerate: () => Promise<void>;
-  handleClear:    () => void;
+  handleClear: () => void;
 }
 
 const THINKING_DELAY_MS = 800;
-const CARD_STAGGER_MS   = 380;
+const CARD_STAGGER_MS = 380;
 
-export const STORAGE_KEY  = 'ideapick:last-research';
-export const HISTORY_KEY  = 'ideapick:research-history';
-export const MAX_HISTORY  = 20;
+export const STORAGE_KEY = 'ideapick:last-research';
+export const HISTORY_KEY = 'ideapick:research-history';
+export const MAX_HISTORY = 20;
 export const HISTORY_EVENT = 'ideapick:history-updated';
 
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 export interface PersistedResearch {
-  prompt:       string;
-  productType:  ProductType | '';
-  difficulty:   Difficulty  | '';
-  result:       GenerateResponse;
+  prompt: string;
+  productType: ProductType | '';
+  difficulty: Difficulty | '';
+  result: GenerateResponse;
   generationId: string | null;
-  createdAt:    number;
+  createdAt: number;
 }
 
 export function loadStorage<T>(key: string): T | null {
-  try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) as T : null; }
-  catch { return null; }
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
 }
 
 function save(key: string, data: unknown): void {
-  try { localStorage.setItem(key, JSON.stringify(data)); } catch { /* quota */ }
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch {
+    /* quota */
+  }
 }
 
 export function pushHistory(entry: PersistedResearch): void {
@@ -72,13 +80,25 @@ export function useResearch(): UseResearchReturn {
 
   const persisted = loadStorage<PersistedResearch>(STORAGE_KEY);
 
-  const [prompt,       setPrompt]      = useState(persisted?.prompt       ?? '');
-  const [productType,  setProductType] = useState<ProductType | ''>(persisted?.productType ?? '');
-  const [difficulty,   setDifficulty]  = useState<Difficulty  | ''>(persisted?.difficulty  ?? '');
-  const [phase,        setPhase]       = useState<ResearchPhase>(persisted ? 'done' : 'idle');
-  const [visibleCount, setVisibleCount]= useState(persisted?.result.ideas.length ?? 0);
-  const [generationId, setGenerationId]= useState<string | null>(persisted?.generationId ?? null);
-  const [result,       setResult]      = useState<GenerateResponse | null>(persisted?.result ?? null);
+  const [prompt, setPrompt] = useState(persisted?.prompt ?? '');
+  const [productType, setProductType] = useState<ProductType | ''>(
+    persisted?.productType ?? ''
+  );
+  const [difficulty, setDifficulty] = useState<Difficulty | ''>(
+    persisted?.difficulty ?? ''
+  );
+  const [phase, setPhase] = useState<ResearchPhase>(
+    persisted ? 'done' : 'idle'
+  );
+  const [visibleCount, setVisibleCount] = useState(
+    persisted?.result.ideas.length ?? 0
+  );
+  const [generationId, setGenerationId] = useState<string | null>(
+    persisted?.generationId ?? null
+  );
+  const [result, setResult] = useState<GenerateResponse | null>(
+    persisted?.result ?? null
+  );
 
   const mutation = useGenerateMutation();
 
@@ -109,12 +129,24 @@ export function useResearch(): UseResearchReturn {
 
     let savedId: string | null = null;
     if (user) {
-      savedId = await saveGeneration({ userId: user.id, prompt, productType, difficulty, result: data })
-        .catch(() => null);
+      savedId = await saveGeneration({
+        userId: user.id,
+        prompt,
+        productType,
+        difficulty,
+        result: data,
+      }).catch(() => null);
       setGenerationId(savedId);
     }
 
-    const entry: PersistedResearch = { prompt, productType, difficulty, result: data, generationId: savedId, createdAt: Date.now() };
+    const entry: PersistedResearch = {
+      prompt,
+      productType,
+      difficulty,
+      result: data,
+      generationId: savedId,
+      createdAt: Date.now(),
+    };
     save(STORAGE_KEY, entry);
     pushHistory(entry);
 
@@ -136,15 +168,27 @@ export function useResearch(): UseResearchReturn {
     setPhase('idle');
     setVisibleCount(0);
     setGenerationId(null);
-    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
   }
 
   return {
-    prompt, productType, difficulty,
+    prompt,
+    productType,
+    difficulty,
     result,
     errorMsg: mutation.error?.message ?? 'Something went wrong',
-    phase, visibleCount, isGenerating, generationId,
-    setPrompt, setProductType, setDifficulty,
-    handleGenerate, handleClear,
+    phase,
+    visibleCount,
+    isGenerating,
+    generationId,
+    setPrompt,
+    setProductType,
+    setDifficulty,
+    handleGenerate,
+    handleClear,
   };
 }

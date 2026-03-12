@@ -16,7 +16,7 @@ export function IdeaPickLogo({
       className={cn(
         'font-display uppercase leading-none tracking-[0.25em] text-foreground',
         compact ? 'text-sm' : 'text-[1.05rem]',
-        className,
+        className
       )}
     >
       IDEA<span className="text-primary">PICK</span>

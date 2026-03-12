@@ -2,13 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import type { Idea } from '@/types';
-import { isIdeaSavedInDB, saveIdeaToDB, unsaveIdeaFromDB } from '@/services/db.service';
+import {
+  isIdeaSavedInDB,
+  saveIdeaToDB,
+  unsaveIdeaFromDB,
+} from '@/services/db.service';
 import { useAuth } from '@/context/auth';
 
 const SAVED_EVENT = 'ideapick:saved-change';
 
 export interface UseSavedIdeaReturn {
-  saved:  boolean;
+  saved: boolean;
   // Returns new saved state; opens auth gate if not logged in
   toggle: (generationId?: string | null) => boolean;
   requiresAuth: boolean; // true after a toggle attempt while unauthenticated
@@ -24,21 +28,25 @@ function emitSavedChange(title: string, nextSaved: boolean) {
   window.dispatchEvent(
     new CustomEvent<SavedIdeaEventDetail>(SAVED_EVENT, {
       detail: { title, saved: nextSaved },
-    }),
+    })
   );
 }
 
 export function useSavedIdea(idea: Idea | null): UseSavedIdeaReturn {
   const { user } = useAuth();
-  const [savedState,    setSavedState]    = useState<{ title: string | null; saved: boolean }>({
+  const [savedState, setSavedState] = useState<{
+    title: string | null;
+    saved: boolean;
+  }>({
     title: idea?.title ?? null,
     saved: false,
   });
-  const [requiresAuth,  setRequiresAuth]  = useState(false);
+  const [requiresAuth, setRequiresAuth] = useState(false);
 
-  const saved = user && idea?.title && savedState.title === idea.title
-    ? savedState.saved
-    : false;
+  const saved =
+    user && idea?.title && savedState.title === idea.title
+      ? savedState.saved
+      : false;
 
   useEffect(() => {
     if (!idea?.title) return;
@@ -84,12 +92,15 @@ export function useSavedIdea(idea: Idea | null): UseSavedIdeaReturn {
     emitSavedChange(idea.title, next);
 
     if (next) {
-      saveIdeaToDB({ userId: user.id, generationId: generationId ?? null, idea })
-        .then((id) => {
-          if (id) return;
-          setSavedState({ title: idea.title, saved: false });
-          emitSavedChange(idea.title, false);
-        });
+      saveIdeaToDB({
+        userId: user.id,
+        generationId: generationId ?? null,
+        idea,
+      }).then((id) => {
+        if (id) return;
+        setSavedState({ title: idea.title, saved: false });
+        emitSavedChange(idea.title, false);
+      });
     } else {
       unsaveIdeaFromDB(user.id, idea.title).catch(() => {
         setSavedState({ title: idea.title, saved: true });

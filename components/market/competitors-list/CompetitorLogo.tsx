@@ -4,7 +4,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 export interface CompetitorLogoProps {
   domain: string;
-  name:   string;
+  name: string;
 }
 
 export function CompetitorLogo({ domain, name }: CompetitorLogoProps) {

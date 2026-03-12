@@ -9,18 +9,16 @@ import { OpportunityCard } from '@/components/opportunity/opportunity-card';
 import { OpportunityModal } from '@/components/opportunity/opportunity-modal';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/auth';
-import {
-  getSavedIdeasFromDB,
-  type SavedIdeaRow,
-} from '@/services/db.service';
+import { getSavedIdeasFromDB, type SavedIdeaRow } from '@/services/db.service';
 import type { Idea } from '@/types';
-
 
 export default function IdeasPage() {
   const { user, loading } = useAuth();
   const [savedIdeas, setSavedIdeas] = useState<SavedIdeaRow[]>([]);
   const [selectedIdea, setSelectedIdea] = useState<Idea | null>(null);
-  const [activeGenerationId, setActiveGenerationId] = useState<string | null>(null);
+  const [activeGenerationId, setActiveGenerationId] = useState<string | null>(
+    null
+  );
   const [pageLoading, setPageLoading] = useState(false);
 
   useEffect(() => {
@@ -50,7 +48,9 @@ export default function IdeasPage() {
   }, [loading, user]);
 
   function handleUnsave(title: string) {
-    setSavedIdeas((prev) => prev.filter((row) => row.idea_json.title !== title));
+    setSavedIdeas((prev) =>
+      prev.filter((row) => row.idea_json.title !== title)
+    );
     if (selectedIdea?.title === title) {
       setSelectedIdea(null);
       setActiveGenerationId(null);
@@ -72,7 +72,9 @@ export default function IdeasPage() {
             Workspace
           </p>
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground">Saved ideas</h1>
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+              Saved ideas
+            </h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Review the concepts you kept from your brainstorms.
             </p>
@@ -96,7 +98,9 @@ export default function IdeasPage() {
               <Bookmark className="h-5 w-5" />
             </div>
             <div className="space-y-2">
-              <p className="text-base font-semibold text-foreground">Sign in to keep your ideas</p>
+              <p className="text-base font-semibold text-foreground">
+                Sign in to keep your ideas
+              </p>
               <p className="text-sm leading-relaxed text-muted-foreground">
                 Saved ideas are tied to your account.
               </p>
@@ -114,8 +118,13 @@ export default function IdeasPage() {
           <>
             <section className="space-y-4">
               <div className="flex items-center gap-2">
-                <Bookmark className="h-4 w-4 text-primary" fill="currentColor" />
-                <h2 className="text-sm font-bold text-foreground">Saved Ideas</h2>
+                <Bookmark
+                  className="h-4 w-4 text-primary"
+                  fill="currentColor"
+                />
+                <h2 className="text-sm font-bold text-foreground">
+                  Saved Ideas
+                </h2>
                 <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
                   {savedIdeas.length}
                 </span>
@@ -140,7 +149,9 @@ export default function IdeasPage() {
                         <OpportunityCard
                           {...row.idea_json}
                           generationId={row.generation_id}
-                          onExplore={() => openIdea(row.idea_json, row.generation_id)}
+                          onExplore={() =>
+                            openIdea(row.idea_json, row.generation_id)
+                          }
                           onUnsave={() => handleUnsave(row.idea_json.title)}
                         />
                       </motion.div>
@@ -149,7 +160,6 @@ export default function IdeasPage() {
                 </AnimatePresence>
               )}
             </section>
-
           </>
         )}
       </main>

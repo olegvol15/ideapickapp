@@ -22,12 +22,13 @@ export function UserMenu({ variant = 'compact' }: UserMenuProps) {
   const mounted = useSyncExternalStore(
     () => () => {},
     () => true,
-    () => false,
+    () => false
   );
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
     }
     document.addEventListener('mousedown', onClick);
     return () => document.removeEventListener('mousedown', onClick);
@@ -43,8 +44,12 @@ export function UserMenu({ variant = 'compact' }: UserMenuProps) {
           <LogOut className="h-3.5 w-3.5 rotate-180" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-sm font-semibold leading-none text-foreground">Sign in</span>
-          <span className="block text-xs text-muted-foreground">Access your saved ideas</span>
+          <span className="block text-sm font-semibold leading-none text-foreground">
+            Sign in
+          </span>
+          <span className="block text-xs text-muted-foreground">
+            Access your saved ideas
+          </span>
         </span>
         <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
       </Link>
@@ -82,14 +87,14 @@ export function UserMenu({ variant = 'compact' }: UserMenuProps) {
           'transition-all',
           variant === 'compact'
             ? 'flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary ring-2 ring-transparent hover:ring-primary/30'
-            : 'flex w-full items-center gap-2.5 rounded-xl px-1 py-1.5 text-left hover:bg-background/35',
+            : 'flex w-full items-center gap-2.5 rounded-xl px-1 py-1.5 text-left hover:bg-background/35'
         )}
         title={email}
       >
         <span
           className={cn(
             'flex shrink-0 items-center justify-center rounded-full bg-primary/12 font-bold text-primary',
-            variant === 'compact' ? 'h-8 w-8 text-[11px]' : 'h-9 w-9 text-xs',
+            variant === 'compact' ? 'h-8 w-8 text-[11px]' : 'h-9 w-9 text-xs'
           )}
         >
           {initials}
@@ -107,7 +112,9 @@ export function UserMenu({ variant = 'compact' }: UserMenuProps) {
             <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
           </>
         )}
-        {variant === 'compact' && <span className="sr-only">Open user menu</span>}
+        {variant === 'compact' && (
+          <span className="sr-only">Open user menu</span>
+        )}
       </button>
 
       <AnimatePresence>
@@ -121,11 +128,13 @@ export function UserMenu({ variant = 'compact' }: UserMenuProps) {
               'absolute z-50 overflow-hidden rounded-xl border border-border bg-card shadow-[0_8px_32px_rgba(0,0,0,0.15)]',
               variant === 'compact'
                 ? 'right-0 top-10 w-52'
-                : 'bottom-[calc(100%+0.75rem)] left-0 w-full min-w-[240px]',
+                : 'bottom-[calc(100%+0.75rem)] left-0 w-full min-w-[240px]'
             )}
           >
             <div className="border-b border-border px-3 py-2.5">
-              <p className="truncate text-[11px] text-muted-foreground">{email}</p>
+              <p className="truncate text-[11px] text-muted-foreground">
+                {email}
+              </p>
             </div>
 
             <div className="p-1">
@@ -135,11 +144,19 @@ export function UserMenu({ variant = 'compact' }: UserMenuProps) {
                 className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-muted"
               >
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                  {isDark ? (
+                    <Sun className="h-4 w-4" />
+                  ) : (
+                    <Moon className="h-4 w-4" />
+                  )}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium text-foreground">Appearance</span>
-                  <span className="block text-xs text-muted-foreground">{appearanceLabel}</span>
+                  <span className="block text-sm font-medium text-foreground">
+                    Appearance
+                  </span>
+                  <span className="block text-xs text-muted-foreground">
+                    {appearanceLabel}
+                  </span>
                 </span>
               </button>
             </div>

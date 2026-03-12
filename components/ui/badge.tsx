@@ -13,15 +13,13 @@ const badgeVariants = cva(
           'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80',
         destructive:
           'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80',
-        outline:
-          'border-border text-foreground',
+        outline: 'border-border text-foreground',
         // ── Signal variants (used in opportunity cards) ──
         'signal-high':
           'text-emerald-700 border-emerald-500/25 bg-emerald-50 dark:text-emerald-400 dark:border-emerald-400/20 dark:bg-emerald-400/[0.06]',
         'signal-medium':
           'text-amber-700 border-amber-500/25 bg-amber-50 dark:text-amber-400 dark:border-amber-400/20 dark:bg-amber-400/[0.06]',
-        'signal-low':
-          'text-muted-foreground border-border bg-muted',
+        'signal-low': 'text-muted-foreground border-border bg-muted',
         'competition-low':
           'text-emerald-700 border-emerald-500/25 bg-emerald-50 dark:text-emerald-400 dark:border-emerald-400/20 dark:bg-emerald-400/[0.06]',
         'competition-medium':
@@ -39,11 +37,12 @@ const badgeVariants = cva(
     defaultVariants: {
       variant: 'default',
     },
-  },
+  }
 );
 
 export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof badgeVariants> {}
 
 function Badge({ className, variant, ...props }: BadgeProps) {

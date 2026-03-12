@@ -47,7 +47,9 @@ export function ResearchSkeletons() {
             key={label}
             className={cn(
               'px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest',
-              i === 0 ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground/60',
+              i === 0
+                ? 'text-primary border-b-2 border-primary'
+                : 'text-muted-foreground/60'
             )}
           >
             {label}

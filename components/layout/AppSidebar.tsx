@@ -45,7 +45,11 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { items: recentBrainstorms, restore } = useRecentBrainstorms();
 
   function handleNewBrainstorm() {
-    try { localStorage.removeItem('ideapick:last-research'); } catch { /* ignore */ }
+    try {
+      localStorage.removeItem('ideapick:last-research');
+    } catch {
+      /* ignore */
+    }
     onNavigate?.();
     setOpenMobile(false);
     window.location.href = '/';
@@ -113,7 +117,7 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <SidebarContent
         className={cn(
           'bg-card/95 text-card-foreground backdrop-blur-xl',
-          openDesktop ? 'pt-4' : 'px-2 pt-3',
+          openDesktop ? 'pt-4' : 'px-2 pt-3'
         )}
       >
         {openDesktop ? (
@@ -144,7 +148,7 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                 <ChevronDown
                   className={cn(
                     'h-3.5 w-3.5 text-muted-foreground transition-transform duration-300 ease-out',
-                    workspaceOpen && 'rotate-180',
+                    workspaceOpen && 'rotate-180'
                   )}
                 />
               </button>
@@ -172,7 +176,7 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                                   'rounded-xl px-2.5 py-2 text-[0.95rem] font-medium shadow-none transition-all duration-300 ease-out',
                                   item.active
                                     ? 'bg-primary/12 text-primary'
-                                    : 'text-foreground/88 hover:bg-background/50',
+                                    : 'text-foreground/88 hover:bg-background/50'
                                 )}
                               >
                                 <Link
@@ -185,7 +189,9 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                                   <Icon
                                     className={cn(
                                       'h-3.5 w-3.5 transition-colors duration-300 ease-out',
-                                      item.active ? 'text-primary' : 'text-muted-foreground',
+                                      item.active
+                                        ? 'text-primary'
+                                        : 'text-muted-foreground'
                                     )}
                                   />
                                   <span>{item.label}</span>
@@ -200,7 +206,12 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                                     onClick={() => setRecentsOpen((o) => !o)}
                                     className="flex w-full items-center gap-1.5 px-2 py-1.5 text-[0.78rem] font-semibold uppercase tracking-widest text-muted-foreground/50 hover:text-muted-foreground transition-colors"
                                   >
-                                    <ChevronDown className={cn('h-3 w-3 transition-transform duration-200', recentsOpen && 'rotate-180')} />
+                                    <ChevronDown
+                                      className={cn(
+                                        'h-3 w-3 transition-transform duration-200',
+                                        recentsOpen && 'rotate-180'
+                                      )}
+                                    />
                                     Recents
                                   </button>
                                   <AnimatePresence initial={false}>
@@ -209,7 +220,10 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                                         initial={{ height: 0, opacity: 0 }}
                                         animate={{ height: 'auto', opacity: 1 }}
                                         exit={{ height: 0, opacity: 0 }}
-                                        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                                        transition={{
+                                          duration: 0.25,
+                                          ease: [0.22, 1, 0.36, 1],
+                                        }}
                                         className="overflow-hidden"
                                       >
                                         {recentBrainstorms.map((entry, i) => (
@@ -224,7 +238,9 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                                             className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[0.82rem] text-foreground/55 transition-colors hover:bg-background/50 hover:text-foreground"
                                           >
                                             <Clock className="h-3 w-3 shrink-0 text-muted-foreground/40" />
-                                            <span className="truncate">{truncate(entry.prompt)}</span>
+                                            <span className="truncate">
+                                              {truncate(entry.prompt)}
+                                            </span>
                                           </button>
                                         ))}
                                       </motion.div>
@@ -256,7 +272,7 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                       'justify-center rounded-2xl px-0 py-0',
                       item.active
                         ? 'bg-primary/14 text-primary shadow-[0_14px_34px_var(--brand-hi)]'
-                        : 'text-muted-foreground hover:bg-background/55 hover:text-foreground',
+                        : 'text-muted-foreground hover:bg-background/55 hover:text-foreground'
                     )}
                   >
                     <Link
@@ -272,7 +288,7 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                       <Icon
                         className={cn(
                           'h-4 w-4 transition-colors duration-300 ease-out',
-                          item.active ? 'text-primary' : 'text-muted-foreground',
+                          item.active ? 'text-primary' : 'text-muted-foreground'
                         )}
                       />
                     </Link>
@@ -285,7 +301,10 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       </SidebarContent>
 
       <SidebarFooter
-        className={cn('bg-card/95 backdrop-blur-xl', openDesktop ? 'pb-6' : 'px-2 pb-4')}
+        className={cn(
+          'bg-card/95 backdrop-blur-xl',
+          openDesktop ? 'pb-6' : 'px-2 pb-4'
+        )}
       >
         <UserMenu variant={openDesktop ? 'sidebar' : 'compact'} />
       </SidebarFooter>

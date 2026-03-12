@@ -7,8 +7,8 @@ import { PromptForm } from '@/components/research/PromptForm';
 
 const fadeUp = (delay: number) =>
   ({
-    initial:    { opacity: 0, y: 20 },
-    animate:    { opacity: 1, y: 0 },
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
     transition: { duration: 0.55, delay, ease: 'easeOut' },
   }) as const;
 
@@ -16,7 +16,6 @@ export default function Home() {
   return (
     <AppShell>
       <main className="relative mx-auto flex min-h-svh max-w-3xl flex-col justify-center px-5 pb-24 pt-14 sm:px-8">
-
         <div className="mx-auto max-w-xl text-center">
           <motion.p
             {...fadeUp(0.2)}

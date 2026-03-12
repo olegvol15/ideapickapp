@@ -13,10 +13,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
     () =>
       new QueryClient({
         defaultOptions: {
-          queries:   { staleTime: 0, retry: 1 },
+          queries: { staleTime: 0, retry: 1 },
           mutations: { retry: false }, // never auto-retry AI calls — slow and expensive
         },
-      }),
+      })
   );
 
   return (

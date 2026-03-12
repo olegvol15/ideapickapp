@@ -23,10 +23,7 @@ function useSidebar() {
   return context;
 }
 
-function SidebarProvider({
-  children,
-  className,
-}: React.ComponentProps<'div'>) {
+function SidebarProvider({ children, className }: React.ComponentProps<'div'>) {
   const [openDesktop, setOpenDesktop] = React.useState(true);
   const [openMobile, setOpenMobile] = React.useState(false);
 
@@ -36,7 +33,10 @@ function SidebarProvider({
     >
       <div
         data-slot="sidebar-provider"
-        className={cn('group/sidebar-wrapper flex min-h-screen w-full', className)}
+        className={cn(
+          'group/sidebar-wrapper flex min-h-screen w-full',
+          className
+        )}
       >
         {children}
       </div>
@@ -44,10 +44,7 @@ function SidebarProvider({
   );
 }
 
-function Sidebar({
-  children,
-  className,
-}: React.ComponentProps<'aside'>) {
+function Sidebar({ children, className }: React.ComponentProps<'aside'>) {
   const { openDesktop, openMobile, setOpenMobile } = useSidebar();
 
   return (
@@ -62,7 +59,7 @@ function Sidebar({
         transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
         className={cn(
           'relative hidden shrink-0 overflow-visible border-r border-border/70 bg-card/70 lg:block',
-          className,
+          className
         )}
       >
         <div className="sticky top-0 flex h-screen w-full min-w-0 flex-col overflow-visible">
@@ -100,10 +97,7 @@ function Sidebar({
   );
 }
 
-function SidebarInset({
-  children,
-  className,
-}: React.ComponentProps<'div'>) {
+function SidebarInset({ children, className }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="sidebar-inset"
@@ -126,7 +120,7 @@ function SidebarTrigger({
       type="button"
       className={cn(
         'flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-foreground transition-all duration-300 ease-out hover:bg-muted',
-        className,
+        className
       )}
       onClick={() => {
         if (window.matchMedia('(min-width: 1024px)').matches) {
@@ -143,10 +137,7 @@ function SidebarTrigger({
   );
 }
 
-function SidebarHeader({
-  children,
-  className,
-}: React.ComponentProps<'div'>) {
+function SidebarHeader({ children, className }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="sidebar-header"
@@ -157,10 +148,7 @@ function SidebarHeader({
   );
 }
 
-function SidebarContent({
-  children,
-  className,
-}: React.ComponentProps<'div'>) {
+function SidebarContent({ children, className }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="sidebar-content"
@@ -171,24 +159,21 @@ function SidebarContent({
   );
 }
 
-function SidebarFooter({
-  children,
-  className,
-}: React.ComponentProps<'div'>) {
+function SidebarFooter({ children, className }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="sidebar-footer"
-      className={cn('relative mt-auto shrink-0 px-4 pb-4 overflow-visible', className)}
+      className={cn(
+        'relative mt-auto shrink-0 px-4 pb-4 overflow-visible',
+        className
+      )}
     >
       {children}
     </div>
   );
 }
 
-function SidebarGroup({
-  children,
-  className,
-}: React.ComponentProps<'div'>) {
+function SidebarGroup({ children, className }: React.ComponentProps<'div'>) {
   return (
     <div data-slot="sidebar-group" className={cn('space-y-3', className)}>
       {children}
@@ -205,7 +190,7 @@ function SidebarGroupLabel({
       data-slot="sidebar-group-label"
       className={cn(
         'px-1 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground/80',
-        className,
+        className
       )}
     >
       {children}
@@ -213,10 +198,7 @@ function SidebarGroupLabel({
   );
 }
 
-function SidebarMenu({
-  children,
-  className,
-}: React.ComponentProps<'ul'>) {
+function SidebarMenu({ children, className }: React.ComponentProps<'ul'>) {
   return (
     <ul data-slot="sidebar-menu" className={cn('space-y-1.5', className)}>
       {children}
@@ -224,10 +206,7 @@ function SidebarMenu({
   );
 }
 
-function SidebarMenuItem({
-  children,
-  className,
-}: React.ComponentProps<'li'>) {
+function SidebarMenuItem({ children, className }: React.ComponentProps<'li'>) {
   return (
     <li data-slot="sidebar-menu-item" className={cn(className)}>
       {children}
@@ -261,7 +240,7 @@ function SidebarMenuButton({
           ? 'bg-primary text-primary-foreground shadow-[0_14px_34px_var(--brand-hi)]'
           : 'text-foreground/88 hover:bg-background/60 hover:text-foreground',
         child.props.className,
-        className,
+        className
       ),
     });
   }
@@ -274,7 +253,7 @@ function SidebarMenuButton({
         isActive
           ? 'bg-primary text-primary-foreground shadow-[0_14px_34px_var(--brand-hi)]'
           : 'text-foreground/88 hover:bg-background/60 hover:text-foreground',
-        className,
+        className
       )}
       {...props}
     >

@@ -13,7 +13,12 @@ export function ThinkingIndicator({ label }: ThinkingIndicatorProps) {
             key={i}
             className="block h-[7px] w-[7px] rounded-full bg-primary"
             animate={{ opacity: [0.25, 1, 0.25], scale: [0.75, 1, 0.75] }}
-            transition={{ duration: 1.1, repeat: Infinity, delay: i * 0.18, ease: 'easeInOut' }}
+            transition={{
+              duration: 1.1,
+              repeat: Infinity,
+              delay: i * 0.18,
+              ease: 'easeInOut',
+            }}
           />
         ))}
       </div>
