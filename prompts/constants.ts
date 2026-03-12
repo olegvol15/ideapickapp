@@ -64,7 +64,7 @@ export const RESPONSE_SCHEMA = `{
   ],
   "ideas": [
     {
-      "title": "Product Name — Short tagline",
+      "title": "Product Name - Short tagline",
       "pitch": "2–3 sentence pitch.",
       "audience": "Specific target user.",
       "problem": "Exact pain point solved.",

@@ -3,32 +3,22 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bookmark, History, Loader2 } from 'lucide-react';
+import { Bookmark, Loader2 } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { OpportunityCard } from '@/components/opportunity/opportunity-card';
 import { OpportunityModal } from '@/components/opportunity/opportunity-modal';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/auth';
 import {
-  getGenerations,
   getSavedIdeasFromDB,
-  type GenerationRow,
   type SavedIdeaRow,
 } from '@/services/db.service';
 import type { Idea } from '@/types';
 
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat('en', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(value));
-}
 
 export default function IdeasPage() {
   const { user, loading } = useAuth();
   const [savedIdeas, setSavedIdeas] = useState<SavedIdeaRow[]>([]);
-  const [generations, setGenerations] = useState<GenerationRow[]>([]);
   const [selectedIdea, setSelectedIdea] = useState<Idea | null>(null);
   const [activeGenerationId, setActiveGenerationId] = useState<string | null>(null);
   const [pageLoading, setPageLoading] = useState(false);
@@ -44,14 +34,9 @@ export default function IdeasPage() {
       setPageLoading(true);
 
       try {
-        const [savedRows, generationRows] = await Promise.all([
-          getSavedIdeasFromDB(userId),
-          getGenerations(userId),
-        ]);
-
+        const savedRows = await getSavedIdeasFromDB(userId);
         if (cancelled) return;
         setSavedIdeas(savedRows);
-        setGenerations(generationRows);
       } finally {
         if (!cancelled) setPageLoading(false);
       }
@@ -89,7 +74,7 @@ export default function IdeasPage() {
           <div>
             <h1 className="text-3xl font-semibold tracking-tight text-foreground">Saved ideas</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Review the concepts you kept and revisit prior generations.
+              Review the concepts you kept from your brainstorms.
             </p>
           </div>
         </div>
@@ -113,7 +98,7 @@ export default function IdeasPage() {
             <div className="space-y-2">
               <p className="text-base font-semibold text-foreground">Sign in to keep your ideas</p>
               <p className="text-sm leading-relaxed text-muted-foreground">
-                Saved ideas and generation history are tied to your account.
+                Saved ideas are tied to your account.
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -165,73 +150,6 @@ export default function IdeasPage() {
               )}
             </section>
 
-            <section className="space-y-4">
-              <div className="flex items-center gap-2">
-                <History className="h-4 w-4 text-primary" />
-                <h2 className="text-sm font-bold text-foreground">Generation History</h2>
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
-                  {generations.length}
-                </span>
-              </div>
-
-              {generations.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-border px-6 py-12 text-sm text-muted-foreground">
-                  Run your first generation to start building history.
-                </div>
-              ) : (
-                <div className="grid gap-4">
-                  {generations.map((generation) => (
-                    <div
-                      key={generation.id}
-                      className="rounded-2xl border border-border bg-card/80 p-5 shadow-[0_12px_36px_rgba(0,0,0,0.08)]"
-                    >
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div className="space-y-2">
-                          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground/60">
-                            {formatDate(generation.created_at)}
-                          </p>
-                          <p className="max-w-2xl text-sm leading-relaxed text-foreground">
-                            {generation.prompt}
-                          </p>
-                        </div>
-
-                        <div className="flex flex-wrap gap-2">
-                          {generation.product_type && (
-                            <Badge variant="secondary">{generation.product_type}</Badge>
-                          )}
-                          {generation.difficulty && (
-                            <Badge variant="outline">{generation.difficulty}</Badge>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="mt-4 grid gap-2">
-                        {generation.result_json.ideas.map((idea) => (
-                          <button
-                            key={`${generation.id}:${idea.title}`}
-                            type="button"
-                            onClick={() => openIdea(idea, generation.id)}
-                            className="rounded-xl border border-border/80 bg-background/50 px-4 py-3 text-left transition-colors hover:border-primary/30 hover:bg-background"
-                          >
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="text-sm font-semibold text-foreground">
-                                {idea.title}
-                              </span>
-                              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                                Open
-                              </span>
-                            </div>
-                            <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-                              {idea.pitch}
-                            </p>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
           </>
         )}
       </main>

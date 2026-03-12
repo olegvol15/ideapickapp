@@ -15,21 +15,9 @@ const fadeUp = (delay: number) =>
 export default function Home() {
   return (
     <AppShell>
-      <main className="relative mx-auto max-w-3xl px-5 pb-24 pt-14 sm:px-8 sm:pt-20">
-        <motion.div {...fadeUp(0)} className="mb-16 flex items-center justify-center">
-          <IdeaPickLogo compact />
-        </motion.div>
+      <main className="relative mx-auto flex min-h-svh max-w-3xl flex-col justify-center px-5 pb-24 pt-14 sm:px-8">
 
         <div className="mx-auto max-w-xl text-center">
-          <motion.h1
-            {...fadeUp(0.1)}
-            className="font-display text-5xl uppercase leading-[1.1] text-foreground sm:text-6xl"
-          >
-            Generate startup ideas
-            <br />
-            <span className="text-primary">with AI</span>
-          </motion.h1>
-
           <motion.p
             {...fadeUp(0.2)}
             className="mt-7 text-[1.0625rem] leading-[1.7] text-foreground/70"

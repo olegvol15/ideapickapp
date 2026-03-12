@@ -17,7 +17,7 @@ export function PromptForm() {
     productType, setProductType,
     difficulty, setDifficulty,
     result, phase, visibleCount, errorMsg, isGenerating, generationId,
-    handleGenerate,
+    handleGenerate, handleClear,
   } = useResearch();
 
   return (
@@ -56,17 +56,19 @@ export function PromptForm() {
           </div>
         </div>
 
-        <Button onClick={handleGenerate} disabled={isGenerating || !prompt.trim()} className="w-full sm:w-auto">
-          {isGenerating
-            ? <><Loader2 className="h-4 w-4 animate-spin" />Researching...</>
-            : 'Find Opportunities →'}
-        </Button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button onClick={handleGenerate} disabled={isGenerating || !prompt.trim()} className="flex-1 sm:flex-none">
+            {isGenerating
+              ? <><Loader2 className="h-4 w-4 animate-spin" />Researching...</>
+              : 'Find Opportunities →'}
+          </Button>
+        </div>
       </div>
 
       {/* Phase-based result area */}
       <AnimatePresence mode="wait">
 
-        {phase === 'idle' && (
+        {/* {phase === 'idle' && (
           <motion.div
             key="idle"
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
@@ -83,7 +85,7 @@ export function PromptForm() {
               </p>
             </div>
           </motion.div>
-        )}
+        )} */}
 
         {phase === 'thinking' && (
           <motion.div

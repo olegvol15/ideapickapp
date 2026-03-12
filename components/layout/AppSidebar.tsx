@@ -7,14 +7,16 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   Bookmark,
   ChevronDown,
-  ChevronsUpDown,
+  Clock,
   LogIn,
   PanelLeftClose,
+  Plus,
   Sparkles,
 } from 'lucide-react';
 import { UserMenu } from '@/components/auth/UserMenu';
 import { IdeaPickLogo } from '@/components/brand/IdeaPickLogo';
 import { useAuth } from '@/context/auth';
+import { useRecentBrainstorms } from '@/hooks/use-recent-brainstorms';
 import { cn } from '@/lib/utils';
 import {
   Sidebar,
@@ -30,11 +32,24 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 
+function truncate(text: string, max = 32) {
+  return text.length > max ? text.slice(0, max).trimEnd() + '…' : text;
+}
+
 function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const { user } = useAuth();
   const { openDesktop, setOpenDesktop, setOpenMobile } = useSidebar();
   const [workspaceOpen, setWorkspaceOpen] = useState(true);
+  const [recentsOpen, setRecentsOpen] = useState(true);
+  const { items: recentBrainstorms, restore } = useRecentBrainstorms();
+
+  function handleNewBrainstorm() {
+    try { localStorage.removeItem('ideapick:last-research'); } catch { /* ignore */ }
+    onNavigate?.();
+    setOpenMobile(false);
+    window.location.href = '/';
+  }
 
   const navigation = [
     {
@@ -107,6 +122,15 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               Platform
             </SidebarGroupLabel>
 
+            <button
+              type="button"
+              onClick={handleNewBrainstorm}
+              className="flex w-full items-center gap-2 rounded-xl border border-border/60 bg-background/40 px-3 py-2 text-[0.88rem] font-medium text-foreground/80 transition-all hover:bg-background/70 hover:text-foreground"
+            >
+              <Plus className="h-3.5 w-3.5 text-primary" />
+              New Brainstorm
+            </button>
+
             <div className="space-y-2">
               <button
                 type="button"
@@ -138,7 +162,7 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                       <SidebarMenu className="space-y-1">
                         {navigation.map((item) => {
                           const Icon = item.icon;
-
+                          const isPlayground = item.href === '/';
                           return (
                             <SidebarMenuItem key={item.href}>
                               <SidebarMenuButton
@@ -167,6 +191,47 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                                   <span>{item.label}</span>
                                 </Link>
                               </SidebarMenuButton>
+
+                              {/* Recents — nested under Playground */}
+                              {isPlayground && recentBrainstorms.length > 0 && (
+                                <div className="ml-4 mt-0.5 border-l border-border/60 pl-3">
+                                  <button
+                                    type="button"
+                                    onClick={() => setRecentsOpen((o) => !o)}
+                                    className="flex w-full items-center gap-1.5 px-2 py-1.5 text-[0.78rem] font-semibold uppercase tracking-widest text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                                  >
+                                    <ChevronDown className={cn('h-3 w-3 transition-transform duration-200', recentsOpen && 'rotate-180')} />
+                                    Recents
+                                  </button>
+                                  <AnimatePresence initial={false}>
+                                    {recentsOpen && (
+                                      <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                                        className="overflow-hidden"
+                                      >
+                                        {recentBrainstorms.map((entry, i) => (
+                                          <button
+                                            key={entry.createdAt ?? i}
+                                            type="button"
+                                            onClick={() => {
+                                              onNavigate?.();
+                                              setOpenMobile(false);
+                                              restore(entry);
+                                            }}
+                                            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[0.82rem] text-foreground/55 transition-colors hover:bg-background/50 hover:text-foreground"
+                                          >
+                                            <Clock className="h-3 w-3 shrink-0 text-muted-foreground/40" />
+                                            <span className="truncate">{truncate(entry.prompt)}</span>
+                                          </button>
+                                        ))}
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                                </div>
+                              )}
                             </SidebarMenuItem>
                           );
                         })}
