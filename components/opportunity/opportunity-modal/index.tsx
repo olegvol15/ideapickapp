@@ -78,7 +78,7 @@ export function OpportunityModal({
   function handleBuildRoadmap() {
     if (!displayIdea) return;
     onClose();
-    router.push(`/plan/${setPlan(displayIdea)}`);
+    router.push(`/roadmap/${setPlan(displayIdea)}`);
   }
 
   const i = displayIdea;

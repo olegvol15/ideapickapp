@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { GenerateResponse, ProductType, Difficulty } from '@/types';
 import { useGenerateMutation } from '@/hooks/mutations/use-generate-mutation';
 import { useAuth } from '@/context/auth';
@@ -37,7 +37,8 @@ const CARD_STAGGER_MS = 380;
 export const STORAGE_KEY = 'ideapick:last-research';
 export const HISTORY_KEY = 'ideapick:research-history';
 export const MAX_HISTORY = 20;
-export const HISTORY_EVENT = 'ideapick:history-updated';
+export const HISTORY_EVENT  = 'ideapick:history-updated';
+export const RESTORE_EVENT  = 'ideapick:restore';
 
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
@@ -78,27 +79,36 @@ export function pushHistory(entry: PersistedResearch): void {
 export function useResearch(): UseResearchReturn {
   const { user } = useAuth();
 
-  const persisted = loadStorage<PersistedResearch>(STORAGE_KEY);
+  const [prompt, setPrompt] = useState('');
+  const [productType, setProductType] = useState<ProductType | ''>('');
+  const [difficulty, setDifficulty] = useState<Difficulty | ''>('');
+  const [phase, setPhase] = useState<ResearchPhase>('idle');
+  const [visibleCount, setVisibleCount] = useState(0);
+  const [generationId, setGenerationId] = useState<string | null>(null);
+  const [result, setResult] = useState<GenerateResponse | null>(null);
 
-  const [prompt, setPrompt] = useState(persisted?.prompt ?? '');
-  const [productType, setProductType] = useState<ProductType | ''>(
-    persisted?.productType ?? ''
-  );
-  const [difficulty, setDifficulty] = useState<Difficulty | ''>(
-    persisted?.difficulty ?? ''
-  );
-  const [phase, setPhase] = useState<ResearchPhase>(
-    persisted ? 'done' : 'idle'
-  );
-  const [visibleCount, setVisibleCount] = useState(
-    persisted?.result.ideas.length ?? 0
-  );
-  const [generationId, setGenerationId] = useState<string | null>(
-    persisted?.generationId ?? null
-  );
-  const [result, setResult] = useState<GenerateResponse | null>(
-    persisted?.result ?? null
-  );
+  // Restore from localStorage after mount (avoids SSR/client hydration mismatch)
+  useEffect(() => {
+    function applyEntry(entry: PersistedResearch) {
+      setPrompt(entry.prompt);
+      setProductType(entry.productType);
+      setDifficulty(entry.difficulty);
+      setResult(entry.result);
+      setVisibleCount(entry.result.ideas.length);
+      setGenerationId(entry.generationId);
+      setPhase('done');
+    }
+
+    const persisted = loadStorage<PersistedResearch>(STORAGE_KEY);
+    if (persisted) applyEntry(persisted);
+
+    // Listen for in-page restore events from the sidebar (no full reload needed)
+    const onRestore = (e: Event) => {
+      applyEntry((e as CustomEvent<PersistedResearch>).detail);
+    };
+    window.addEventListener(RESTORE_EVENT, onRestore);
+    return () => window.removeEventListener(RESTORE_EVENT, onRestore);
+  }, []);
 
   const mutation = useGenerateMutation();
 

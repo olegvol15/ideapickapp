@@ -9,7 +9,7 @@
   --font-sans: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
   --font-mono:
     'SFMono-Regular', 'SF Mono', Consolas, 'Liberation Mono', monospace;
-  --font-display: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  --font-display: 'Bodoni Moda', Georgia, serif;
 
   /* ── shadcn/ui standard tokens ────────────────────────────────────────────
      These map to shadcn's CSS variable names so every shadcn component works
