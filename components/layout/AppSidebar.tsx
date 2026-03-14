@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Bookmark,
@@ -15,8 +15,11 @@ import {
 import { UserMenu } from '@/components/auth/UserMenu';
 import { IdeaPickLogo } from '@/components/brand/IdeaPickLogo';
 import { useAuth } from '@/context/auth';
-import { useRecentBrainstorms } from '@/hooks/use-recent-brainstorms';
-import { useRoadmapPlans } from '@/hooks/use-roadmap-plans';
+import { useResearchStore } from '@/stores/research.store';
+import { useRoadmapStore } from '@/stores/roadmap.store';
+import { useGetGenerations } from '@/hooks/use-generations';
+import { useGetRoadmaps } from '@/hooks/use-roadmaps';
+import { listPlans } from '@/services/storage.service';
 import { cn } from '@/lib/utils';
 import {
   Sidebar,
@@ -36,19 +39,55 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { openDesktop, setOpenDesktop, setOpenMobile } = useSidebar();
   const [recentsOpen, setRecentsOpen] = useState(true);
   const [roadmapsOpen, setRoadmapsOpen] = useState(true);
-  const { items: recentBrainstorms } = useRecentBrainstorms();
-  const roadmapPlans = useRoadmapPlans();
+
+  // Research recents — logged-in users use React Query, others use Zustand store
+  const localHistory = useResearchStore((s) => s.localHistory);
+  const { data: dbGenerations } = useGetGenerations(user?.id);
+  const recentBrainstorms = user
+    ? (dbGenerations ?? []).map((g) => ({ prompt: g.prompt, createdAt: g.id }))
+    : localHistory.map((h) => ({
+        prompt: h.prompt,
+        createdAt: String(h.createdAt),
+      }));
+
+  // Roadmap plans — logged-in users use React Query, others use Zustand store
+  const localPlans = useRoadmapStore((s) => s.localPlans);
+  const { data: dbRoadmaps } = useGetRoadmaps(user?.id);
+  const roadmapPlans = user
+    ? (dbRoadmaps ?? []).map((r) => ({ id: r.slug, title: r.title }))
+    : localPlans;
+
+  // Seed local plans from sessionStorage on mount (for non-logged-in users)
+  useEffect(() => {
+    if (!user) {
+      useRoadmapStore.getState().setLocalPlans(listPlans());
+    }
+  }, [user]);
 
   function handleNewBrainstorm() {
-    try { localStorage.removeItem('ideapick:last-research'); } catch { /* ignore */ }
+    useResearchStore.getState().clear();
     onNavigate?.();
     setOpenMobile(false);
     window.location.href = '/';
   }
 
   const navigation = [
-    { href: '/ideas', label: 'Saved ideas', icon: Bookmark, active: pathname === '/ideas' || pathname === '/saved' },
-    ...(!user ? [{ href: '/auth', label: 'Sign in', icon: LogIn, active: pathname === '/auth' }] : []),
+    {
+      href: '/ideas',
+      label: 'Saved ideas',
+      icon: Bookmark,
+      active: pathname === '/ideas' || pathname === '/saved',
+    },
+    ...(!user
+      ? [
+          {
+            href: '/auth',
+            label: 'Sign in',
+            icon: LogIn,
+            active: pathname === '/auth',
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -58,7 +97,10 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           <div className="flex items-center justify-between">
             <Link
               href="/"
-              onClick={() => { onNavigate?.(); setOpenMobile(false); }}
+              onClick={() => {
+                onNavigate?.();
+                setOpenMobile(false);
+              }}
               className="flex min-w-0 items-center rounded-lg px-1.5 py-1.5 transition-colors hover:bg-white/5"
             >
               <IdeaPickLogo />
@@ -79,10 +121,14 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         )}
       </SidebarHeader>
 
-      <SidebarContent className={cn('bg-card/95 text-card-foreground backdrop-blur-xl', openDesktop ? 'px-2 py-1' : 'px-2 pt-3')}>
+      <SidebarContent
+        className={cn(
+          'bg-card/95 text-card-foreground backdrop-blur-xl',
+          openDesktop ? 'px-2 py-1' : 'px-2 pt-3'
+        )}
+      >
         {openDesktop ? (
           <div className="flex flex-col gap-0.5">
-
             {/* New Brainstorm */}
             <button
               type="button"
@@ -102,7 +148,10 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={() => { onNavigate?.(); setOpenMobile(false); }}
+                  onClick={() => {
+                    onNavigate?.();
+                    setOpenMobile(false);
+                  }}
                   className={cn(
                     'flex w-full items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm font-medium transition-colors',
                     item.active
@@ -110,10 +159,12 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                       : 'text-foreground/60 hover:bg-white/5 hover:text-foreground/90'
                   )}
                 >
-                  <span className={cn(
-                    'flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors',
-                    item.active ? 'bg-white/10' : 'bg-white/6'
-                  )}>
+                  <span
+                    className={cn(
+                      'flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors',
+                      item.active ? 'bg-white/10' : 'bg-white/6'
+                    )}
+                  >
                     <Icon className="h-3.5 w-3.5" />
                   </span>
                   {item.label}
@@ -131,7 +182,12 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                   onClick={() => setRoadmapsOpen((o) => !o)}
                   className="flex w-full items-center gap-1.5 px-2.5 py-1 text-xs text-muted-foreground/60 transition-colors hover:text-muted-foreground"
                 >
-                  <ChevronDown className={cn('h-3 w-3 transition-transform duration-200', roadmapsOpen && 'rotate-180')} />
+                  <ChevronDown
+                    className={cn(
+                      'h-3 w-3 transition-transform duration-200',
+                      roadmapsOpen && 'rotate-180'
+                    )}
+                  />
                   Roadmaps
                 </button>
 
@@ -148,7 +204,10 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                         <Link
                           key={plan.id}
                           href={`/roadmap/${plan.id}`}
-                          onClick={() => { onNavigate?.(); setOpenMobile(false); }}
+                          onClick={() => {
+                            onNavigate?.();
+                            setOpenMobile(false);
+                          }}
                           className={cn(
                             'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors',
                             pathname === `/roadmap/${plan.id}`
@@ -176,7 +235,12 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                   onClick={() => setRecentsOpen((o) => !o)}
                   className="flex w-full items-center gap-1.5 px-2.5 py-1 text-xs text-muted-foreground/60 transition-colors hover:text-muted-foreground"
                 >
-                  <ChevronDown className={cn('h-3 w-3 transition-transform duration-200', recentsOpen && 'rotate-180')} />
+                  <ChevronDown
+                    className={cn(
+                      'h-3 w-3 transition-transform duration-200',
+                      recentsOpen && 'rotate-180'
+                    )}
+                  />
                   Recents
                 </button>
 
@@ -193,7 +257,10 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                         <Link
                           key={entry.createdAt ?? i}
                           href={`/brainstorms/${entry.createdAt}`}
-                          onClick={() => { onNavigate?.(); setOpenMobile(false); }}
+                          onClick={() => {
+                            onNavigate?.();
+                            setOpenMobile(false);
+                          }}
                           className={cn(
                             'flex w-full items-center rounded-lg px-3 py-2 text-left text-sm transition-colors',
                             pathname === `/brainstorms/${entry.createdAt}`
@@ -230,10 +297,18 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                       href={item.href}
                       aria-label={item.label}
                       title={item.label}
-                      onClick={() => { onNavigate?.(); setOpenMobile(false); }}
+                      onClick={() => {
+                        onNavigate?.();
+                        setOpenMobile(false);
+                      }}
                       className="flex h-12 w-12 items-center justify-center"
                     >
-                      <Icon className={cn('h-4 w-4 transition-colors duration-300 ease-out', item.active ? 'text-primary' : 'text-muted-foreground')} />
+                      <Icon
+                        className={cn(
+                          'h-4 w-4 transition-colors duration-300 ease-out',
+                          item.active ? 'text-primary' : 'text-muted-foreground'
+                        )}
+                      />
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -243,7 +318,12 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         )}
       </SidebarContent>
 
-      <SidebarFooter className={cn('bg-card/95 backdrop-blur-xl', openDesktop ? 'px-2 pb-4' : 'px-2 pb-4')}>
+      <SidebarFooter
+        className={cn(
+          'bg-card/95 backdrop-blur-xl',
+          openDesktop ? 'px-2 pb-4' : 'px-2 pb-4'
+        )}
+      >
         <UserMenu variant={openDesktop ? 'sidebar' : 'compact'} />
       </SidebarFooter>
     </>

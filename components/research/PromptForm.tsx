@@ -1,6 +1,6 @@
 'use client';
 
-import { Loader2, Sparkles, AlertTriangle } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,10 +14,14 @@ import {
 import { ResultsTabs } from '@/components/ResultsTabs';
 import { ThinkingIndicator } from './ThinkingIndicator';
 import { ResearchSkeletons } from './ResearchSkeletons';
+import { useAuth } from '@/context/auth';
 import { useResearch } from '@/hooks/use-research';
+import { useResearchStore } from '@/stores/research.store';
 import { PRODUCT_TYPE_OPTIONS, DIFFICULTY_OPTIONS } from '@/constants/products';
 
 export function PromptForm() {
+  const { user } = useAuth();
+
   const {
     prompt,
     setPrompt,
@@ -28,12 +32,12 @@ export function PromptForm() {
     result,
     phase,
     visibleCount,
-    errorMsg,
-    isGenerating,
     generationId,
-    handleGenerate,
-    handleClear,
-  } = useResearch();
+  } = useResearchStore();
+
+  const { handleGenerate, handleClear, isGenerating, errorMsg } = useResearch(
+    user?.id
+  );
 
   return (
     <div className="flex flex-col gap-5">
@@ -105,25 +109,6 @@ export function PromptForm() {
 
       {/* Phase-based result area */}
       <AnimatePresence mode="wait">
-        {/* {phase === 'idle' && (
-          <motion.div
-            key="idle"
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.35, delay: 0.1 }}
-            className="mt-10 flex flex-col items-center gap-5 rounded-xl border border-dashed border-border px-8 py-20 text-center"
-          >
-            <div className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-primary/[0.06] text-primary">
-              <Sparkles className="h-4 w-4" />
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-foreground">Your research will appear here</p>
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                Describe your skills or a problem above,<br />then click Find Opportunities.
-              </p>
-            </div>
-          </motion.div>
-        )} */}
-
         {phase === 'thinking' && (
           <motion.div
             key="thinking"

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { AuthGate } from '@/components/auth/AuthGate';
 import type { Idea, SignalLevel } from '@/types';
 import { computeOpportunityScore } from '@/lib/scoring';
+import { useAuth } from '@/context/auth';
 import { useSavedIdea } from '@/hooks/use-saved-idea';
 import { Tag } from './Tag';
 import {
@@ -30,7 +31,11 @@ export function OpportunityCard({
 }: OpportunityCardProps) {
   const idea = ideaProps as Idea;
   const score = computeOpportunityScore(idea);
-  const { saved, toggle, requiresAuth, clearAuthRequired } = useSavedIdea(idea);
+  const { user } = useAuth();
+  const { saved, toggle, requiresAuth, clearAuthRequired } = useSavedIdea(
+    idea,
+    user?.id
+  );
 
   const buildSignal: SignalLevel =
     idea.difficulty === 'Easy'

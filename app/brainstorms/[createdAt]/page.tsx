@@ -1,33 +1,71 @@
 'use client';
 
-import { useLayoutEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { ResultsTabs } from '@/components/ResultsTabs';
-import { loadStorage, HISTORY_KEY, type PersistedResearch } from '@/hooks/use-research';
+import {
+  useResearchStore,
+  type PersistedResearch,
+} from '@/stores/research.store';
+import { useGetGenerations } from '@/hooks/use-generations';
+import { useAuth } from '@/context/auth';
+import type { GenerateResponse } from '@/types';
 
 export default function BrainstormPage() {
   const { createdAt } = useParams<{ createdAt: string }>();
   const router = useRouter();
+  const { user } = useAuth();
   const [entry, setEntry] = useState<PersistedResearch | null>(null);
   const [notFound, setNotFound] = useState(false);
 
-  useLayoutEffect(() => {
+  const localHistory = useResearchStore((s) => s.localHistory);
+  const { data: dbGenerations, isFetched: dbFetched } = useGetGenerations(
+    user?.id
+  );
+
+  useEffect(() => {
+    // Try local history first (timestamp-based ID)
     const id = Number(createdAt);
-    const history = loadStorage<PersistedResearch[]>(HISTORY_KEY) ?? [];
-    const found = history.find((e) => e.createdAt === id) ?? null;
-    if (found) {
-      setEntry(found);
+    if (!Number.isNaN(id) && id > 0) {
+      const found = localHistory.find((e) => e.createdAt === id) ?? null;
+      if (found) {
+        setEntry(found);
+        return;
+      }
+    }
+
+    // Try DB history (UUID-based ID)
+    if (!user) {
+      setNotFound(true);
+      return;
+    }
+    if (!dbFetched) return;
+
+    const row = dbGenerations?.find((g) => g.id === createdAt);
+    if (row) {
+      setEntry({
+        prompt: row.prompt,
+        productType: (row.product_type ??
+          '') as PersistedResearch['productType'],
+        difficulty: (row.difficulty ?? '') as PersistedResearch['difficulty'],
+        result: row.result_json as GenerateResponse,
+        generationId: row.id,
+        createdAt: new Date(row.created_at).getTime(),
+      });
     } else {
       setNotFound(true);
     }
-  }, [createdAt]);
+  }, [createdAt, localHistory, user, dbFetched, dbGenerations]);
 
   if (notFound) {
     return (
       <div className="flex h-svh flex-col items-center justify-center gap-3 text-muted-foreground">
         <p className="text-sm">Brainstorm not found.</p>
-        <button onClick={() => router.push('/')} className="text-xs text-primary hover:underline">
+        <button
+          onClick={() => router.push('/')}
+          className="text-xs text-primary hover:underline"
+        >
           ← Go home
         </button>
       </div>
@@ -48,7 +86,9 @@ export default function BrainstormPage() {
         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
           Brainstorm
         </p>
-        <h1 className="text-2xl font-bold text-foreground leading-snug">{entry.prompt}</h1>
+        <h1 className="text-2xl font-bold text-foreground leading-snug">
+          {entry.prompt}
+        </h1>
         {(entry.productType || entry.difficulty) && (
           <p className="mt-2 text-xs text-muted-foreground/60">
             {[entry.productType, entry.difficulty].filter(Boolean).join(' · ')}

@@ -10,7 +10,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     idea = body.idea;
   } catch {
-    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'Invalid request body' },
+      { status: 400 }
+    );
   }
 
   if (!idea?.title) {
@@ -33,6 +36,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(graph);
   } catch (err) {
     console.error('[/api/roadmap]', err);
-    return NextResponse.json({ error: 'Failed to generate roadmap.' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to generate roadmap.' },
+      { status: 500 }
+    );
   }
 }

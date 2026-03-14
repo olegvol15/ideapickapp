@@ -5,8 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { RoadmapCanvas } from '@/components/roadmap/RoadmapCanvas';
 import { getPlan, setPlan, loadRoadmapState } from '@/services/storage.service';
-import { loadRoadmapFromDB } from '@/services/db.service';
 import { useAuth } from '@/context/auth';
+import { useGetRoadmap } from '@/hooks/use-roadmaps';
 import type { Idea } from '@/types';
 
 export default function RoadmapPage() {
@@ -16,35 +16,47 @@ export default function RoadmapPage() {
   const [idea, setIdea] = useState<Idea | null>(null);
   const [notFound, setNotFound] = useState(false);
 
-  // Read sessionStorage before first paint — avoids hydration mismatch
+  // Read sessionStorage before first paint
   useLayoutEffect(() => {
     const cached = getPlan(ideaId);
     if (cached) setIdea(cached);
   }, [ideaId]);
 
-  useEffect(() => {
-    if (authLoading || idea) return;
+  // DB load via React Query (skip when session cache or auth still resolving)
+  const { data: dbRoadmap, isFetched: dbFetched } = useGetRoadmap(
+    ideaId,
+    user?.id,
+    {
+      enabled: !idea && !authLoading,
+    }
+  );
 
-    // Not in sessionStorage — try DB (logged-in users)
-    if (user) {
-      loadRoadmapFromDB({ userId: user.id, slug: ideaId }).then((row) => {
-        if (row) {
-          setPlan(row.idea); // cache for this session
-          setIdea(row.idea);
-        } else {
-          setNotFound(true);
-        }
-      });
+  useEffect(() => {
+    if (idea || authLoading) return;
+
+    if (!user) {
+      setNotFound(true);
+      return;
+    }
+
+    if (!dbFetched) return;
+
+    if (dbRoadmap) {
+      setPlan(dbRoadmap.idea);
+      setIdea(dbRoadmap.idea);
     } else {
       setNotFound(true);
     }
-  }, [ideaId, idea, user, authLoading]);
+  }, [idea, user, authLoading, dbFetched, dbRoadmap]);
 
   if (notFound) {
     return (
       <div className="flex h-svh flex-col items-center justify-center gap-3 text-muted-foreground">
         <p className="text-sm">Roadmap not found.</p>
-        <button onClick={() => router.push('/')} className="text-xs text-primary hover:underline">
+        <button
+          onClick={() => router.push('/')}
+          className="text-xs text-primary hover:underline"
+        >
           ← Go home
         </button>
       </div>
@@ -62,7 +74,6 @@ export default function RoadmapPage() {
 
   return (
     <div className="flex h-svh flex-col">
-      {/* Header */}
       <div className="flex shrink-0 items-center gap-4 border-b border-border/60 px-5 py-3">
         <button
           onClick={() => router.back()}
@@ -81,13 +92,19 @@ export default function RoadmapPage() {
           </h1>
         </div>
         <p className="ml-auto hidden text-xs text-muted-foreground/60 sm:block">
-          Click <span className="font-bold text-foreground/60">+</span> on any node to expand
+          Click <span className="font-bold text-foreground/60">+</span> on any
+          node to expand
         </p>
       </div>
 
-      {/* Canvas */}
       <div className="flex-1 overflow-hidden">
-        <RoadmapCanvas idea={idea} ideaId={ideaId} initialLoading={loadRoadmapState(ideaId) === null} />
+        <RoadmapCanvas
+          idea={idea}
+          ideaId={ideaId}
+          initialLoading={loadRoadmapState(ideaId) === null}
+          userId={user?.id}
+          authLoading={authLoading}
+        />
       </div>
     </div>
   );

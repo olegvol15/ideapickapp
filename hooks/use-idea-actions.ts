@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import type { Idea, ValidationResult } from '@/types';
-import { useValidateMutation } from '@/hooks/mutations/use-validate-mutation';
-import { useRefineMutation } from '@/hooks/mutations/use-refine-mutation';
+import { validateIdea, refineIdea } from '@/services/idea.service';
+import { useIdeaDraftStore } from '@/stores/idea-draft.store';
 
 export interface UseIdeaActionsReturn {
   displayIdea: Idea | null;
@@ -15,50 +15,35 @@ export interface UseIdeaActionsReturn {
   clearValidation: () => void;
 }
 
-// The useEffect here is state synchronisation, not data fetching — it keeps
-// displayIdea in sync when the user opens a different card in the modal.
-export function useIdeaActions(idea: Idea | null): UseIdeaActionsReturn {
-  const [displayIdea, setDisplayIdea] = useState<Idea | null>(idea);
-  const [validation, setValidation] = useState<ValidationResult | null>(null);
+export function useIdeaActions(): UseIdeaActionsReturn {
+  const { draft, validation, applyRefinement, setValidation, clearValidation } =
+    useIdeaDraftStore();
 
-  const validateMutation = useValidateMutation();
-  const refineMutation = useRefineMutation();
+  const validateMutation = useMutation<ValidationResult, Error, Idea>({
+    mutationFn: validateIdea,
+    onSuccess: (result) => setValidation(result),
+  });
 
-  useEffect(() => {
-    setDisplayIdea(idea);
-    setValidation(null);
-    validateMutation.reset();
-    refineMutation.reset();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idea]);
-
-  function validate(): void {
-    if (!displayIdea) return;
-    validateMutation.mutate(displayIdea, {
-      onSuccess: (result) => setValidation(result),
-    });
-  }
-
-  function refine(instruction: string): void {
-    if (!displayIdea) return;
-    refineMutation.mutate(
-      { idea: displayIdea, instruction },
-      {
-        onSuccess: (refined) => {
-          setDisplayIdea(refined);
-          setValidation(null);
-        },
-      }
-    );
-  }
+  const refineMutation = useMutation<
+    Idea,
+    Error,
+    { idea: Idea; instruction: string }
+  >({
+    mutationFn: ({ idea, instruction }) => refineIdea(idea, instruction),
+    onSuccess: (refined) => applyRefinement(refined),
+  });
 
   return {
-    displayIdea,
+    displayIdea: draft,
     validation,
     refining: refineMutation.isPending,
     validating: validateMutation.isPending,
-    refine,
-    validate,
-    clearValidation: () => setValidation(null),
+    validate: () => {
+      if (draft) validateMutation.mutate(draft);
+    },
+    refine: (instruction) => {
+      if (draft) refineMutation.mutate({ idea: draft, instruction });
+    },
+    clearValidation,
   };
 }

@@ -7,6 +7,7 @@ import { OpportunityCard } from '@/components/opportunity/opportunity-card';
 import { OpportunityModal } from '@/components/opportunity/opportunity-modal';
 import { MarketDashboard } from '@/components/market/market-dashboard';
 import { CompetitorsList } from '@/components/market/competitors-list';
+import { useIdeaDraftStore } from '@/stores/idea-draft.store';
 import type { GenerateResponse, Idea } from '@/types';
 
 type Tab = 'opportunities' | 'market' | 'competitors';
@@ -34,7 +35,12 @@ export function ResultsTabs({
   generationId,
 }: ResultsTabsProps) {
   const [active, setActive] = useState<Tab>('opportunities');
-  const [selectedIdea, setSelectedIdea] = useState<Idea | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  function openIdea(idea: Idea) {
+    useIdeaDraftStore.getState().setDraft(idea, generationId ?? null);
+    setModalOpen(true);
+  }
 
   return (
     <>
@@ -84,7 +90,7 @@ export function ResultsTabs({
                       <OpportunityCard
                         {...idea}
                         generationId={generationId}
-                        onExplore={() => setSelectedIdea(idea)}
+                        onExplore={() => openIdea(idea)}
                       />
                     </motion.div>
                   ))}
@@ -106,11 +112,7 @@ export function ResultsTabs({
         </AnimatePresence>
       </div>
 
-      <OpportunityModal
-        idea={selectedIdea}
-        generationId={generationId}
-        onClose={() => setSelectedIdea(null)}
-      />
+      <OpportunityModal open={modalOpen} onClose={() => setModalOpen(false)} />
     </>
   );
 }

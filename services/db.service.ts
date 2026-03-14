@@ -153,9 +153,9 @@ export async function upsertRoadmapToDB(params: {
 }): Promise<void> {
   const supabase = createClient();
   const row: Record<string, unknown> = {
-    user_id:    params.userId,
-    slug:       params.slug,
-    idea_json:  params.idea,
+    user_id: params.userId,
+    slug: params.slug,
+    idea_json: params.idea,
     graph_json: params.state,
   };
   if (params.bumpTimestamp) row.updated_at = new Date().toISOString();
@@ -167,7 +167,7 @@ export async function upsertRoadmapToDB(params: {
 
 export interface LoadedRoadmap {
   state: RoadmapState;
-  idea:  Idea;
+  idea: Idea;
 }
 
 export async function loadRoadmapFromDB(params: {
@@ -184,7 +184,7 @@ export async function loadRoadmapFromDB(params: {
   if (error || !data) return null;
   return {
     state: data.graph_json as RoadmapState,
-    idea:  data.idea_json  as Idea,
+    idea: data.idea_json as Idea,
   };
 }
 
@@ -200,7 +200,7 @@ export async function getRoadmapsFromDB(userId: string): Promise<RoadmapRow[]> {
     return [];
   }
   return (data ?? []).map((row) => ({
-    slug:  row.slug,
+    slug: row.slug,
     title: (row.idea_json as Idea).title,
   }));
 }

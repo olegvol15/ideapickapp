@@ -11,8 +11,10 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { AuthGate } from '@/components/auth/AuthGate';
-import type { Idea, DifficultyLevel, SignalLevel } from '@/types';
+import type { DifficultyLevel, SignalLevel } from '@/types';
 import { computeOpportunityScore } from '@/lib/scoring';
+import { useAuth } from '@/context/auth';
+import { useIdeaDraftStore } from '@/stores/idea-draft.store';
 import { useSavedIdea } from '@/hooks/use-saved-idea';
 import { useIdeaActions } from '@/hooks/use-idea-actions';
 import { setPlan } from '@/services/storage.service';
@@ -39,17 +41,17 @@ const COMPETITION_COLOR: Record<SignalLevel, string> = {
 };
 
 interface OpportunityModalProps {
-  idea: Idea | null;
-  generationId?: string | null;
+  open: boolean;
   onClose: () => void;
 }
 
-export function OpportunityModal({
-  idea,
-  generationId,
-  onClose,
-}: OpportunityModalProps) {
+export function OpportunityModal({ open, onClose }: OpportunityModalProps) {
   const router = useRouter();
+  const { user } = useAuth();
+
+  // Draft store is the single source of truth for what idea is being viewed
+  const { draft: i, generationId } = useIdeaDraftStore();
+
   const {
     displayIdea,
     validation,
@@ -58,22 +60,23 @@ export function OpportunityModal({
     refine,
     validate,
     clearValidation,
-  } = useIdeaActions(idea);
+  } = useIdeaActions();
+
   const {
     saved,
     toggle: toggleSave,
     requiresAuth,
     clearAuthRequired,
-  } = useSavedIdea(displayIdea);
+  } = useSavedIdea(displayIdea, user?.id);
 
   useEffect(() => {
-    if (!idea) return;
+    if (!open) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [idea, onClose]);
+  }, [open, onClose]);
 
   function handleBuildRoadmap() {
     if (!displayIdea) return;
@@ -82,12 +85,11 @@ export function OpportunityModal({
     router.push(`/roadmap/${ideaId}`);
   }
 
-  const i = displayIdea;
   const score = i ? computeOpportunityScore(i) : 0;
 
   return (
     <AnimatePresence>
-      {idea && i && (
+      {open && i && (
         <motion.div
           key="overlay"
           initial={{ opacity: 0 }}
