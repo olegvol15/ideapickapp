@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { X, Bookmark, Loader2, ShieldCheck, Wand2, Map } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -77,8 +77,9 @@ export function OpportunityModal({
 
   function handleBuildRoadmap() {
     if (!displayIdea) return;
+    const ideaId = setPlan(displayIdea);
     onClose();
-    router.push(`/roadmap/${setPlan(displayIdea)}`);
+    router.push(`/roadmap/${ideaId}`);
   }
 
   const i = displayIdea;

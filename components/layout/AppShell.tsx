@@ -16,7 +16,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       />
       <SidebarProvider className="relative">
         <AppSidebar />
-        <SidebarInset>{children}</SidebarInset>
+        <SidebarInset>
+          {children}
+        </SidebarInset>
       </SidebarProvider>
     </div>
   );

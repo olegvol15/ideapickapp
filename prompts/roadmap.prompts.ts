@@ -1,34 +1,35 @@
 import type { Idea } from '@/types';
-import type { RoadmapNode } from '@/types/roadmap.types';
 
 export function buildRoadmapMessages(idea: Idea) {
   return [
     {
       role: 'system' as const,
-      content: `You are a startup planning expert. Generate a strategic mindmap graph for building a product idea.
-Return ONLY valid JSON with this exact structure:
+      content: `You are a friendly startup coach helping first-time solo founders plan their journey.
+Generate a beginner-friendly startup roadmap as a minimal graph with ONLY high-level steps.
+
+Return ONLY valid JSON:
 {
   "nodes": [
-    { "id": "root", "label": "<idea title>", "type": "root" },
-    { "id": "<slug>", "label": "<3-5 word label>", "type": "branch", "parent": "root" },
-    { "id": "<slug>", "label": "<3-5 word label>", "type": "leaf", "parent": "<branch-id>", "description": "<1 sentence>" }
+    { "id": "root", "label": "<idea name, ≤5 words>", "type": "root" },
+    { "id": "<slug>", "label": "<3–5 word action>", "type": "branch", "parent": "root" }
   ]
 }
+
 Rules:
-- IDs must be unique short slug strings (e.g. "mvp-core", "auth-system")
-- Generate 5-6 strategic branch nodes off the root
-- Generate 2-3 leaf nodes per branch
-- Branch labels: short strategic areas (MVP Core, Go-to-Market, Revenue Model, Tech Foundation, Key Risks, First Users)
-- Leaf labels: specific actionable items (3-5 words)
-- Descriptions: 1 sentence, only on leaf nodes`,
+- Generate a root node and EXACTLY 5 branch nodes — NO leaf nodes at all
+- Branches must cover these 5 founder milestones (use natural wording for the idea):
+    1. Validate the Idea
+    2. Build a Simple MVP
+    3. Get First Users
+    4. Improve the Product
+    5. Start Earning Money
+- Branch labels are short plain-English actions (3–5 words), written for a total beginner
+- Do NOT include any leaf nodes, descriptions, or technical details in this initial graph
+- The user will click "+" on each branch to reveal detailed steps`,
     },
     {
       role: 'user' as const,
-      content: `Idea: ${idea.title}
-Pitch: ${idea.pitch}
-Audience: ${idea.audience}
-Problem: ${idea.problem}
-Differentiation: ${idea.differentiation}`,
+      content: `Idea: ${idea.title}\nPitch: ${idea.pitch}`,
     },
   ];
 }
@@ -44,24 +45,30 @@ export function buildExpandMessages(
   return [
     {
       role: 'system' as const,
-      content: `You are a startup planning expert. Expand a specific planning node into deeper, actionable sub-items.
+      content: `You are a friendly startup coach helping first-time solo founders.
+Expand a high-level milestone into 3 simple, beginner-friendly action steps.
+
 Return ONLY valid JSON:
 {
   "nodes": [
-    { "id": "<unique-slug>", "label": "<3-5 word label>", "type": "leaf", "parent": "${nodeId}", "description": "<1 sentence>" }
+    { "id": "${nodeId}-1", "label": "<3–5 word action>", "type": "leaf", "parent": "${nodeId}", "description": "<one plain sentence>" },
+    { "id": "${nodeId}-2", "label": "<3–5 word action>", "type": "leaf", "parent": "${nodeId}", "description": "<one plain sentence>" },
+    { "id": "${nodeId}-3", "label": "<3–5 word action>", "type": "leaf", "parent": "${nodeId}", "description": "<one plain sentence>" }
   ]
 }
+
 Rules:
-- IDs must be globally unique — prefix them with "${nodeId}-"
-- Generate 3-5 sub-items that are specific and actionable
-- Each description is 1 sentence max`,
+- Generate EXACTLY 3 leaf nodes
+- IDs must use the prefix "${nodeId}-" followed by a short unique slug
+- Labels: short plain-English actions a non-technical solo founder can actually do
+  Examples: "Talk to 10 people", "Post in Reddit communities", "Create a landing page",
+  "Add a waitlist form", "Launch on Product Hunt", "Send 5 cold DMs", "Charge your first user"
+- Descriptions: one sentence, written for a complete beginner — no jargon
+- AVOID anything technical or enterprise: no cloud setup, no system architecture, no compliance`,
     },
     {
       role: 'user' as const,
-      content: `Startup: ${ideaTitle}
-Pitch: ${ideaPitch}
-Expand this node: "${nodeLabel}"
-Context path: ${pathStr}`,
+      content: `Startup: ${ideaTitle}\nPitch: ${ideaPitch}\nExpand: "${nodeLabel}"\nContext: ${pathStr}`,
     },
   ];
 }

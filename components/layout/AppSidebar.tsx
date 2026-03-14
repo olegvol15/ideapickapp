@@ -1,13 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Bookmark,
   ChevronDown,
   LogIn,
+  Map,
   PanelLeftClose,
   Plus,
 } from 'lucide-react';
@@ -15,6 +16,7 @@ import { UserMenu } from '@/components/auth/UserMenu';
 import { IdeaPickLogo } from '@/components/brand/IdeaPickLogo';
 import { useAuth } from '@/context/auth';
 import { useRecentBrainstorms } from '@/hooks/use-recent-brainstorms';
+import { useRoadmapPlans } from '@/hooks/use-roadmap-plans';
 import { cn } from '@/lib/utils';
 import {
   Sidebar,
@@ -30,11 +32,12 @@ import {
 
 function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
-  const router = useRouter();
   const { user } = useAuth();
   const { openDesktop, setOpenDesktop, setOpenMobile } = useSidebar();
   const [recentsOpen, setRecentsOpen] = useState(true);
-  const { items: recentBrainstorms, activeCreatedAt, restore } = useRecentBrainstorms();
+  const [roadmapsOpen, setRoadmapsOpen] = useState(true);
+  const { items: recentBrainstorms } = useRecentBrainstorms();
+  const roadmapPlans = useRoadmapPlans();
 
   function handleNewBrainstorm() {
     try { localStorage.removeItem('ideapick:last-research'); } catch { /* ignore */ }
@@ -118,6 +121,51 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               );
             })}
 
+            {/* Roadmaps */}
+            {roadmapPlans.length > 0 && (
+              <>
+                <div className="mx-2 my-3 border-t border-white/8" />
+
+                <button
+                  type="button"
+                  onClick={() => setRoadmapsOpen((o) => !o)}
+                  className="flex w-full items-center gap-1.5 px-2.5 py-1 text-xs text-muted-foreground/60 transition-colors hover:text-muted-foreground"
+                >
+                  <ChevronDown className={cn('h-3 w-3 transition-transform duration-200', roadmapsOpen && 'rotate-180')} />
+                  Roadmaps
+                </button>
+
+                <AnimatePresence initial={false}>
+                  {roadmapsOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                      className="overflow-hidden"
+                    >
+                      {roadmapPlans.map((plan) => (
+                        <Link
+                          key={plan.id}
+                          href={`/roadmap/${plan.id}`}
+                          onClick={() => { onNavigate?.(); setOpenMobile(false); }}
+                          className={cn(
+                            'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors',
+                            pathname === `/roadmap/${plan.id}`
+                              ? 'bg-white/8 text-foreground/90'
+                              : 'text-foreground/45 hover:bg-white/5 hover:text-foreground/80'
+                          )}
+                        >
+                          <Map className="h-3 w-3 shrink-0 opacity-50" />
+                          <span className="truncate">{plan.title}</span>
+                        </Link>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </>
+            )}
+
             {/* Recents */}
             {recentBrainstorms.length > 0 && (
               <>
@@ -142,24 +190,19 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                       className="overflow-hidden"
                     >
                       {recentBrainstorms.map((entry, i) => (
-                        <button
+                        <Link
                           key={entry.createdAt ?? i}
-                          type="button"
-                          onClick={() => {
-                            restore(entry);
-                            onNavigate?.();
-                            setOpenMobile(false);
-                            if (pathname !== '/') router.push('/');
-                          }}
+                          href={`/brainstorms/${entry.createdAt}`}
+                          onClick={() => { onNavigate?.(); setOpenMobile(false); }}
                           className={cn(
                             'flex w-full items-center rounded-lg px-3 py-2 text-left text-sm transition-colors',
-                            entry.createdAt === activeCreatedAt
+                            pathname === `/brainstorms/${entry.createdAt}`
                               ? 'text-foreground/90'
                               : 'text-foreground/45 hover:bg-white/5 hover:text-foreground/80'
                           )}
                         >
                           <span className="truncate">{entry.prompt}</span>
-                        </button>
+                        </Link>
                       ))}
                     </motion.div>
                   )}
