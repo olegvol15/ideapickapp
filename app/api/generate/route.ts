@@ -5,14 +5,9 @@ import {
   buildQueryGenerationMessages,
   buildAnalysisMessages,
 } from '@/prompts/generate.prompts';
-import { getCorsHeaders } from '@/constants/cors';
 import { requireAuth, checkRateLimit } from '@/lib/supabase/auth';
 import { generateLimiter } from '@/lib/rate-limit';
 import type { GenerateRequest, GenerateResponse } from '@/types';
-
-export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: getCorsHeaders() });
-}
 
 export async function POST(req: NextRequest) {
   const { user, error: authError } = await requireAuth();
@@ -84,7 +79,7 @@ export async function POST(req: NextRequest) {
       },
     };
 
-    return NextResponse.json(result, { headers: getCorsHeaders() });
+    return NextResponse.json(result);
   } catch (err) {
     console.error('[/api/generate]', err);
     return NextResponse.json(
