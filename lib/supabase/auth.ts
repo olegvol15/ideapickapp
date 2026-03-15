@@ -1,12 +1,9 @@
-import { NextResponse } from 'next/server';
 import { createClient } from './server';
+import { AppError } from '../errors/app-error';
 import type { User } from '@supabase/supabase-js';
 import type { Ratelimit } from '@upstash/ratelimit';
 
-type AuthOk = { user: User; error: null };
-type AuthErr = { user: null; error: NextResponse };
-
-export async function requireAuth(): Promise<AuthOk | AuthErr> {
+export async function requireAuth(): Promise<User> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -14,33 +11,18 @@ export async function requireAuth(): Promise<AuthOk | AuthErr> {
   } = await supabase.auth.getUser();
 
   if (error || !user) {
-    return {
-      user: null,
-      error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
-    };
+    throw AppError.authRequired();
   }
 
-  return { user, error: null };
+  return user;
 }
 
 export async function checkRateLimit(
   limiter: Ratelimit,
   userId: string
-): Promise<NextResponse | null> {
-  const { success, limit, remaining, reset } = await limiter.limit(userId);
+): Promise<void> {
+  const { success, reset } = await limiter.limit(userId);
   if (!success) {
-    return NextResponse.json(
-      { error: 'Rate limit exceeded. Try again later.' },
-      {
-        status: 429,
-        headers: {
-          'X-RateLimit-Limit': String(limit),
-          'X-RateLimit-Remaining': String(remaining),
-          'X-RateLimit-Reset': String(reset),
-          'Retry-After': String(Math.ceil((reset - Date.now()) / 1000)),
-        },
-      }
-    );
+    throw AppError.rateLimit(reset - Date.now());
   }
-  return null;
 }

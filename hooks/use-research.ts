@@ -5,6 +5,7 @@ import {
   type PersistedResearch,
 } from '@/stores/research.store';
 import { useGenerate, useSaveGeneration } from '@/hooks/use-generations';
+import { getApiMessage } from '@/lib/errors/api-error';
 
 const THINKING_DELAY_MS = 800;
 const CARD_STAGGER_MS = 380;
@@ -81,6 +82,6 @@ export function useResearch(userId: string | undefined) {
     handleGenerate,
     handleClear,
     isGenerating,
-    errorMsg: generateMutation.error?.message ?? 'Something went wrong',
+    errorMsg: getApiMessage(generateMutation.error),
   };
 }

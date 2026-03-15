@@ -4,11 +4,13 @@ import axios, {
   type AxiosRequestConfig,
 } from 'axios';
 import { toast } from 'sonner';
+import { createClient } from '@/lib/supabase/client';
 
-export interface ApiError {
+interface ApiErrorBody {
+  status: 'error';
+  code: string;
   message: string;
-  code?: string;
-  errors?: Record<string, string[]>;
+  data: Record<string, unknown>;
 }
 
 // Only POST/PUT/PATCH/DELETE warrant a success toast when the server returns a message.
@@ -30,38 +32,58 @@ api.interceptors.response.use(
     return response.data;
   },
 
-  (error: AxiosError<ApiError>) => {
+  async (error: AxiosError<ApiErrorBody>) => {
     if (!error.response) {
-      toast.error('Network error. Check your internet connection.');
+      toast.error('Network error. Check your connection.');
       return Promise.reject(error);
     }
 
-    const { status, data } = error.response;
+    const { status, headers } = error.response;
+    const body = error.response.data;
+    const message = body?.message;
 
     switch (status) {
-      case 401:
-        toast.error('Session expired. Please login again.');
-        // Delay navigation so the toast has time to appear before the page unloads.
+      case 400:
+      case 422:
+        // Do NOT toast — let the calling hook/component handle inline display.
+        break;
+
+      case 401: {
+        const supabase = createClient();
+        await supabase.auth.signOut();
+        toast.error('Session expired. Please sign in again.', { duration: Infinity, dismissible: true });
         setTimeout(() => {
-          if (typeof window !== 'undefined') window.location.href = '/login';
+          if (typeof window !== 'undefined') window.location.href = '/auth';
         }, 1_500);
         break;
+      }
+
       case 403:
-        toast.error("You don't have permission to perform this action.");
+        if (typeof window !== 'undefined') window.location.href = '/403';
         break;
-      case 422:
-        if (data?.errors) {
-          const firstMessage = Object.values(data.errors).flat()[0];
-          toast.error(firstMessage ?? data.message ?? 'Validation failed.');
-        } else {
-          toast.error(data?.message ?? 'Validation failed.');
-        }
+
+      case 404:
+        if (typeof window !== 'undefined') window.location.href = '/404';
         break;
+
+      case 429: {
+        const retryAfter = headers['retry-after'];
+        const seconds = retryAfter ? parseInt(String(retryAfter), 10) : null;
+        toast.error(
+          seconds != null
+            ? `Too many requests. Try again in ${seconds} seconds.`
+            : 'Too many requests. Try again later.'
+        );
+        break;
+      }
+
       case 500:
-        toast.error('Server error. Please try again later.');
+        toast.error('Something went wrong');
+        reportError(error);
         break;
+
       default:
-        toast.error(data?.message ?? `Request failed (${status}).`);
+        toast.error(message ?? `Request failed (${status}).`);
     }
 
     return Promise.reject(error);
@@ -92,5 +114,10 @@ export const typedApi = {
   delete: <T>(url: string, config?: AxiosRequestConfig): Promise<T> =>
     api.delete<T>(url, config) as unknown as Promise<T>,
 };
+
+export function reportError(err: unknown, context?: Record<string, unknown>) {
+  // Swap for Sentry.captureException(err, { extra: context }) once configured
+  console.error('[reportError]', err, context);
+}
 
 export default api;

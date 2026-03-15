@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { AppError } from './errors/app-error';
 import { PRODUCT_TYPE_OPTIONS, DIFFICULTY_OPTIONS } from '@/constants/products';
 
 // ─── Limits ───────────────────────────────────────────────────────────────────
@@ -24,42 +24,35 @@ function tooLong(value: string, max: number): boolean {
   return value.length > max;
 }
 
-function err(message: string): NextResponse {
-  return NextResponse.json({ error: message }, { status: 400 });
-}
-
 // ─── Per-route validators ─────────────────────────────────────────────────────
 
 export function validateGenerateInput(
   prompt: string,
   productType: string,
   difficulty: string
-): NextResponse | null {
+): void {
   if (tooLong(prompt, LIMITS.prompt)) {
-    return err(`Prompt must be ${LIMITS.prompt} characters or fewer`);
+    throw AppError.validation(`Prompt must be ${LIMITS.prompt} characters or fewer`);
   }
   if (productType && !VALID_PRODUCT_TYPES.has(productType as never)) {
-    return err('Invalid product type');
+    throw AppError.validation('Invalid product type');
   }
   if (difficulty && !VALID_DIFFICULTIES.has(difficulty as never)) {
-    return err('Invalid difficulty');
+    throw AppError.validation('Invalid difficulty');
   }
-  return null;
 }
 
-export function validateInstruction(instruction: string): NextResponse | null {
+export function validateInstruction(instruction: string): void {
   if (tooLong(instruction, LIMITS.instruction)) {
-    return err(`Instruction must be ${LIMITS.instruction} characters or fewer`);
+    throw AppError.validation(`Instruction must be ${LIMITS.instruction} characters or fewer`);
   }
-  return null;
 }
 
-export function validateIdeaSize(idea: unknown): NextResponse | null {
+export function validateIdeaSize(idea: unknown): void {
   const size = Buffer.byteLength(JSON.stringify(idea), 'utf8');
   if (size > LIMITS.ideaJson) {
-    return err('Idea payload is too large');
+    throw AppError.validation('Idea payload is too large');
   }
-  return null;
 }
 
 export function validateExpandInput(
@@ -68,28 +61,27 @@ export function validateExpandInput(
   nodeId: string,
   nodeLabel: string,
   parentPath: unknown
-): NextResponse | null {
+): void {
   if (typeof ideaTitle === 'string' && tooLong(ideaTitle, LIMITS.ideaTitle)) {
-    return err(`Idea title must be ${LIMITS.ideaTitle} characters or fewer`);
+    throw AppError.validation(`Idea title must be ${LIMITS.ideaTitle} characters or fewer`);
   }
   if (typeof ideaPitch === 'string' && tooLong(ideaPitch, LIMITS.ideaPitch)) {
-    return err(`Idea pitch must be ${LIMITS.ideaPitch} characters or fewer`);
+    throw AppError.validation(`Idea pitch must be ${LIMITS.ideaPitch} characters or fewer`);
   }
   if (tooLong(nodeId, LIMITS.nodeId)) {
-    return err(`nodeId must be ${LIMITS.nodeId} characters or fewer`);
+    throw AppError.validation(`nodeId must be ${LIMITS.nodeId} characters or fewer`);
   }
   if (tooLong(nodeLabel, LIMITS.nodeLabel)) {
-    return err(`nodeLabel must be ${LIMITS.nodeLabel} characters or fewer`);
+    throw AppError.validation(`nodeLabel must be ${LIMITS.nodeLabel} characters or fewer`);
   }
   if (Array.isArray(parentPath)) {
     if (parentPath.length > LIMITS.parentPathItems) {
-      return err(`parentPath must have ${LIMITS.parentPathItems} items or fewer`);
+      throw AppError.validation(`parentPath must have ${LIMITS.parentPathItems} items or fewer`);
     }
     for (const item of parentPath) {
       if (typeof item === 'string' && tooLong(item, LIMITS.parentPathItem)) {
-        return err(`Each parentPath item must be ${LIMITS.parentPathItem} characters or fewer`);
+        throw AppError.validation(`Each parentPath item must be ${LIMITS.parentPathItem} characters or fewer`);
       }
     }
   }
-  return null;
 }
