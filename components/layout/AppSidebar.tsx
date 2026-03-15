@@ -57,12 +57,13 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     ? (dbRoadmaps ?? []).map((r) => ({ id: r.slug, title: r.title }))
     : localPlans;
 
-  // Seed local plans from sessionStorage on mount (for non-logged-in users)
+  // Seed local plans from sessionStorage on mount only (for non-logged-in users)
   useEffect(() => {
     if (!user) {
       useRoadmapStore.getState().setLocalPlans(listPlans());
     }
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function handleNewBrainstorm() {
     useResearchStore.getState().clear();

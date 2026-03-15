@@ -3,11 +3,13 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { getSupabaseEnv } from '@/lib/supabase/config';
 
 function buildCsp(nonce: string): string {
+  const isDev = process.env.NODE_ENV === 'development';
   return [
     "default-src 'self'",
     // 'strict-dynamic' lets nonce-whitelisted scripts load further scripts.
+    // 'unsafe-eval' is needed in dev for Next.js hot-reload; omitted in prod.
     // 'self' is a fallback for browsers that don't support strict-dynamic.
-    `script-src 'nonce-${nonce}' 'strict-dynamic' 'self'`,
+    `script-src 'nonce-${nonce}' 'strict-dynamic' 'self'${isDev ? " 'unsafe-eval'" : ''}`,
     // Framer Motion and Radix UI inject inline styles; fonts come from Google.
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",

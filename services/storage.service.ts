@@ -59,6 +59,16 @@ export interface PlanEntry {
   title: string;
 }
 
+/** Removes all persisted plans from sessionStorage. */
+export function clearPlans(): void {
+  const keys: string[] = [];
+  for (let i = 0; i < sessionStorage.length; i++) {
+    const key = sessionStorage.key(i);
+    if (key?.startsWith(PLAN_PREFIX)) keys.push(key);
+  }
+  keys.forEach((k) => sessionStorage.removeItem(k));
+}
+
 /** Returns all persisted plan entries from sessionStorage. */
 export function listPlans(): PlanEntry[] {
   const entries: PlanEntry[] = [];

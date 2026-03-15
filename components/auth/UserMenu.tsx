@@ -7,6 +7,9 @@ import { useTheme } from 'next-themes';
 import { ChevronsUpDown, LogOut, Moon, Sun } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '@/context/auth';
+import { useRoadmapStore } from '@/stores/roadmap.store';
+import { useResearchStore } from '@/stores/research.store';
+import { clearPlans } from '@/services/storage.service';
 import { cn } from '@/lib/utils';
 
 interface UserMenuProps {
@@ -70,6 +73,9 @@ export function UserMenu({ variant = 'compact' }: UserMenuProps) {
 
   async function handleSignOut() {
     await signOut();
+    clearPlans();
+    useRoadmapStore.getState().setLocalPlans([]);
+    useResearchStore.getState().clear();
     router.push('/');
   }
 
