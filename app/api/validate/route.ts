@@ -3,6 +3,8 @@ import { openai } from '@/lib/openai';
 import { buildValidateMessages } from '@/prompts/validate.prompts';
 import { requireAuth, checkRateLimit } from '@/lib/supabase/auth';
 import { validateLimiter } from '@/lib/rate-limit';
+import { validateIdeaSize } from '@/lib/validate-input';
+import { ValidationResultSchema } from '@/lib/schemas';
 import type { Idea, ValidationResult } from '@/types';
 
 export async function POST(req: NextRequest) {
@@ -25,6 +27,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const inputError = validateIdeaSize(idea);
+  if (inputError) return inputError;
+
   try {
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -34,11 +39,19 @@ export async function POST(req: NextRequest) {
       messages: buildValidateMessages(idea),
     });
 
-    const result = JSON.parse(
-      completion.choices[0]?.message?.content ?? '{}'
-    ) as ValidationResult;
+    const parsed = ValidationResultSchema.safeParse(
+      JSON.parse(completion.choices[0]?.message?.content ?? '{}')
+    );
 
-    return NextResponse.json(result);
+    if (!parsed.success) {
+      console.error('[/api/validate] invalid LLM output', parsed.error.flatten());
+      return NextResponse.json(
+        { error: 'Validation failed. Please try again.' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(parsed.data as ValidationResult);
   } catch (err) {
     console.error('[/api/validate]', err);
     return NextResponse.json(

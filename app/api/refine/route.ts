@@ -3,6 +3,8 @@ import { openai } from '@/lib/openai';
 import { buildRefineMessages } from '@/prompts/refine.prompts';
 import { requireAuth, checkRateLimit } from '@/lib/supabase/auth';
 import { refineLimiter } from '@/lib/rate-limit';
+import { validateInstruction, validateIdeaSize } from '@/lib/validate-input';
+import { IdeaSchema } from '@/lib/schemas';
 import type { Idea } from '@/types';
 
 export async function POST(req: NextRequest) {
@@ -32,6 +34,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const inputError = validateInstruction(instruction) ?? validateIdeaSize(idea);
+  if (inputError) return inputError;
+
   try {
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -41,11 +46,19 @@ export async function POST(req: NextRequest) {
       messages: buildRefineMessages(idea, instruction),
     });
 
-    const refined = JSON.parse(
-      completion.choices[0]?.message?.content ?? '{}'
-    ) as Idea;
+    const parsed = IdeaSchema.safeParse(
+      JSON.parse(completion.choices[0]?.message?.content ?? '{}')
+    );
 
-    return NextResponse.json(refined);
+    if (!parsed.success) {
+      console.error('[/api/refine] invalid LLM output', parsed.error.flatten());
+      return NextResponse.json(
+        { error: 'Refinement failed. Please try again.' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(parsed.data as Idea);
   } catch (err) {
     console.error('[/api/refine]', err);
     return NextResponse.json(

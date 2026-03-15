@@ -3,6 +3,8 @@ import { openai } from '@/lib/openai';
 import { buildExpandMessages } from '@/prompts/roadmap.prompts';
 import { requireAuth, checkRateLimit } from '@/lib/supabase/auth';
 import { expandLimiter } from '@/lib/rate-limit';
+import { validateExpandInput } from '@/lib/validate-input';
+import { RoadmapGraphSchema } from '@/lib/schemas';
 import type { ExpandRequest, RoadmapGraph } from '@/types/roadmap.types';
 
 export async function POST(req: NextRequest) {
@@ -30,6 +32,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const inputError = validateExpandInput(ideaTitle, ideaPitch, nodeId, nodeLabel, parentPath);
+  if (inputError) return inputError;
+
   try {
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -45,11 +50,19 @@ export async function POST(req: NextRequest) {
       response_format: { type: 'json_object' },
     });
 
-    const graph = JSON.parse(
-      completion.choices[0]?.message?.content ?? '{}'
-    ) as RoadmapGraph;
+    const parsed = RoadmapGraphSchema.safeParse(
+      JSON.parse(completion.choices[0]?.message?.content ?? '{}')
+    );
 
-    return NextResponse.json(graph);
+    if (!parsed.success) {
+      console.error('[/api/roadmap/expand] invalid LLM output', parsed.error.flatten());
+      return NextResponse.json(
+        { error: 'Failed to expand node.' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(parsed.data as RoadmapGraph);
   } catch (err) {
     console.error('[/api/roadmap/expand]', err);
     return NextResponse.json(

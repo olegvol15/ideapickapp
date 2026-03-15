@@ -3,6 +3,8 @@ import { openai } from '@/lib/openai';
 import { buildRoadmapMessages } from '@/prompts/roadmap.prompts';
 import { requireAuth, checkRateLimit } from '@/lib/supabase/auth';
 import { roadmapLimiter } from '@/lib/rate-limit';
+import { validateIdeaSize } from '@/lib/validate-input';
+import { RoadmapGraphSchema } from '@/lib/schemas';
 import type { Idea } from '@/types';
 import type { RoadmapGraph } from '@/types/roadmap.types';
 
@@ -27,6 +29,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Idea is required' }, { status: 400 });
   }
 
+  const inputError = validateIdeaSize(idea);
+  if (inputError) return inputError;
+
   try {
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -36,11 +41,19 @@ export async function POST(req: NextRequest) {
       response_format: { type: 'json_object' },
     });
 
-    const graph = JSON.parse(
-      completion.choices[0]?.message?.content ?? '{}'
-    ) as RoadmapGraph;
+    const parsed = RoadmapGraphSchema.safeParse(
+      JSON.parse(completion.choices[0]?.message?.content ?? '{}')
+    );
 
-    return NextResponse.json(graph);
+    if (!parsed.success) {
+      console.error('[/api/roadmap] invalid LLM output', parsed.error.flatten());
+      return NextResponse.json(
+        { error: 'Failed to generate roadmap.' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(parsed.data as RoadmapGraph);
   } catch (err) {
     console.error('[/api/roadmap]', err);
     return NextResponse.json(

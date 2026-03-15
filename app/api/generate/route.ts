@@ -7,6 +7,8 @@ import {
 } from '@/prompts/generate.prompts';
 import { requireAuth, checkRateLimit } from '@/lib/supabase/auth';
 import { generateLimiter } from '@/lib/rate-limit';
+import { validateGenerateInput } from '@/lib/validate-input';
+import { GenerateLLMOutputSchema } from '@/lib/schemas';
 import type { GenerateRequest, GenerateResponse } from '@/types';
 
 export async function POST(req: NextRequest) {
@@ -31,6 +33,9 @@ export async function POST(req: NextRequest) {
   if (!prompt?.trim()) {
     return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
   }
+
+  const inputError = validateGenerateInput(prompt, productType, difficulty);
+  if (inputError) return inputError;
 
   try {
     // Step 1: Generate focused search queries
@@ -66,15 +71,23 @@ export async function POST(req: NextRequest) {
       response_format: { type: 'json_object' },
     });
 
-    const llmOutput = JSON.parse(
-      analysisCompletion.choices[0]?.message?.content ?? '{}'
+    const parsed = GenerateLLMOutputSchema.safeParse(
+      JSON.parse(analysisCompletion.choices[0]?.message?.content ?? '{}')
     );
 
+    if (!parsed.success) {
+      console.error('[/api/generate] invalid LLM output', parsed.error.flatten());
+      return NextResponse.json(
+        { error: 'Failed to generate ideas. Please try again.' },
+        { status: 500 }
+      );
+    }
+
     const result: GenerateResponse = {
-      ...llmOutput,
+      ...parsed.data,
       competitors,
       marketContext: {
-        ...llmOutput.marketContext,
+        ...parsed.data.marketContext,
         competitorsFound: competitors.length,
       },
     };
