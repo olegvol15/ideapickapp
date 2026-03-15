@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { openai } from '@/lib/openai';
 import { buildRefineMessages } from '@/prompts/refine.prompts';
+import { requireAuth, checkRateLimit } from '@/lib/supabase/auth';
+import { refineLimiter } from '@/lib/rate-limit';
 import type { Idea } from '@/types';
 
 export async function POST(req: NextRequest) {
+  const { user, error: authError } = await requireAuth();
+  if (authError) return authError;
+
+  const rateLimitError = await checkRateLimit(refineLimiter, user.id);
+  if (rateLimitError) return rateLimitError;
+
   let idea: Idea;
   let instruction: string;
 

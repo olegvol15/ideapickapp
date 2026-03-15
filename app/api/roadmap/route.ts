@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { openai } from '@/lib/openai';
 import { buildRoadmapMessages } from '@/prompts/roadmap.prompts';
+import { requireAuth, checkRateLimit } from '@/lib/supabase/auth';
+import { roadmapLimiter } from '@/lib/rate-limit';
 import type { Idea } from '@/types';
 import type { RoadmapGraph } from '@/types/roadmap.types';
 
 export async function POST(req: NextRequest) {
+  const { user, error: authError } = await requireAuth();
+  if (authError) return authError;
+
+  const rateLimitError = await checkRateLimit(roadmapLimiter, user.id);
+  if (rateLimitError) return rateLimitError;
   let idea: Idea;
   try {
     const body = await req.json();

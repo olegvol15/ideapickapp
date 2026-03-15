@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { openai } from '@/lib/openai';
 import { buildValidateMessages } from '@/prompts/validate.prompts';
+import { requireAuth, checkRateLimit } from '@/lib/supabase/auth';
+import { validateLimiter } from '@/lib/rate-limit';
 import type { Idea, ValidationResult } from '@/types';
 
 export async function POST(req: NextRequest) {
+  const { user, error: authError } = await requireAuth();
+  if (authError) return authError;
+
+  const rateLimitError = await checkRateLimit(validateLimiter, user.id);
+  if (rateLimitError) return rateLimitError;
   let idea: Idea;
   try {
     const body = (await req.json()) as { idea?: Idea };

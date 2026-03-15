@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { openai } from '@/lib/openai';
 import { buildExpandMessages } from '@/prompts/roadmap.prompts';
+import { requireAuth, checkRateLimit } from '@/lib/supabase/auth';
+import { expandLimiter } from '@/lib/rate-limit';
 import type { ExpandRequest, RoadmapGraph } from '@/types/roadmap.types';
 
 export async function POST(req: NextRequest) {
+  const { user, error: authError } = await requireAuth();
+  if (authError) return authError;
+
+  const rateLimitError = await checkRateLimit(expandLimiter, user.id);
+  if (rateLimitError) return rateLimitError;
   let body: ExpandRequest;
   try {
     body = await req.json();

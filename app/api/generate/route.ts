@@ -6,6 +6,8 @@ import {
   buildAnalysisMessages,
 } from '@/prompts/generate.prompts';
 import { getCorsHeaders } from '@/constants/cors';
+import { requireAuth, checkRateLimit } from '@/lib/supabase/auth';
+import { generateLimiter } from '@/lib/rate-limit';
 import type { GenerateRequest, GenerateResponse } from '@/types';
 
 export async function OPTIONS() {
@@ -13,6 +15,12 @@ export async function OPTIONS() {
 }
 
 export async function POST(req: NextRequest) {
+  const { user, error: authError } = await requireAuth();
+  if (authError) return authError;
+
+  const rateLimitError = await checkRateLimit(generateLimiter, user.id);
+  if (rateLimitError) return rateLimitError;
+
   let body: GenerateRequest;
   try {
     body = await req.json();
