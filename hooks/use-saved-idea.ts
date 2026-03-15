@@ -25,8 +25,11 @@ export function useSavedIdea(
   const saveIdea = useSaveIdea(userId);
   const unsaveIdea = useUnsaveIdea(userId);
 
-  const saved =
-    !!userId && savedIdeas.some((r) => r.idea_json.title === idea?.title);
+  const savedRow =
+    userId && idea?.title
+      ? (savedIdeas.find((r) => r.idea_json.title === idea.title) ?? null)
+      : null;
+  const saved = !!savedRow;
 
   function toggle(generationId?: string | null): boolean {
     if (!idea?.title) return false;
@@ -39,8 +42,8 @@ export function useSavedIdea(
     const next = !saved;
     if (next) {
       saveIdea.mutate({ generationId: generationId ?? null, idea });
-    } else {
-      unsaveIdea.mutate(idea.title);
+    } else if (savedRow) {
+      unsaveIdea.mutate(savedRow.id);
     }
     return next;
   }

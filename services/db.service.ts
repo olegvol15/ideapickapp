@@ -70,14 +70,14 @@ export async function saveIdeaToDB(params: {
 
 export async function unsaveIdeaFromDB(
   userId: string,
-  ideaTitle: string
+  ideaId: string
 ): Promise<void> {
   const supabase = createClient();
   const { error } = await supabase
     .from('saved_ideas')
     .delete()
     .eq('user_id', userId)
-    .eq('idea_json->>title', ideaTitle);
+    .eq('id', ideaId);
 
   if (error) {
     console.error('[db] unsaveIdeaFromDB', error.message);

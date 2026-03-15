@@ -190,12 +190,12 @@ export function RoadmapCanvas({
   const freshGenerationRef = useRef(false);
   const dbSyncedRef = useRef(false);
 
-  // DB query — only when no session cache is present
+  // DB query — only when no session cache is present and auth has resolved
   const { data: dbRoadmap, isFetched: dbFetched } = useGetRoadmap(
     ideaId,
     userId,
     {
-      enabled: !cachedState,
+      enabled: !cachedState && !authLoading,
     }
   );
 
@@ -275,7 +275,11 @@ export function RoadmapCanvas({
 
         const { nodes: newRm }: { nodes: RoadmapNode[] } = await res.json();
 
-        const parent = rfNodes.find((n) => n.id === nodeId)!;
+        const parent = rfNodes.find((n) => n.id === nodeId);
+        if (!parent) {
+          store.patchNode(nodeId, { expanding: false });
+          return;
+        }
         const total = newRm.length;
         const totalSpan = (total - 1) * CHILD_STEP;
 
@@ -341,6 +345,7 @@ export function RoadmapCanvas({
 
   useEffect(() => {
     if (cachedState || freshGenerationRef.current) return;
+    if (authLoading) return; // wait for auth to resolve before querying DB or generating
     if (userId && !dbFetched) return; // wait for DB query
 
     if (dbRoadmap) {
@@ -417,7 +422,7 @@ export function RoadmapCanvas({
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cachedState, userId, dbFetched, dbRoadmap]);
+  }, [cachedState, userId, dbFetched, dbRoadmap, authLoading]);
 
   // ── DB sync after auth resolves (race condition) ───────────────────────────
 

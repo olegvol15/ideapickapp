@@ -62,11 +62,11 @@ export function useUnsaveIdea(userId: string | undefined) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (ideaTitle: string) => {
+    mutationFn: (ideaId: string) => {
       if (!userId) return Promise.resolve();
-      return unsaveIdeaFromDB(userId, ideaTitle);
+      return unsaveIdeaFromDB(userId, ideaId);
     },
-    onMutate: async (ideaTitle) => {
+    onMutate: async (ideaId) => {
       if (!userId) return;
       await queryClient.cancelQueries({ queryKey: savedIdeaKeys.all(userId) });
       const previous = queryClient.getQueryData<SavedIdeaRow[]>(
@@ -74,7 +74,7 @@ export function useUnsaveIdea(userId: string | undefined) {
       );
       queryClient.setQueryData<SavedIdeaRow[]>(
         savedIdeaKeys.all(userId),
-        (old = []) => old.filter((r) => r.idea_json.title !== ideaTitle)
+        (old = []) => old.filter((r) => r.id !== ideaId)
       );
       return { previous };
     },

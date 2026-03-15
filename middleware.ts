@@ -22,7 +22,11 @@ export async function middleware(request: NextRequest) {
   });
 
   // Refresh the session — required for Server Component auth to work.
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user && request.nextUrl.pathname.startsWith('/api/')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   return supabaseResponse;
 }

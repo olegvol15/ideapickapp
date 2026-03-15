@@ -2,7 +2,6 @@ import axios, {
   type AxiosError,
   type AxiosResponse,
   type AxiosRequestConfig,
-  type InternalAxiosRequestConfig,
 } from 'axios';
 import { toast } from 'sonner';
 
@@ -15,34 +14,11 @@ export interface ApiError {
 // Only POST/PUT/PATCH/DELETE warrant a success toast when the server returns a message.
 const MUTABLE_METHODS = new Set(['post', 'put', 'patch', 'delete']);
 
-function getToken(): string | null {
-  if (typeof window === 'undefined') return null;
-
-  const lsToken = localStorage.getItem('token');
-  if (lsToken) return lsToken;
-
-  return (
-    document.cookie
-      .split('; ')
-      .find((row) => row.startsWith('token='))
-      ?.split('=')[1] ?? null
-  );
-}
-
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
   timeout: 60_000, // LLM + search calls can take 20–40 s
   headers: { 'Content-Type': 'application/json' },
 });
-
-api.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    const token = getToken();
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-    return config;
-  },
-  (error: AxiosError) => Promise.reject(error)
-);
 
 api.interceptors.response.use(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
