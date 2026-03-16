@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { Toaster, toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 
 interface GlobalErrorProps {
   error: Error & { digest?: string };
@@ -24,12 +25,12 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
           <p className="text-sm text-muted-foreground">
             A critical error occurred. Please reload the page.
           </p>
-          <button
+          <Button
             onClick={reset}
             className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Reload
-          </button>
+          </Button>
         </div>
         <Toaster position="bottom-right" richColors closeButton />
       </body>

@@ -35,3 +35,10 @@ export const expandLimiter = new Ratelimit({
   limiter: Ratelimit.slidingWindow(40, '1 h'),
   prefix: 'rl:expand',
 });
+
+// Check-email is unauthenticated — rate limit by IP to prevent enumeration.
+export const checkEmailLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, '1 h'),
+  prefix: 'rl:check-email',
+});

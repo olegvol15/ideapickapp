@@ -60,7 +60,7 @@ export async function middleware(request: NextRequest) {
   // Refresh the session — required for Server Component auth to work.
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user && request.nextUrl.pathname.startsWith('/api/')) {
+  if (!user && request.nextUrl.pathname.startsWith('/api/') && !request.nextUrl.pathname.startsWith('/api/auth/')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

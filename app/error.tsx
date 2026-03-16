@@ -1,6 +1,7 @@
 'use client';
 
 import { AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ErrorPageProps {
   error: Error & { digest?: string };
@@ -17,12 +18,12 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
           <p className="text-sm text-muted-foreground">{error.message}</p>
         )}
       </div>
-      <button
+      <Button
         onClick={reset}
         className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground transition-colors hover:bg-primary/90"
       >
         Try again
-      </button>
+      </Button>
     </div>
   );
 }
