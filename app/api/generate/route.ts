@@ -41,9 +41,11 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     response_format: { type: 'json_object' },
   });
 
-  const { queries = [] }: { queries: string[] } = JSON.parse(
-    queryCompletion.choices[0]?.message?.content ?? '{}'
-  );
+  let parsedQueries: { queries?: string[] } = {};
+  try {
+    parsedQueries = JSON.parse(queryCompletion.choices[0]?.message?.content ?? '{}');
+  } catch { /* use empty fallback */ }
+  const { queries = [] } = parsedQueries;
 
   // Step 2: Discover competitors via product-type-aware strategy
   const competitors = await discoverCompetitors(
@@ -65,9 +67,11 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     response_format: { type: 'json_object' },
   });
 
-  const parsed = GenerateLLMOutputSchema.safeParse(
-    JSON.parse(analysisCompletion.choices[0]?.message?.content ?? '{}')
-  );
+  let analysisJson: unknown = {};
+  try {
+    analysisJson = JSON.parse(analysisCompletion.choices[0]?.message?.content ?? '{}');
+  } catch { /* use empty fallback */ }
+  const parsed = GenerateLLMOutputSchema.safeParse(analysisJson);
 
   if (!parsed.success) {
     throw AppError.invalidAiResponse('Failed to generate ideas. Please try again.');

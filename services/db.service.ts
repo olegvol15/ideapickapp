@@ -24,7 +24,7 @@ export async function saveGeneration(params: {
   productType: ProductType | '';
   difficulty: Difficulty | '';
   result: GenerateResponse;
-}): Promise<string | null> {
+}): Promise<string> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from('generations')
@@ -38,10 +38,7 @@ export async function saveGeneration(params: {
     .select('id')
     .single();
 
-  if (error) {
-    console.error('[db] saveGeneration', error.message);
-    return null;
-  }
+  if (error) throw new Error(`[db] saveGeneration: ${error.message}`);
   return data.id;
 }
 
@@ -49,7 +46,7 @@ export async function saveIdeaToDB(params: {
   userId: string;
   generationId: string | null;
   idea: Idea;
-}): Promise<string | null> {
+}): Promise<string> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from('saved_ideas')
@@ -61,10 +58,7 @@ export async function saveIdeaToDB(params: {
     .select('id')
     .single();
 
-  if (error) {
-    console.error('[db] saveIdeaToDB', error.message);
-    return null;
-  }
+  if (error) throw new Error(`[db] saveIdeaToDB: ${error.message}`);
   return data.id;
 }
 
@@ -162,7 +156,7 @@ export async function upsertRoadmapToDB(params: {
   const { error } = await supabase
     .from('roadmaps')
     .upsert(row, { onConflict: 'user_id,slug' });
-  if (error) console.error('[db] upsertRoadmapToDB', error.message);
+  if (error) throw new Error(`[db] upsertRoadmapToDB: ${error.message}`);
 }
 
 export interface LoadedRoadmap {

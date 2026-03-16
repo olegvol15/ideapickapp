@@ -36,9 +36,11 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     response_format: { type: 'json_object' },
   });
 
-  const parsed = RoadmapGraphSchema.safeParse(
-    JSON.parse(completion.choices[0]?.message?.content ?? '{}')
-  );
+  let roadmapJson: unknown = {};
+  try {
+    roadmapJson = JSON.parse(completion.choices[0]?.message?.content ?? '{}');
+  } catch { /* use empty fallback */ }
+  const parsed = RoadmapGraphSchema.safeParse(roadmapJson);
 
   if (!parsed.success) {
     throw AppError.invalidAiResponse('Failed to generate roadmap.');

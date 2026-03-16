@@ -42,9 +42,11 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     response_format: { type: 'json_object' },
   });
 
-  const parsed = RoadmapGraphSchema.safeParse(
-    JSON.parse(completion.choices[0]?.message?.content ?? '{}')
-  );
+  let expandJson: unknown = {};
+  try {
+    expandJson = JSON.parse(completion.choices[0]?.message?.content ?? '{}');
+  } catch { /* use empty fallback */ }
+  const parsed = RoadmapGraphSchema.safeParse(expandJson);
 
   if (!parsed.success) {
     throw AppError.invalidAiResponse('Failed to expand node.');

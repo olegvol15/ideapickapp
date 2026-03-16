@@ -39,9 +39,11 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     messages: buildRefineMessages(idea, instruction),
   });
 
-  const parsed = IdeaSchema.safeParse(
-    JSON.parse(completion.choices[0]?.message?.content ?? '{}')
-  );
+  let refineJson: unknown = {};
+  try {
+    refineJson = JSON.parse(completion.choices[0]?.message?.content ?? '{}');
+  } catch { /* use empty fallback */ }
+  const parsed = IdeaSchema.safeParse(refineJson);
 
   if (!parsed.success) {
     throw AppError.invalidAiResponse('Refinement failed. Please try again.');

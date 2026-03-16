@@ -35,9 +35,11 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     messages: buildValidateMessages(idea),
   });
 
-  const parsed = ValidationResultSchema.safeParse(
-    JSON.parse(completion.choices[0]?.message?.content ?? '{}')
-  );
+  let validateJson: unknown = {};
+  try {
+    validateJson = JSON.parse(completion.choices[0]?.message?.content ?? '{}');
+  } catch { /* use empty fallback */ }
+  const parsed = ValidationResultSchema.safeParse(validateJson);
 
   if (!parsed.success) {
     throw AppError.invalidAiResponse('Validation failed. Please try again.');
