@@ -13,6 +13,9 @@ const LIMITS = {
   nodeLabel: 200,
   parentPathItems: 10,
   parentPathItem: 200,
+  validateDescription: 600,
+  validateAudience: 200,
+  validateProblem: 300,
 } as const;
 
 const VALID_PRODUCT_TYPES = new Set(PRODUCT_TYPE_OPTIONS.map((o) => o.value));
@@ -52,6 +55,29 @@ export function validateIdeaSize(idea: unknown): void {
   const size = Buffer.byteLength(JSON.stringify(idea), 'utf8');
   if (size > LIMITS.ideaJson) {
     throw AppError.validation('Idea payload is too large');
+  }
+}
+
+export function validateValidateInput(
+  description: string,
+  productType: string,
+  audience?: string,
+  problem?: string
+): void {
+  if (!description || !description.trim()) {
+    throw AppError.validation('Description is required');
+  }
+  if (tooLong(description, LIMITS.validateDescription)) {
+    throw AppError.validation(`Description must be ${LIMITS.validateDescription} characters or fewer`);
+  }
+  if (!productType || !VALID_PRODUCT_TYPES.has(productType as never)) {
+    throw AppError.validation('Invalid product type');
+  }
+  if (audience && tooLong(audience, LIMITS.validateAudience)) {
+    throw AppError.validation(`Audience must be ${LIMITS.validateAudience} characters or fewer`);
+  }
+  if (problem && tooLong(problem, LIMITS.validateProblem)) {
+    throw AppError.validation(`Problem must be ${LIMITS.validateProblem} characters or fewer`);
   }
 }
 

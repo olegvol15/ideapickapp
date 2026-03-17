@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/client';
-import type { GenerateResponse, Idea, ProductType, Difficulty } from '@/types';
+import type { GenerateResponse, Idea, ProductType, Difficulty, Competitor } from '@/types';
 import type { RoadmapState } from '@/services/storage.service';
+import type { EnhancedValidationResult } from '@/lib/schemas';
 
 export interface GenerationRow {
   id: string;
@@ -153,6 +154,80 @@ export async function isIdeaSavedInDB(
   }
 
   return (count ?? 0) > 0;
+}
+
+// ─── Validations ──────────────────────────────────────────────────────────────
+
+export interface ValidationRow {
+  id: string;
+  description: string;
+  product_type: string | null;
+  result_json: EnhancedValidationResult;
+  competitors_json: Competitor[];
+  created_at: string;
+}
+
+export async function saveValidation(params: {
+  userId: string;
+  description: string;
+  productType: string;
+  result: EnhancedValidationResult;
+  competitors: Competitor[];
+}): Promise<string> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('validations')
+    .insert({
+      user_id: params.userId,
+      description: params.description,
+      product_type: params.productType || null,
+      result_json: params.result,
+      competitors_json: params.competitors,
+    })
+    .select('id')
+    .single();
+  if (error) throw new Error(`[db] saveValidation: ${error.message}`);
+  return data.id;
+}
+
+export async function deleteValidation(userId: string, id: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('validations')
+    .delete()
+    .eq('user_id', userId)
+    .eq('id', id);
+  if (error) throw new Error(`[db] deleteValidation: ${error.message}`);
+}
+
+export async function getValidations(userId: string): Promise<ValidationRow[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('validations')
+    .select('id, description, product_type, result_json, competitors_json, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(20);
+  if (error) {
+    console.error('[db] getValidations', error.message);
+    return [];
+  }
+  return (data ?? []) as ValidationRow[];
+}
+
+export async function getValidation(
+  userId: string,
+  id: string
+): Promise<ValidationRow | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('validations')
+    .select('id, description, product_type, result_json, competitors_json, created_at')
+    .eq('user_id', userId)
+    .eq('id', id)
+    .single();
+  if (error || !data) return null;
+  return data as ValidationRow;
 }
 
 // ─── Roadmaps ─────────────────────────────────────────────────────────────────

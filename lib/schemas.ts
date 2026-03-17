@@ -53,6 +53,19 @@ export const RoadmapGraphSchema = z.object({
   ),
 });
 
+// ─── EnhancedValidationResult ────────────────────────────────────────────────
+
+export const EnhancedValidationResultSchema = z.object({
+  score: z.number().min(0).max(100),
+  painScore: z.number().min(0).max(100),
+  competitionScore: z.number().min(0).max(100),
+  opportunityScore: z.number().min(0).max(100),
+  signals: z.array(z.string()),
+  risks: z.array(z.string()),
+  verdict: z.string(),
+});
+export type EnhancedValidationResult = z.infer<typeof EnhancedValidationResultSchema>;
+
 // ─── Generate (LLM portion only — competitors are appended from Tavily) ───────
 
 const MarketContextLLMSchema = z.object({

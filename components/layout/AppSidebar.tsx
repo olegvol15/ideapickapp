@@ -2,30 +2,30 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Bookmark,
   ChevronDown,
+  Gauge,
   LogIn,
-  Map,
   PanelLeftClose,
   Plus,
 } from 'lucide-react';
 import { UserMenu } from '@/components/auth/UserMenu';
 import { IdeaPickLogo } from '@/components/brand/IdeaPickLogo';
 import { BrainstormItem } from '@/components/layout/BrainstormItem';
+import { ValidationItem } from '@/components/validate/ValidationItem';
 import { useAuth } from '@/context/auth';
 import { useResearchStore } from '@/stores/research.store';
-import { useRoadmapStore } from '@/stores/roadmap.store';
+import { useValidateStore } from '@/stores/validate.store';
 import {
   useGetGenerations,
   useDeleteGeneration,
   useRenameGeneration,
 } from '@/hooks/use-generations';
-import { useGetRoadmaps } from '@/hooks/use-roadmaps';
-import { listPlans } from '@/services/storage.service';
+import { useGetValidations, useDeleteValidation } from '@/hooks/use-validations';
 import { cn } from '@/lib/utils';
 import {
   Sidebar,
@@ -45,10 +45,11 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { user } = useAuth();
   const { openDesktop, setOpenDesktop, setOpenMobile } = useSidebar();
   const [recentsOpen, setRecentsOpen] = useState(true);
-  const [roadmapsOpen, setRoadmapsOpen] = useState(true);
+  const [validationsOpen, setValidationsOpen] = useState(true);
 
   const deleteMutation = useDeleteGeneration(user?.id);
   const renameMutation = useRenameGeneration(user?.id);
+  const deleteValidationMutation = useDeleteValidation(user?.id);
 
   // Research recents — logged-in users use React Query, others use Zustand store
   const localHistory = useResearchStore((s) => s.localHistory);
@@ -60,20 +61,13 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         createdAt: String(h.createdAt),
       }));
 
-  // Roadmap plans — logged-in users use React Query, others use Zustand store
-  const localPlans = useRoadmapStore((s) => s.localPlans);
-  const { data: dbRoadmaps } = useGetRoadmaps(user?.id);
-  const roadmapPlans = user
-    ? (dbRoadmaps ?? []).map((r) => ({ id: r.slug, title: r.title }))
-    : localPlans;
-
-  // Seed local plans from sessionStorage on mount only (for non-logged-in users)
-  useEffect(() => {
-    if (!user) {
-      useRoadmapStore.getState().setLocalPlans(listPlans());
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Validations — logged-in users use React Query, others use Zustand store
+  const localValidations = useValidateStore((s) => s.localValidations);
+  const removeLocalValidation = useValidateStore((s) => s.removeLocalValidation);
+  const { data: dbValidations } = useGetValidations(user?.id);
+  const recentValidations = user
+    ? (dbValidations ?? []).map((v) => ({ id: v.id, description: v.description }))
+    : localValidations.map((v) => ({ id: v.id, description: v.description }));
 
   function handleNewBrainstorm() {
     useResearchStore.getState().clear();
@@ -83,6 +77,12 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   }
 
   const navigation = [
+    {
+      href: '/validate',
+      label: 'Validate Idea',
+      icon: Gauge,
+      active: pathname === '/validate',
+    },
     {
       href: '/ideas',
       label: 'Saved ideas',
@@ -183,27 +183,27 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               );
             })}
 
-            {/* Roadmaps */}
-            {roadmapPlans.length > 0 && (
+            {/* Validations */}
+            {recentValidations.length > 0 && (
               <>
                 <div className="mx-2 my-3 border-t border-white/8" />
 
                 <button
                   type="button"
-                  onClick={() => setRoadmapsOpen((o) => !o)}
+                  onClick={() => setValidationsOpen((o) => !o)}
                   className="flex w-full items-center gap-1.5 px-2.5 py-1 text-xs text-muted-foreground/60 transition-colors hover:text-muted-foreground"
                 >
                   <ChevronDown
                     className={cn(
                       'h-3 w-3 transition-transform duration-200',
-                      roadmapsOpen && 'rotate-180'
+                      validationsOpen && 'rotate-180'
                     )}
                   />
-                  Roadmaps
+                  Validations
                 </button>
 
                 <AnimatePresence initial={false}>
-                  {roadmapsOpen && (
+                  {validationsOpen && (
                     <motion.div
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
@@ -211,24 +211,30 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                       transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                       className="overflow-hidden"
                     >
-                      {roadmapPlans.map((plan) => (
-                        <Link
-                          key={plan.id}
-                          href={`/roadmap/${plan.id}`}
-                          onClick={() => {
+                      {recentValidations.map((entry) => (
+                        <ValidationItem
+                          key={entry.id}
+                          id={entry.id}
+                          description={entry.description}
+                          onNavigate={() => {
                             onNavigate?.();
                             setOpenMobile(false);
                           }}
-                          className={cn(
-                            'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors',
-                            pathname === `/roadmap/${plan.id}`
-                              ? 'bg-white/8 text-foreground/90'
-                              : 'text-foreground/45 hover:bg-white/5 hover:text-foreground/80'
-                          )}
-                        >
-                          <Map className="h-3 w-3 shrink-0 opacity-50" />
-                          <span className="truncate">{plan.title}</span>
-                        </Link>
+                          onDelete={() => {
+                            if (user) {
+                              deleteValidationMutation.mutate(entry.id, {
+                                onSuccess: () => {
+                                  if (pathname === `/validate/${entry.id}`)
+                                    router.push('/validate');
+                                },
+                              });
+                            } else {
+                              removeLocalValidation(entry.id);
+                              if (pathname === `/validate/${entry.id}`)
+                                router.push('/validate');
+                            }
+                          }}
+                        />
                       ))}
                     </motion.div>
                   )}
