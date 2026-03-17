@@ -11,7 +11,7 @@ export function CompetitorLogo({ domain, name }: CompetitorLogoProps) {
   return (
     <Avatar>
       <AvatarImage
-        src={`https://www.google.com/s2/favicons?domain=${domain}&sz=128`}
+        src={`https://icons.duckduckgo.com/ip3/${domain}.ico`}
         alt={`${name} logo`}
       />
       <AvatarFallback>{name[0]?.toUpperCase() ?? '?'}</AvatarFallback>

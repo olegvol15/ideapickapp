@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface ThinkingIndicatorProps {
   label: string;
@@ -22,7 +22,18 @@ export function ThinkingIndicator({ label }: ThinkingIndicatorProps) {
           />
         ))}
       </div>
-      <span className="text-sm text-muted-foreground">{label}</span>
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={label}
+          className="text-sm text-muted-foreground"
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.25, ease: 'easeOut' }}
+        >
+          {label}
+        </motion.span>
+      </AnimatePresence>
     </div>
   );
 }

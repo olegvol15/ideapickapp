@@ -11,23 +11,40 @@ import { generateIdeasStream } from '@/services/generate.service';
 const THINKING_DELAY_MS = 800;
 const CARD_STAGGER_MS = 380;
 
+const CYCLE_MESSAGES = [
+  'Mapping the competitive landscape…',
+  'Identifying market opportunities…',
+  'Crafting product ideas…',
+  'Scoring difficulty and demand…',
+  'Almost there…',
+];
+
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 export function useResearch(userId: string | undefined) {
   const store = useResearchStore();
   const saveGenerationMutation = useSaveGeneration(userId);
   const abortRef = useRef<AbortController | null>(null);
+  const analysisIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const isGenerating =
     store.phase === 'thinking' ||
     store.phase === 'generating' ||
     store.phase === 'streaming';
 
+  function clearAnalysisInterval() {
+    if (analysisIntervalRef.current) {
+      clearInterval(analysisIntervalRef.current);
+      analysisIntervalRef.current = null;
+    }
+  }
+
   async function handleGenerate(): Promise<void> {
     const { prompt, productType, difficulty } = useResearchStore.getState();
     if (!prompt.trim() || isGenerating) return;
 
     abortRef.current?.abort();
+    clearAnalysisInterval();
     const abort = new AbortController();
     abortRef.current = abort;
 
@@ -48,15 +65,22 @@ export function useResearch(userId: string | undefined) {
         {
           signal: abort.signal,
           onCompetitors: (competitors) => {
-            store.setStatusLabel(
+            const firstMsg =
               competitors.length > 0
-                ? `Found ${competitors.length} competitor${competitors.length !== 1 ? 's' : ''}, generating ideas…`
-                : 'Analyzing the market…'
-            );
+                ? `Found ${competitors.length} competitor${competitors.length !== 1 ? 's' : ''}, analyzing gaps…`
+                : 'Analyzing the market…';
+            store.setStatusLabel(firstMsg);
+
+            let idx = 0;
+            analysisIntervalRef.current = setInterval(() => {
+              store.setStatusLabel(CYCLE_MESSAGES[idx]);
+              idx = Math.min(idx + 1, CYCLE_MESSAGES.length - 1);
+            }, 3500);
           },
         }
       );
     } catch (err: unknown) {
+      clearAnalysisInterval();
       if ((err as { name?: string }).name === 'AbortError') return;
       store.setPhase('error');
       store.setErrorMessage(
@@ -65,6 +89,7 @@ export function useResearch(userId: string | undefined) {
       return;
     }
 
+    clearAnalysisInterval();
     store.setResult(data, null);
 
     const savedId = await saveGenerationMutation
@@ -94,6 +119,7 @@ export function useResearch(userId: string | undefined) {
 
   function handleClear(): void {
     abortRef.current?.abort();
+    clearAnalysisInterval();
     store.clear();
   }
 

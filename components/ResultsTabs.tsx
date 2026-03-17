@@ -106,7 +106,10 @@ export function ResultsTabs({
             )}
 
             {active === 'competitors' && (
-              <CompetitorsList competitors={result.competitorAnalysis} />
+              <CompetitorsList
+                competitors={result.competitors}
+                analyzed={result.competitorAnalysis}
+              />
             )}
           </motion.div>
         </AnimatePresence>

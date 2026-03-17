@@ -13,7 +13,6 @@ import {
 } from '@/components/ui/select';
 import { ResultsTabs } from '@/components/ResultsTabs';
 import { ThinkingIndicator } from './ThinkingIndicator';
-import { ResearchSkeletons } from './ResearchSkeletons';
 import { useAuth } from '@/context/auth';
 import { useResearch } from '@/hooks/use-research';
 import { useResearchStore } from '@/stores/research.store';
@@ -130,9 +129,9 @@ export function PromptForm() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="mt-8"
+            className="mt-10 flex justify-center"
           >
-            <ResearchSkeletons statusLabel={statusLabel} />
+            <ThinkingIndicator label={statusLabel} />
           </motion.div>
         )}
 
