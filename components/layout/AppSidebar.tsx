@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Bookmark,
@@ -14,10 +15,15 @@ import {
 } from 'lucide-react';
 import { UserMenu } from '@/components/auth/UserMenu';
 import { IdeaPickLogo } from '@/components/brand/IdeaPickLogo';
+import { BrainstormItem } from '@/components/layout/BrainstormItem';
 import { useAuth } from '@/context/auth';
 import { useResearchStore } from '@/stores/research.store';
 import { useRoadmapStore } from '@/stores/roadmap.store';
-import { useGetGenerations } from '@/hooks/use-generations';
+import {
+  useGetGenerations,
+  useDeleteGeneration,
+  useRenameGeneration,
+} from '@/hooks/use-generations';
 import { useGetRoadmaps } from '@/hooks/use-roadmaps';
 import { listPlans } from '@/services/storage.service';
 import { cn } from '@/lib/utils';
@@ -35,10 +41,14 @@ import {
 
 function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { user } = useAuth();
   const { openDesktop, setOpenDesktop, setOpenMobile } = useSidebar();
   const [recentsOpen, setRecentsOpen] = useState(true);
   const [roadmapsOpen, setRoadmapsOpen] = useState(true);
+
+  const deleteMutation = useDeleteGeneration(user?.id);
+  const renameMutation = useRenameGeneration(user?.id);
 
   // Research recents — logged-in users use React Query, others use Zustand store
   const localHistory = useResearchStore((s) => s.localHistory);
@@ -255,22 +265,38 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                       className="overflow-hidden"
                     >
                       {recentBrainstorms.map((entry, i) => (
-                        <Link
+                        <BrainstormItem
                           key={entry.createdAt ?? i}
-                          href={`/brainstorms/${entry.createdAt}`}
-                          onClick={() => {
+                          id={entry.createdAt}
+                          prompt={entry.prompt}
+                          onNavigate={() => {
                             onNavigate?.();
                             setOpenMobile(false);
                           }}
-                          className={cn(
-                            'flex w-full items-center rounded-lg px-3 py-2 text-left text-sm transition-colors',
-                            pathname === `/brainstorms/${entry.createdAt}`
-                              ? 'text-foreground/90'
-                              : 'text-foreground/45 hover:bg-white/5 hover:text-foreground/80'
-                          )}
-                        >
-                          <span className="truncate">{entry.prompt}</span>
-                        </Link>
+                          onDelete={() => {
+                            if (user) {
+                              deleteMutation.mutate(entry.createdAt, {
+                                onSuccess: () => {
+                                  if (pathname === `/brainstorms/${entry.createdAt}`)
+                                    router.push('/');
+                                },
+                              });
+                            } else {
+                              useResearchStore.getState().removeLocalHistory(entry.createdAt);
+                              if (pathname === `/brainstorms/${entry.createdAt}`)
+                                router.push('/');
+                            }
+                          }}
+                          onRename={(newPrompt) => {
+                            if (user) {
+                              renameMutation.mutate({ id: entry.createdAt, prompt: newPrompt });
+                            } else {
+                              useResearchStore
+                                .getState()
+                                .renameLocalHistory(entry.createdAt, newPrompt);
+                            }
+                          }}
+                        />
                       ))}
                     </motion.div>
                   )}

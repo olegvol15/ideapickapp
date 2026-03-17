@@ -96,6 +96,30 @@ export async function getSavedIdeasFromDB(
   return (data ?? []) as SavedIdeaRow[];
 }
 
+export async function deleteGeneration(userId: string, id: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('generations')
+    .delete()
+    .eq('user_id', userId)
+    .eq('id', id);
+  if (error) throw new Error(`[db] deleteGeneration: ${error.message}`);
+}
+
+export async function renameGeneration(
+  userId: string,
+  id: string,
+  prompt: string
+): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('generations')
+    .update({ prompt })
+    .eq('user_id', userId)
+    .eq('id', id);
+  if (error) throw new Error(`[db] renameGeneration: ${error.message}`);
+}
+
 export async function getGenerations(userId: string): Promise<GenerationRow[]> {
   const supabase = createClient();
   const { data, error } = await supabase

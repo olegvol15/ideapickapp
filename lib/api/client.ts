@@ -78,7 +78,12 @@ api.interceptors.response.use(
       }
 
       case 500:
-        toast.error('Something went wrong');
+        toast.error('Something went wrong', {
+          action: {
+            label: 'Retry',
+            onClick: () => { if (error.config) api.request(error.config); },
+          },
+        });
         reportError(error);
         break;
 
@@ -116,8 +121,15 @@ export const typedApi = {
 };
 
 export function reportError(err: unknown, context?: Record<string, unknown>) {
-  // Swap for Sentry.captureException(err, { extra: context }) once configured
-  console.error('[reportError]', err, context);
+  const isAxios = axios.isAxiosError(err);
+  console.error('[error]', {
+    message: isAxios ? err.message : String(err),
+    url: isAxios ? err.config?.url : undefined,
+    status: isAxios ? err.response?.status : undefined,
+    code: isAxios ? (err.response?.data as ApiErrorBody)?.code : undefined,
+    ...context,
+  });
+  // TODO: Sentry.captureException(err, { extra: context })
 }
 
 export default api;

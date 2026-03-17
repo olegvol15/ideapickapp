@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ThinkingIndicator } from './ThinkingIndicator';
 
 const TAB_LABELS = ['Opportunities', 'Market', 'Competitors'] as const;
 
@@ -38,9 +39,15 @@ function SkeletonCard({ delay }: { delay: number }) {
   );
 }
 
-export function ResearchSkeletons() {
+export function ResearchSkeletons({ statusLabel }: { statusLabel?: string }) {
   return (
     <div>
+      {statusLabel && (
+        <div className="mb-5">
+          <ThinkingIndicator label={statusLabel} />
+        </div>
+      )}
+
       <div className="flex border-b border-border mb-6">
         {TAB_LABELS.map((label, i) => (
           <div

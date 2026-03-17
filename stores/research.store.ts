@@ -31,18 +31,24 @@ interface PersistedState {
 interface ResearchState extends PersistedState {
   phase: ResearchPhase;
   visibleCount: number;
+  statusLabel: string;
+  errorMessage: string | null;
 
   setPrompt: (v: string) => void;
   setProductType: (v: ProductType | '') => void;
   setDifficulty: (v: Difficulty | '') => void;
   setPhase: (phase: ResearchPhase) => void;
   setVisibleCount: (count: number) => void;
+  setStatusLabel: (label: string) => void;
+  setErrorMessage: (msg: string | null) => void;
   setResult: (
     result: GenerateResponse | null,
     generationId: string | null
   ) => void;
   restore: (entry: PersistedResearch) => void;
   pushLocalHistory: (entry: PersistedResearch) => void;
+  removeLocalHistory: (createdAt: string) => void;
+  renameLocalHistory: (createdAt: string, prompt: string) => void;
   clear: () => void;
 }
 
@@ -57,12 +63,16 @@ export const useResearchStore = create<ResearchState>()(
       localHistory: [],
       phase: 'idle',
       visibleCount: 0,
+      statusLabel: '',
+      errorMessage: null,
 
       setPrompt: (v) => set({ prompt: v }),
       setProductType: (v) => set({ productType: v }),
       setDifficulty: (v) => set({ difficulty: v }),
       setPhase: (phase) => set({ phase }),
       setVisibleCount: (count) => set({ visibleCount: count }),
+      setStatusLabel: (label) => set({ statusLabel: label }),
+      setErrorMessage: (msg) => set({ errorMessage: msg }),
       setResult: (result, generationId) => set({ result, generationId }),
 
       restore: (entry) =>
@@ -84,6 +94,20 @@ export const useResearchStore = create<ResearchState>()(
           return { localHistory: [entry, ...deduped].slice(0, 20) };
         }),
 
+      removeLocalHistory: (createdAt) =>
+        set((state) => ({
+          localHistory: state.localHistory.filter(
+            (h) => String(h.createdAt) !== createdAt
+          ),
+        })),
+
+      renameLocalHistory: (createdAt, prompt) =>
+        set((state) => ({
+          localHistory: state.localHistory.map((h) =>
+            String(h.createdAt) === createdAt ? { ...h, prompt } : h
+          ),
+        })),
+
       clear: () =>
         set({
           prompt: '',
@@ -93,6 +117,8 @@ export const useResearchStore = create<ResearchState>()(
           generationId: null,
           phase: 'idle',
           visibleCount: 0,
+          statusLabel: '',
+          errorMessage: null,
         }),
     }),
     {

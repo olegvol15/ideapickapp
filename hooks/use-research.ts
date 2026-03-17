@@ -1,11 +1,12 @@
 'use client';
 
+import { useRef } from 'react';
 import {
   useResearchStore,
   type PersistedResearch,
 } from '@/stores/research.store';
-import { useGenerate, useSaveGeneration } from '@/hooks/use-generations';
-import { getApiMessage } from '@/lib/errors/api-error';
+import { useSaveGeneration } from '@/hooks/use-generations';
+import { generateIdeasStream } from '@/services/generate.service';
 
 const THINKING_DELAY_MS = 800;
 const CARD_STAGGER_MS = 380;
@@ -14,8 +15,8 @@ const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 export function useResearch(userId: string | undefined) {
   const store = useResearchStore();
-  const generateMutation = useGenerate();
   const saveGenerationMutation = useSaveGeneration(userId);
+  const abortRef = useRef<AbortController | null>(null);
 
   const isGenerating =
     store.phase === 'thinking' ||
@@ -26,23 +27,41 @@ export function useResearch(userId: string | undefined) {
     const { prompt, productType, difficulty } = useResearchStore.getState();
     if (!prompt.trim() || isGenerating) return;
 
-    generateMutation.reset();
+    abortRef.current?.abort();
+    const abort = new AbortController();
+    abortRef.current = abort;
+
     store.setPhase('thinking');
+    store.setStatusLabel('');
+    store.setErrorMessage(null);
     store.setVisibleCount(0);
     store.setResult(null, null);
     await wait(THINKING_DELAY_MS);
 
     store.setPhase('generating');
+    store.setStatusLabel('Searching the market…');
 
     let data;
     try {
-      data = await generateMutation.mutateAsync({
-        prompt,
-        productType,
-        difficulty,
-      });
-    } catch {
+      data = await generateIdeasStream(
+        { prompt, productType, difficulty },
+        {
+          signal: abort.signal,
+          onCompetitors: (competitors) => {
+            store.setStatusLabel(
+              competitors.length > 0
+                ? `Found ${competitors.length} competitor${competitors.length !== 1 ? 's' : ''}, generating ideas…`
+                : 'Analyzing the market…'
+            );
+          },
+        }
+      );
+    } catch (err: unknown) {
+      if ((err as { name?: string }).name === 'AbortError') return;
       store.setPhase('error');
+      store.setErrorMessage(
+        err instanceof Error ? err.message : 'Something went wrong'
+      );
       return;
     }
 
@@ -74,7 +93,7 @@ export function useResearch(userId: string | undefined) {
   }
 
   function handleClear(): void {
-    generateMutation.reset();
+    abortRef.current?.abort();
     store.clear();
   }
 
@@ -82,6 +101,6 @@ export function useResearch(userId: string | undefined) {
     handleGenerate,
     handleClear,
     isGenerating,
-    errorMsg: getApiMessage(generateMutation.error),
+    errorMsg: store.errorMessage ?? 'Something went wrong',
   };
 }

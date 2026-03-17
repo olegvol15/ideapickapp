@@ -33,6 +33,7 @@ export function PromptForm() {
     phase,
     visibleCount,
     generationId,
+    statusLabel,
   } = useResearchStore();
 
   const { handleGenerate, handleClear, isGenerating, errorMsg } = useResearch(
@@ -131,7 +132,7 @@ export function PromptForm() {
             transition={{ duration: 0.25 }}
             className="mt-8"
           >
-            <ResearchSkeletons />
+            <ResearchSkeletons statusLabel={statusLabel} />
           </motion.div>
         )}
 
