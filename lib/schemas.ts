@@ -55,7 +55,31 @@ export const RoadmapGraphSchema = z.object({
 
 // ─── EnhancedValidationResult ────────────────────────────────────────────────
 
+const EvidencedSignalSchema = z.object({
+  text: z.string(),
+  strength: z.enum(['strong', 'moderate', 'weak']),
+});
+
+const CompetitorInsightSchema = z.object({
+  name: z.string(),
+  whyChosen: z.string(),
+  weakness: z.string(),
+});
+
+const ValidationEffortSchema = z.object({
+  time: z.string(),
+  cost: z.string(),
+  difficulty: z.enum(['easy', 'medium', 'hard']),
+});
+
+const WillingnessToPaySchema = z.object({
+  level: z.enum(['low', 'medium', 'high']),
+  freeSubstitutes: z.string(),
+  paidAlternatives: z.string(),
+});
+
 export const EnhancedValidationResultSchema = z.object({
+  // Required — always present
   score: z.number().min(0).max(100),
   painScore: z.number().min(0).max(100),
   competitionScore: z.number().min(0).max(100),
@@ -63,6 +87,21 @@ export const EnhancedValidationResultSchema = z.object({
   signals: z.array(z.string()),
   risks: z.array(z.string()),
   verdict: z.string(),
+
+  // Optional — new fields (backward compat with saved validations)
+  confidence: z.enum(['low', 'medium', 'high']).optional(),
+  confidenceReason: z.string().optional(),
+  keyInsights: z.array(z.string()).optional(),
+  decision: z.enum(['proceed', 'test-first', 'drop']).optional(),
+  decisionReason: z.string().optional(),
+  nextStep: z.string().optional(),
+  nextStepType: z.enum(['reddit-post', 'landing-page', 'interviews', 'prototype', 'survey', 'other']).optional(),
+  validationEffort: ValidationEffortSchema.optional(),
+  willingnessToPay: WillingnessToPaySchema.optional(),
+  evidencedSignals: z.array(EvidencedSignalSchema).optional(),
+  failureReasons: z.array(z.string()).optional(),
+  marketHardness: z.string().optional(),
+  competitorInsights: z.array(CompetitorInsightSchema).optional(),
 });
 export type EnhancedValidationResult = z.infer<typeof EnhancedValidationResultSchema>;
 

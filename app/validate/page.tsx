@@ -4,7 +4,7 @@ import { ValidateForm } from '@/components/validate/ValidateForm';
 
 export default function ValidatePage() {
   return (
-    <main className="relative mx-auto flex min-h-svh max-w-3xl flex-col justify-center px-5 pb-24 pt-14 sm:px-8">
+    <main className="relative mx-auto flex min-h-svh max-w-5xl flex-col justify-center px-5 pb-24 pt-14 sm:px-8">
       <div className="mx-auto w-full max-w-xl text-center mb-12">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Validate Your Idea

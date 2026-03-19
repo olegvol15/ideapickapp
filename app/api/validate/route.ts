@@ -89,7 +89,7 @@ export const POST = async (req: NextRequest): Promise<Response> => {
             competitors
           ),
           temperature: 0.4,
-          max_tokens: 900,
+          max_tokens: 2000,
           response_format: { type: 'json_object' },
         });
 

@@ -61,7 +61,7 @@ export default function ValidationDetailPage({ params }: PageProps) {
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-5 pb-24 pt-14 sm:px-8">
+    <main className="mx-auto max-w-5xl px-5 pb-24 pt-14 sm:px-8">
       <ValidationReport result={result} competitors={competitors} />
     </main>
   );

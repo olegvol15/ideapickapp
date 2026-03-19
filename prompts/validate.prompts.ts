@@ -59,18 +59,49 @@ export function buildValidationAnalysisMessages(
   return [
     {
       role: 'system',
-      content: `You are a startup idea validator with access to real web research results.
-Analyze the idea and web evidence, then return a JSON validation report:
+      content: `You are a brutally honest startup idea validator with access to real web research.
+Analyze the idea and evidence, then return a JSON report with this exact shape:
 {
   "score": <integer 0-100, overall viability>,
   "painScore": <integer 0-100, how real and evidenced the problem is>,
   "competitionScore": <integer 0-100, market saturation — lower = less saturated = better>,
   "opportunityScore": <integer 0-100, differentiation gap and timing>,
+  "confidence": <"low" | "medium" | "high" — how reliable is this validation based on evidence quality>,
+  "confidenceReason": "<1 sentence: why confidence is this level>",
+  "keyInsights": ["<sharp specific insight 1>", "<sharp specific insight 2>", "<optional insight 3>"],
+  "decision": <"proceed" | "test-first" | "drop" — be opinionated, pick one>,
+  "decisionReason": "<1-2 sentences: direct reasoning for this decision>",
+  "nextStep": "<one concrete action the founder should take this week>",
+  "nextStepType": <"reddit-post" | "landing-page" | "interviews" | "prototype" | "survey" | "other">,
+  "validationEffort": {
+    "time": "<e.g. 2 days>",
+    "cost": "<e.g. $0–20>",
+    "difficulty": <"easy" | "medium" | "hard">
+  },
+  "willingnessToPay": {
+    "level": <"low" | "medium" | "high">,
+    "freeSubstitutes": "<are there strong free alternatives? name them>",
+    "paidAlternatives": "<do paid alternatives exist? what do they charge?>"
+  },
   "signals": ["<positive signal 1>", "<positive signal 2>", "<positive signal 3>"],
+  "evidencedSignals": [
+    { "text": "<signal>", "strength": <"strong" | "moderate" | "weak"> }
+  ],
   "risks": ["<risk 1>", "<risk 2>", "<risk 3>"],
-  "verdict": "<2-3 sentences: honest assessment of viability based on the evidence>"
+  "failureReasons": ["<specific reason this could fail 1>", "<reason 2>", "<reason 3>"],
+  "marketHardness": "<1 sentence: what makes this market hard to enter>",
+  "verdict": "<2-3 sentences: honest assessment of viability based on evidence>",
+  "competitorInsights": [
+    { "name": "<competitor name>", "whyChosen": "<why users pick them>", "weakness": "<their gap or weakness>" }
+  ]
 }
-Be honest and grounded in the web evidence. Use the competitor data to inform scores.
+Rules:
+- decision MUST be opinionated — do not hedge or say "it depends"
+- keyInsights must be specific to this idea, not generic startup advice
+- nextStep must be concrete and doable this week
+- evidencedSignals: tag each with strength based on how direct the evidence is
+- competitorInsights: analyze top 2-4 competitors from the web results
+- Be honest and grounded. Use the web evidence. No hype.
 Respond ONLY with valid JSON. No markdown.`,
     },
     {
