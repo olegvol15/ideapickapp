@@ -19,6 +19,7 @@ import { validateIdeaStream } from '@/services/validate.service';
 import { useValidateStore } from '@/stores/validate.store';
 import { useSaveValidation } from '@/hooks/use-validations';
 import { useAuth } from '@/context/auth';
+import { toast } from 'sonner';
 import { PRODUCT_TYPE_OPTIONS } from '@/constants/products';
 import type { EnhancedValidationResult } from '@/lib/schemas';
 import type { Competitor } from '@/types';
@@ -46,6 +47,7 @@ export function ValidateForm() {
   const { user } = useAuth();
   const saveValidation = useSaveValidation(user?.id);
   const pushLocalValidation = useValidateStore((s) => s.pushLocalValidation);
+  const updateLocalValidationId = useValidateStore((s) => s.updateLocalValidationId);
 
   const [description, setDescription] = useState('');
   const [productType, setProductType] = useState('');
@@ -107,23 +109,24 @@ export function ValidateForm() {
       setCompetitors(data.competitors);
       setPhase('done');
 
-      // Persist result
+      // Persist result — always push to local store for immediate sidebar update
+      const localId = String(Date.now());
+      pushLocalValidation({
+        id: localId,
+        description,
+        productType,
+        result: data.result,
+        competitors: data.competitors,
+        createdAt: Date.now(),
+      });
+
+      // Also save to DB for logged-in users (cross-device persistence)
+      // After save, swap the temp timestamp ID for the real UUID so the sidebar links to the DB record
       if (user) {
-        saveValidation.mutate({
-          description,
-          productType,
-          result: data.result,
-          competitors: data.competitors,
-        });
-      } else {
-        pushLocalValidation({
-          id: String(Date.now()),
-          description,
-          productType,
-          result: data.result,
-          competitors: data.competitors,
-          createdAt: Date.now(),
-        });
+        saveValidation
+          .mutateAsync({ description, productType, result: data.result, competitors: data.competitors })
+          .then((uuid) => { if (uuid) updateLocalValidationId(localId, uuid); })
+          .catch(() => { toast.error('Failed to save validation to your account.'); });
       }
     } catch (err: unknown) {
       if ((err as { name?: string }).name === 'AbortError') return;

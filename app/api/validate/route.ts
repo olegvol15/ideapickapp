@@ -56,20 +56,24 @@ export const POST = async (req: NextRequest): Promise<Response> => {
           model: 'gpt-4o-mini',
           messages: buildValidationQueryMessages(description, productType, audience, problem),
           temperature: 0.3,
-          max_tokens: 120,
+          max_tokens: 200,
           response_format: { type: 'json_object' },
         });
 
-        let parsedQueries: { queries?: string[] } = {};
+        let parsedQueries: { competitorQueries?: string[]; signalQuery?: string } = {};
         try {
           parsedQueries = JSON.parse(
             queryCompletion.choices[0]?.message?.content ?? '{}'
           );
         } catch { /* use empty fallback */ }
-        const { queries = [] } = parsedQueries;
+        const { competitorQueries = [], signalQuery } = parsedQueries;
 
         // Step 2: Tavily research (~2-4s)
-        const competitors = await searchAll(queries.slice(0, 3));
+        const searchQueries: { query: string; type: 'competitor' | 'signal' }[] = [
+          ...competitorQueries.slice(0, 2).map((q) => ({ query: q, type: 'competitor' as const })),
+          ...(signalQuery ? [{ query: signalQuery, type: 'signal' as const }] : []),
+        ];
+        const competitors = await searchAll(searchQueries);
 
         // Emit early — client shows progress while step 3 runs
         emit({ type: 'research', data: { competitors } });

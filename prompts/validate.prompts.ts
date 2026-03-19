@@ -23,18 +23,18 @@ export function buildValidationQueryMessages(
       content: `You generate web search queries for startup idea validation research.
 Return a JSON object with exactly this shape:
 {
-  "queries": [
-    "<query targeting pain evidence — people struggling with the problem>",
-    "<query targeting existing solutions / competitors in this space>",
-    "<query targeting market size / demand signals>"
-  ]
+  "competitorQueries": [
+    "<query for direct competitor products or tools in this space>",
+    "<query for alternative solutions or apps solving the same problem>"
+  ],
+  "signalQuery": "<query targeting forum discussions, Reddit posts, or reviews where real people express frustration or struggle with this problem>"
 }
 Queries must be specific, short (5-10 words), and use natural search phrasing.
 Respond ONLY with valid JSON. No markdown.`,
     },
     {
       role: 'user',
-      content: `Generate 3 research queries for this idea:\n${description}\n\n${context}`,
+      content: `Generate research queries for this idea:\n${description}\n\n${context}`,
     },
   ];
 }

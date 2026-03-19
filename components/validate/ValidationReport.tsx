@@ -98,15 +98,31 @@ export function ValidationReport({ result, competitors }: ValidationReportProps)
         </div>
       )}
 
-      {/* Web competitors */}
-      {competitors.length > 0 && (
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">
-            Market Signals from the Web
-          </p>
-          <CompetitorsList competitors={competitors} analyzed={[]} />
-        </div>
-      )}
+      {/* Web research: competitors + pain signals */}
+      {competitors.length > 0 && (() => {
+        const competitorItems = competitors.filter((c) => c.type !== 'signal');
+        const signalItems = competitors.filter((c) => c.type === 'signal');
+        return (
+          <div className="flex flex-col gap-5">
+            {competitorItems.length > 0 && (
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">
+                  Competitors
+                </p>
+                <CompetitorsList competitors={competitorItems} analyzed={[]} />
+              </div>
+            )}
+            {signalItems.length > 0 && (
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">
+                  Pain Signals
+                </p>
+                <CompetitorsList competitors={signalItems} analyzed={[]} />
+              </div>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }

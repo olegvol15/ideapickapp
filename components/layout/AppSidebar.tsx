@@ -25,7 +25,7 @@ import {
   useDeleteGeneration,
   useRenameGeneration,
 } from '@/hooks/use-generations';
-import { useGetValidations, useDeleteValidation } from '@/hooks/use-validations';
+import { useDeleteValidation } from '@/hooks/use-validations';
 import { cn } from '@/lib/utils';
 import {
   Sidebar,
@@ -61,13 +61,10 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         createdAt: String(h.createdAt),
       }));
 
-  // Validations — logged-in users use React Query, others use Zustand store
+  // Validations — always use local store for immediate display; DB save is for persistence only
   const localValidations = useValidateStore((s) => s.localValidations);
   const removeLocalValidation = useValidateStore((s) => s.removeLocalValidation);
-  const { data: dbValidations } = useGetValidations(user?.id);
-  const recentValidations = user
-    ? (dbValidations ?? []).map((v) => ({ id: v.id, description: v.description }))
-    : localValidations.map((v) => ({ id: v.id, description: v.description }));
+  const recentValidations = localValidations.map((v) => ({ id: v.id, description: v.description }));
 
   function handleNewBrainstorm() {
     useResearchStore.getState().clear();
@@ -221,18 +218,10 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                             setOpenMobile(false);
                           }}
                           onDelete={() => {
-                            if (user) {
-                              deleteValidationMutation.mutate(entry.id, {
-                                onSuccess: () => {
-                                  if (pathname === `/validate/${entry.id}`)
-                                    router.push('/validate');
-                                },
-                              });
-                            } else {
-                              removeLocalValidation(entry.id);
-                              if (pathname === `/validate/${entry.id}`)
-                                router.push('/validate');
-                            }
+                            removeLocalValidation(entry.id);
+                            if (user) deleteValidationMutation.mutate(entry.id);
+                            if (pathname === `/validate/${entry.id}`)
+                              router.push('/validate');
                           }}
                         />
                       ))}

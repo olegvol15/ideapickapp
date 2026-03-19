@@ -16,6 +16,7 @@ interface ValidateState {
   localValidations: PersistedValidation[];
   pushLocalValidation: (entry: PersistedValidation) => void;
   removeLocalValidation: (id: string) => void;
+  updateLocalValidationId: (oldId: string, newId: string) => void;
 }
 
 export const useValidateStore = create<ValidateState>()(
@@ -31,6 +32,13 @@ export const useValidateStore = create<ValidateState>()(
       removeLocalValidation: (id) =>
         set((state) => ({
           localValidations: state.localValidations.filter((v) => v.id !== id),
+        })),
+
+      updateLocalValidationId: (oldId, newId) =>
+        set((state) => ({
+          localValidations: state.localValidations.map((v) =>
+            v.id === oldId ? { ...v, id: newId } : v
+          ),
         })),
     }),
     { name: 'ideapick:validations' }
