@@ -190,6 +190,16 @@ export async function saveValidation(params: {
   return data.id;
 }
 
+export async function renameValidation(userId: string, id: string, description: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('validations')
+    .update({ description })
+    .eq('user_id', userId)
+    .eq('id', id);
+  if (error) throw new Error(`[db] renameValidation: ${error.message}`);
+}
+
 export async function deleteValidation(userId: string, id: string): Promise<void> {
   const supabase = createClient();
   const { error } = await supabase

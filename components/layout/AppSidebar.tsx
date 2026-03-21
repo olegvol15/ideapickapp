@@ -25,7 +25,7 @@ import {
   useDeleteGeneration,
   useRenameGeneration,
 } from '@/hooks/use-generations';
-import { useDeleteValidation } from '@/hooks/use-validations';
+import { useDeleteValidation, useRenameValidation } from '@/hooks/use-validations';
 import { cn } from '@/lib/utils';
 import {
   Sidebar,
@@ -50,6 +50,7 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const deleteMutation = useDeleteGeneration(user?.id);
   const renameMutation = useRenameGeneration(user?.id);
   const deleteValidationMutation = useDeleteValidation(user?.id);
+  const renameValidationMutation = useRenameValidation(user?.id);
 
   // Research recents — logged-in users use React Query, others use Zustand store
   const localHistory = useResearchStore((s) => s.localHistory);
@@ -64,6 +65,7 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   // Validations — always use local store for immediate display; DB save is for persistence only
   const localValidations = useValidateStore((s) => s.localValidations);
   const removeLocalValidation = useValidateStore((s) => s.removeLocalValidation);
+  const renameLocalValidation = useValidateStore((s) => s.renameLocalValidation);
   const recentValidations = localValidations.map((v) => ({ id: v.id, description: v.description }));
 
   function handleNewBrainstorm() {
@@ -216,6 +218,10 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                           onNavigate={() => {
                             onNavigate?.();
                             setOpenMobile(false);
+                          }}
+                          onRename={(description) => {
+                            renameLocalValidation(entry.id, description);
+                            if (user) renameValidationMutation.mutate({ id: entry.id, description });
                           }}
                           onDelete={() => {
                             removeLocalValidation(entry.id);
