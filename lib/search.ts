@@ -54,6 +54,14 @@ const COMPETITOR_ONLY_BLOCKED = new Set([
   'wikipedia.org',
 ]);
 
+// App Store / Play Store: only specific app pages are valid, not category/chart/search pages.
+const APPLE_APP_RE = /^https?:\/\/apps\.apple\.com\/[^/]+\/app\//i;
+const GOOGLE_APP_RE = /^https?:\/\/play\.google\.com\/store\/apps\/details/i;
+
+// Title patterns that indicate an editorial article or listicle rather than a product page.
+const ARTICLE_TITLE_RE =
+  /^(best\b|top\s+\d+|top\s+\w+\s+app|\d+\s+(best|top)\b|i\s+(found|tried|tested|used|ranked|reviewed)\b|the best\b|how i\b|why i\b|my (favorite|top|best)\b|ultimate guide|complete guide|ranked:|review:|comparison:|versus\b)/i;
+
 // Path segments indicating a blog post or list article.
 const BLOCKED_PATH_RE =
   /\/(blog|article|articles|post|posts|news|wiki|tutorial|guide|review|reviews|top-\d+|best-\d+|versus|vs)\b/i;
@@ -127,6 +135,15 @@ function isCompetitorPage(c: Competitor): boolean {
   if (BLOCKED_PATH_RE.test(path)) return false;
   if (ARTICLE_SIGNALS.some((s) => snippet.includes(s))) return false;
   if (ECOMMERCE_SIGNALS.some((s) => snippet.includes(s))) return false;
+
+  // App Store: only accept individual app pages, not category/chart/genre pages.
+  if (source === 'apps.apple.com' && !APPLE_APP_RE.test(c.url)) return false;
+
+  // Google Play: only accept individual app detail pages, not search/category pages.
+  if (source === 'play.google.com' && !GOOGLE_APP_RE.test(c.url)) return false;
+
+  // Reject listicles and editorial articles that slipped through domain/path filters.
+  if (ARTICLE_TITLE_RE.test(c.name)) return false;
 
   return true;
 }

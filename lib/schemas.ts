@@ -66,6 +66,13 @@ const CompetitorInsightSchema = z.object({
   weakness: z.string(),
 });
 
+const WinInsightSchema = z.object({
+  title: z.string(),
+  pattern: z.string(),
+  gap: z.string(),
+  opportunity: z.string(),
+});
+
 const ValidationEffortSchema = z.object({
   time: z.string(),
   cost: z.string(),
@@ -102,6 +109,7 @@ export const EnhancedValidationResultSchema = z.object({
   failureReasons: z.array(z.string()).optional(),
   marketHardness: z.string().optional(),
   competitorInsights: z.array(CompetitorInsightSchema).optional(),
+  whereToWin: z.array(WinInsightSchema).optional(),
 });
 export type EnhancedValidationResult = z.infer<typeof EnhancedValidationResultSchema>;
 

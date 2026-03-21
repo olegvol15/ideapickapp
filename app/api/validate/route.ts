@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { openai } from '@/lib/openai';
 import {
   buildValidationQueryMessages,
+  buildCompetitorMessages,
   buildValidationAnalysisMessages,
 } from '@/prompts/validate.prompts';
 import { requireAuth, checkRateLimit } from '@/lib/supabase/auth';
@@ -51,29 +52,45 @@ export const POST = async (req: NextRequest): Promise<Response> => {
         controller.enqueue(encoder.encode(JSON.stringify(event) + '\n'));
 
       try {
-        // Step 1: Generate focused search queries (~1s)
-        const queryCompletion = await openai.chat.completions.create({
-          model: 'gpt-4o-mini',
-          messages: buildValidationQueryMessages(description, productType, audience, problem),
-          temperature: 0.3,
-          max_tokens: 200,
-          response_format: { type: 'json_object' },
-        });
+        // Step 1: In parallel — generate signal query + LLM competitor list (~1s)
+        const [queryCompletion, competitorCompletion] = await Promise.all([
+          openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: buildValidationQueryMessages(description, productType, audience, problem),
+            temperature: 0.3,
+            max_tokens: 150,
+            response_format: { type: 'json_object' },
+          }),
+          openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: buildCompetitorMessages(description, productType, audience, problem),
+            temperature: 0.2,
+            max_tokens: 600,
+            response_format: { type: 'json_object' },
+          }),
+        ]);
 
-        let parsedQueries: { competitorQueries?: string[]; signalQuery?: string } = {};
+        let signalQuery: string | undefined;
         try {
-          parsedQueries = JSON.parse(
-            queryCompletion.choices[0]?.message?.content ?? '{}'
-          );
+          const q = JSON.parse(queryCompletion.choices[0]?.message?.content ?? '{}');
+          signalQuery = q.signalQuery;
         } catch { /* use empty fallback */ }
-        const { competitorQueries = [], signalQuery } = parsedQueries;
 
-        // Step 2: Tavily research (~2-4s)
-        const searchQueries: { query: string; type: 'competitor' | 'signal' }[] = [
-          ...competitorQueries.slice(0, 2).map((q) => ({ query: q, type: 'competitor' as const })),
-          ...(signalQuery ? [{ query: signalQuery, type: 'signal' as const }] : []),
+        let llmCompetitors: Array<{ name: string; url: string; source: string; snippet: string }> = [];
+        try {
+          const c = JSON.parse(competitorCompletion.choices[0]?.message?.content ?? '{}');
+          llmCompetitors = Array.isArray(c.competitors) ? c.competitors : [];
+        } catch { /* use empty fallback */ }
+
+        // Step 2: Tavily — signals only (Reddit/forum pain signals) (~2-4s)
+        const signalResults = signalQuery
+          ? await searchAll([{ query: signalQuery, type: 'signal' }])
+          : [];
+
+        const competitors = [
+          ...llmCompetitors.map((c) => ({ ...c, type: 'competitor' as const })),
+          ...signalResults,
         ];
-        const competitors = await searchAll(searchQueries);
 
         // Emit early — client shows progress while step 3 runs
         emit({ type: 'research', data: { competitors } });

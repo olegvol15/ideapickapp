@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ExternalLink, ArrowRight, Copy, ChevronDown, ChevronUp, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
+import { ExternalLink, ArrowRight, Copy, ChevronDown, ChevronUp, CheckCircle, AlertTriangle, XCircle, Target } from 'lucide-react';
 import { CompetitorLogo } from '@/components/market/competitors-list/CompetitorLogo';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -98,17 +98,16 @@ export function ValidationReport({ result, competitors }: ValidationReportProps)
     risks,
     confidence,
     confidenceReason,
-    keyInsights,
     decision,
     decisionReason,
     nextStep,
     nextStepType,
     validationEffort,
-    willingnessToPay,
     evidencedSignals,
     failureReasons,
     marketHardness,
     competitorInsights,
+    whereToWin,
   } = result;
 
   const mainColor = scoreColor(score);
@@ -194,17 +193,6 @@ export function ValidationReport({ result, competitors }: ValidationReportProps)
               </p>
             )}
 
-            {/* Key insights */}
-            {keyInsights && keyInsights.length > 0 && (
-              <ul className="mt-3 flex flex-col gap-1.5">
-                {keyInsights.slice(0, 3).map((ins, i) => (
-                  <li key={i} className="flex items-start gap-2 text-xs text-foreground/75 leading-snug">
-                    <span className={cn('mt-[5px] h-1 w-1 shrink-0 rounded-full', colorClass(mainColor, 'bg'))} />
-                    {ins}
-                  </li>
-                ))}
-              </ul>
-            )}
           </div>
 
           {/* Decision block — most important element on screen */}
@@ -325,10 +313,11 @@ export function ValidationReport({ result, competitors }: ValidationReportProps)
                       href={c.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="shrink-0 text-muted-foreground/30 hover:text-muted-foreground transition-colors"
+                      className="shrink-0 flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium text-muted-foreground/60 hover:text-foreground bg-muted/30 hover:bg-muted/60 transition-colors"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <ExternalLink className="h-2.5 w-2.5" />
+                      <ExternalLink className="h-3 w-3" />
+                      Visit
                     </a>
                   </div>
                   {ins ? (
@@ -354,36 +343,49 @@ export function ValidationReport({ result, competitors }: ValidationReportProps)
         </div>
 
         {/* Risks */}
-        <div className="rounded-xl border border-border bg-card px-5 py-4">
-          <SectionHeading color="text-rose-500/60">Why This Could Fail</SectionHeading>
-          <ul className="mt-3 flex flex-col gap-2">
+        <div className="rounded-xl border border-rose-500/20 bg-rose-500/[0.04] px-5 py-5">
+          <div className="flex items-center gap-2 mb-3.5">
+            <AlertTriangle className="h-3.5 w-3.5 text-rose-400 shrink-0" />
+            <p className="text-[10px] font-bold uppercase tracking-widest text-rose-400">Why This Could Fail</p>
+          </div>
+          <ul className="flex flex-col gap-2.5">
             {(failureReasons ?? risks).slice(0, 5).map((r, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-foreground/70 leading-snug">
-                <span className="mt-[6px] h-1 w-1 shrink-0 rounded-full bg-rose-500/60" />
+              <li key={i} className="flex items-start gap-2.5 text-sm text-foreground/75 leading-snug">
+                <span className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500/70" />
                 {r}
               </li>
             ))}
           </ul>
 
-          {/* Market Reality — tucked at bottom of Risks */}
-          {willingnessToPay && (
-            <div className="mt-4 border-t border-border pt-3 flex flex-col gap-1.5">
-              <SectionHeading>Market Reality</SectionHeading>
-              <div className="mt-1 flex flex-col gap-1">
-                <div className="flex justify-between gap-2">
-                  <span className="text-[11px] text-muted-foreground/60">Willingness to pay</span>
-                  <span className={cn(
-                    'text-[11px] font-semibold',
-                    levelColor(willingnessToPay.level) === 'emerald' && 'text-emerald-500',
-                    levelColor(willingnessToPay.level) === 'amber' && 'text-amber-500',
-                    levelColor(willingnessToPay.level) === 'rose' && 'text-rose-500',
-                  )}>
-                    {cap(willingnessToPay.level)}
-                  </span>
-                </div>
-                <p className="text-[11px] text-muted-foreground/60 leading-snug">
-                  {willingnessToPay.freeSubstitutes}
-                </p>
+          {/* Where You Can Win — tucked at bottom of Risks */}
+          {whereToWin && whereToWin.length > 0 && (
+            <div className="mt-4 border-t border-emerald-500/20 pt-4 flex flex-col gap-4">
+              <div className="flex items-center gap-1.5">
+                <Target className="h-3 w-3 text-emerald-400 shrink-0" />
+                <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Where You Can Win</p>
+              </div>
+              <div className="flex flex-col divide-y divide-emerald-500/10">
+                {whereToWin.map((insight, i) => (
+                  <div key={i} className="py-4 first:pt-0 last:pb-0 flex flex-col gap-2.5">
+                    <span className="inline-flex w-fit text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">
+                      {insight.title}
+                    </span>
+                    <div className="flex flex-col gap-1.5">
+                      <div className="grid grid-cols-[64px_1fr] gap-2 items-start">
+                        <span className="text-[10px] font-semibold uppercase tracking-wide text-foreground/30 pt-px">They do</span>
+                        <span className="text-xs text-foreground/50 leading-snug">{insight.pattern}</span>
+                      </div>
+                      <div className="grid grid-cols-[64px_1fr] gap-2 items-start">
+                        <span className="text-[10px] font-semibold uppercase tracking-wide text-rose-400/80 pt-px">Ignore</span>
+                        <span className="text-xs text-foreground/70 leading-snug">{insight.gap}</span>
+                      </div>
+                      <div className="grid grid-cols-[64px_1fr] gap-2 items-start">
+                        <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-400 pt-px">Opening</span>
+                        <span className="text-xs text-foreground/90 font-semibold leading-snug">{insight.opportunity}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
