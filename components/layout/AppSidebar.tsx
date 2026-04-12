@@ -210,7 +210,7 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                       transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                       className="overflow-hidden"
                     >
-                      {recentValidations.map((entry) => (
+                      {recentValidations.slice(0, 5).map((entry) => (
                         <ValidationItem
                           key={entry.id}
                           id={entry.id}
@@ -231,6 +231,15 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                           }}
                         />
                       ))}
+                      {recentValidations.length > 5 && (
+                        <Link
+                          href="/validate"
+                          onClick={() => { onNavigate?.(); setOpenMobile(false); }}
+                          className="flex w-full items-center px-2.5 py-2 text-xs text-muted-foreground/50 transition-colors hover:text-muted-foreground"
+                        >
+                          See all validations ({recentValidations.length})
+                        </Link>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -265,7 +274,7 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                       transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                       className="overflow-hidden"
                     >
-                      {recentBrainstorms.map((entry, i) => (
+                      {recentBrainstorms.slice(0, 5).map((entry, i) => (
                         <BrainstormItem
                           key={entry.createdAt ?? i}
                           id={entry.createdAt}
@@ -299,6 +308,15 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                           }}
                         />
                       ))}
+                      {recentBrainstorms.length > 5 && (
+                        <Link
+                          href="/brainstorms"
+                          onClick={() => { onNavigate?.(); setOpenMobile(false); }}
+                          className="flex w-full items-center px-2.5 py-2 text-xs text-muted-foreground/50 transition-colors hover:text-muted-foreground"
+                        >
+                          See all brainstorms ({recentBrainstorms.length})
+                        </Link>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
