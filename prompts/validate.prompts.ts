@@ -122,7 +122,7 @@ Analyze the idea and evidence, then return a JSON report with this exact shape:
 {
   "score": <integer 0-100, overall viability>,
   "painScore": <integer 0-100, how real and evidenced the problem is>,
-  "competitionScore": <integer 0-100, market saturation — lower = less saturated = better>,
+  "competitionScore": <integer 0-100, how crowded the market is — 0 = wide open, almost no competition; 100 = extremely saturated, dominated by funded players. Todo apps = 90. A truly novel niche = 10>,
   "opportunityScore": <integer 0-100, differentiation gap and timing>,
   "confidence": <"low" | "medium" | "high" — how reliable is this validation based on evidence quality>,
   "confidenceReason": "<1 sentence: why confidence is this level>",

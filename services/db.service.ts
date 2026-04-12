@@ -200,6 +200,22 @@ export async function renameValidation(userId: string, id: string, description: 
   if (error) throw new Error(`[db] renameValidation: ${error.message}`);
 }
 
+export async function updateValidation(
+  userId: string,
+  id: string,
+  description: string,
+  result: EnhancedValidationResult,
+  competitors: Competitor[]
+): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('validations')
+    .update({ description, result_json: result, competitors_json: competitors })
+    .eq('user_id', userId)
+    .eq('id', id);
+  if (error) throw new Error(`[db] updateValidation: ${error.message}`);
+}
+
 export async function deleteValidation(userId: string, id: string): Promise<void> {
   const supabase = createClient();
   const { error } = await supabase

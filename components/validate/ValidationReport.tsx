@@ -40,7 +40,7 @@ function colorClass(c: 'emerald' | 'amber' | 'rose', variant: 'text' | 'bg' | 'b
   return map[c][variant];
 }
 
-const DECISION_LABEL = { proceed: 'Proceed', 'test-first': 'Test Before Building', drop: 'Drop It' } as const;
+const DECISION_LABEL = { proceed: 'Proceed', 'test-first': 'Test Before Building', drop: 'Drop This Idea' } as const;
 const DECISION_COLOR = { proceed: 'emerald', 'test-first': 'amber', drop: 'rose' } as const;
 const DECISION_ICON = {
   proceed: CheckCircle,
@@ -51,8 +51,12 @@ const DECISION_ICON = {
 const DEFAULT_NEXT_STEP: Record<string, string> = {
   proceed: 'Talk to 5 potential users this week — validate the problem before writing code',
   'test-first': 'Post this problem in a relevant community and measure engagement before building',
-  drop: 'Document what you learned, then explore a different angle on this problem space',
+  drop: 'Pivot to a narrower segment or a problem space with weaker existing competition',
 };
+
+// Step types that are valid per decision
+const VALIDATION_STEP_TYPES = new Set(['reddit-post', 'landing-page', 'interviews', 'survey']);
+const BUILD_STEP_TYPES = new Set(['prototype', 'other']);
 
 const STEP_LABEL: Record<string, string> = {
   'reddit-post': 'Write Reddit Post',
@@ -150,6 +154,41 @@ export function ValidationReport({ result, competitors }: ValidationReportProps)
   const DecisionIcon = decision ? DECISION_ICON[decision] : null;
   const displayNextStep = nextStep ?? (decision ? DEFAULT_NEXT_STEP[decision] : undefined);
 
+  // Gate CTAs on decision — prevent contradictory actions
+  const isDrop = decision === 'drop';
+  const isProceed = decision === 'proceed';
+  const isTest = decision === 'test-first';
+
+  // "Where You Can Win" section config — adapts to decision
+  const WinIcon = isDrop ? XCircle : Target;
+  const winSection = {
+    heading:         isDrop ? 'NOT ENOUGH TO WIN' : isProceed ? 'YOUR EDGE' : 'WHERE YOU CAN WIN',
+    headingColor:    isDrop ? 'text-amber-400/80'  : 'text-emerald-400',
+    iconColor:       isDrop ? 'text-amber-400/80'  : 'text-emerald-400',
+    borderTop:       isDrop ? 'border-amber-500/15' : 'border-emerald-500/20',
+    divider:         isDrop ? 'divide-amber-500/10' : 'divide-emerald-500/10',
+    badge:           isDrop ? 'bg-amber-500/10 text-amber-400/80' : 'bg-emerald-500/10 text-emerald-400',
+    openingLabel:    isDrop ? 'Angle'       : isProceed ? 'Your edge' : 'Opening',
+    openingLabelCls: isDrop ? 'text-amber-400/70' : 'text-emerald-400',
+    openingValueCls: isDrop
+      ? 'text-foreground/50'
+      : isProceed
+      ? 'text-foreground/95 font-bold'
+      : 'text-foreground/90 font-semibold',
+  };
+
+  const showPrimaryAction =
+    !isDrop &&
+    !!nextStepType &&
+    !!STEP_LABEL[nextStepType] &&
+    (isProceed
+      ? true
+      : isTest
+      ? VALIDATION_STEP_TYPES.has(nextStepType)
+      : true);
+
+  const showStartBuilding = isProceed || !decision;
+
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col gap-3">
@@ -233,25 +272,41 @@ export function ValidationReport({ result, competitors }: ValidationReportProps)
           </div>
 
           <div className="flex flex-col gap-2">
-            {nextStepType && STEP_LABEL[nextStepType] && (
-              <Button size="sm" className="w-full justify-between">
-                {STEP_LABEL[nextStepType]}
+            {isDrop ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-between"
+                onClick={() => router.push('/validate')}
+              >
+                Try Another Angle
                 <ArrowRight className="h-3.5 w-3.5" />
               </Button>
+            ) : (
+              <>
+                {showPrimaryAction && (
+                  <Button size="sm" className="w-full justify-between">
+                    {STEP_LABEL[nextStepType!]}
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="flex-1 gap-1.5" onClick={copyNextStep}>
+                    <Copy className="h-3 w-3" />
+                    Copy
+                  </Button>
+                  {showStartBuilding && (
+                    <Button size="sm" className="flex-1" variant="outline" onClick={() => router.push('/research')}>
+                      Start Building
+                    </Button>
+                  )}
+                </div>
+              </>
             )}
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1 gap-1.5" onClick={copyNextStep}>
-                <Copy className="h-3 w-3" />
-                Copy
-              </Button>
-              <Button size="sm" className="flex-1" variant="outline" onClick={() => router.push('/research')}>
-                Start Building
-              </Button>
-            </div>
           </div>
 
-          {/* Validation effort — compact, tucked at bottom */}
-          {validationEffort && (
+          {/* Validation effort — only relevant when not dropping */}
+          {validationEffort && !isDrop && (
             <div className="border-t border-border pt-3 grid grid-cols-3 gap-1 text-center">
               {[
                 { k: 'Time', v: validationEffort.time },
@@ -271,11 +326,13 @@ export function ValidationReport({ result, competitors }: ValidationReportProps)
       {/* ══ ROW 2: Metrics ═══════════════════════════════════════════════════ */}
       <div className="grid grid-cols-3 divide-x divide-border rounded-xl border border-border overflow-hidden bg-card">
         {[
-          { label: 'Pain', value: painScore },
-          { label: 'Competition', value: competitionScore },
-          { label: 'Opportunity', value: opportunityScore },
-        ].map(({ label, value }) => {
-          const c = scoreColor(value);
+          { label: 'Pain', value: painScore, invert: false },
+          { label: 'Competition', value: competitionScore, invert: true },
+          { label: 'Opportunity', value: opportunityScore, invert: false },
+        ].map(({ label, value, invert }) => {
+          const c = invert
+            ? value >= 70 ? 'rose' : value >= 45 ? 'amber' : 'emerald'
+            : scoreColor(value);
           return (
             <div key={label} className="flex flex-col gap-1.5 px-4 py-2.5">
               <SectionHeading>{label}</SectionHeading>
@@ -357,17 +414,19 @@ export function ValidationReport({ result, competitors }: ValidationReportProps)
             ))}
           </ul>
 
-          {/* Where You Can Win — tucked at bottom of Risks */}
+          {/* Where You Can Win — adapts to decision */}
           {whereToWin && whereToWin.length > 0 && (
-            <div className="mt-4 border-t border-emerald-500/20 pt-4 flex flex-col gap-4">
+            <div className={cn('mt-4 border-t pt-4 flex flex-col gap-4', winSection.borderTop)}>
               <div className="flex items-center gap-1.5">
-                <Target className="h-3 w-3 text-emerald-400 shrink-0" />
-                <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Where You Can Win</p>
+                <WinIcon className={cn('h-3 w-3 shrink-0', winSection.iconColor)} />
+                <p className={cn('text-[10px] font-bold uppercase tracking-widest', winSection.headingColor)}>
+                  {winSection.heading}
+                </p>
               </div>
-              <div className="flex flex-col divide-y divide-emerald-500/10">
+              <div className={cn('flex flex-col divide-y', winSection.divider)}>
                 {whereToWin.map((insight, i) => (
                   <div key={i} className="py-4 first:pt-0 last:pb-0 flex flex-col gap-2.5">
-                    <span className="inline-flex w-fit text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">
+                    <span className={cn('inline-flex w-fit text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded', winSection.badge)}>
                       {insight.title}
                     </span>
                     <div className="flex flex-col gap-1.5">
@@ -380,9 +439,21 @@ export function ValidationReport({ result, competitors }: ValidationReportProps)
                         <span className="text-xs text-foreground/70 leading-snug">{insight.gap}</span>
                       </div>
                       <div className="grid grid-cols-[64px_1fr] gap-2 items-start">
-                        <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-400 pt-px">Opening</span>
-                        <span className="text-xs text-foreground/90 font-semibold leading-snug">{insight.opportunity}</span>
+                        <span className={cn('text-[10px] font-semibold uppercase tracking-wide pt-px', winSection.openingLabelCls)}>
+                          {winSection.openingLabel}
+                        </span>
+                        <span className={cn('text-xs leading-snug', winSection.openingValueCls)}>
+                          {insight.opportunity}
+                        </span>
                       </div>
+                      {isDrop && (
+                        <div className="grid grid-cols-[64px_1fr] gap-2 items-start">
+                          <span className="text-[10px] font-semibold uppercase tracking-wide text-rose-400/60 pt-px">But →</span>
+                          <span className="text-xs text-foreground/40 leading-snug italic">
+                            Not sufficient to overcome established players in this market
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

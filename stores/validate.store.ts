@@ -17,6 +17,7 @@ interface ValidateState {
   pushLocalValidation: (entry: PersistedValidation) => void;
   removeLocalValidation: (id: string) => void;
   renameLocalValidation: (id: string, description: string) => void;
+  updateLocalValidation: (id: string, updates: Partial<Pick<PersistedValidation, 'description' | 'result' | 'competitors'>>) => void;
   updateLocalValidationId: (oldId: string, newId: string) => void;
 }
 
@@ -39,6 +40,13 @@ export const useValidateStore = create<ValidateState>()(
         set((state) => ({
           localValidations: state.localValidations.map((v) =>
             v.id === id ? { ...v, description } : v
+          ),
+        })),
+
+      updateLocalValidation: (id, updates) =>
+        set((state) => ({
+          localValidations: state.localValidations.map((v) =>
+            v.id === id ? { ...v, ...updates } : v
           ),
         })),
 

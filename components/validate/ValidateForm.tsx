@@ -15,9 +15,11 @@ import {
 } from '@/components/ui/select';
 import { ThinkingIndicator } from '@/components/research/ThinkingIndicator';
 import { ValidationReport } from './ValidationReport';
+import { RefinePanel } from './RefinePanel';
 import { validateIdeaStream } from '@/services/validate.service';
 import { useValidateStore } from '@/stores/validate.store';
 import { useSaveValidation } from '@/hooks/use-validations';
+import { updateValidation } from '@/services/db.service';
 import { useAuth } from '@/context/auth';
 import { toast } from 'sonner';
 import { PRODUCT_TYPE_OPTIONS } from '@/constants/products';
@@ -48,6 +50,7 @@ export function ValidateForm() {
   const saveValidation = useSaveValidation(user?.id);
   const pushLocalValidation = useValidateStore((s) => s.pushLocalValidation);
   const updateLocalValidationId = useValidateStore((s) => s.updateLocalValidationId);
+  const updateLocalValidation = useValidateStore((s) => s.updateLocalValidation);
 
   const [description, setDescription] = useState('');
   const [productType, setProductType] = useState('');
@@ -59,6 +62,8 @@ export function ValidateForm() {
   const [competitorCount, setCompetitorCount] = useState(0);
   const [result, setResult] = useState<EnhancedValidationResult | null>(null);
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
+  const [version, setVersion] = useState(1);
+  const [currentId, setCurrentId] = useState<string | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
   const analyzingLabel = useAnalyzingLabel(phase === 'analyzing');
@@ -71,7 +76,9 @@ export function ValidateForm() {
   const isActive = phase === 'thinking' || phase === 'researching' || phase === 'analyzing';
   const canSubmit = description.trim().length > 0 && productType.length > 0 && !isActive;
 
-  async function handleSubmit() {
+  async function handleSubmit(descriptionOverride?: string) {
+    const desc = descriptionOverride ?? description;
+
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -90,7 +97,7 @@ export function ValidateForm() {
     try {
       const data = await validateIdeaStream(
         {
-          description,
+          description: desc,
           productType,
           audience: audience.trim() || undefined,
           problem: problem.trim() || undefined,
@@ -109,24 +116,45 @@ export function ValidateForm() {
       setCompetitors(data.competitors);
       setPhase('done');
 
-      // Persist result — always push to local store for immediate sidebar update
-      const localId = String(Date.now());
-      pushLocalValidation({
-        id: localId,
-        description,
-        productType,
-        result: data.result,
-        competitors: data.competitors,
-        createdAt: Date.now(),
-      });
+      if (descriptionOverride) {
+        // Re-validation — update the existing entry, don't create a new one
+        setDescription(descriptionOverride);
+        setVersion((v) => v + 1);
+        if (currentId) {
+          updateLocalValidation(currentId, {
+            description: desc,
+            result: data.result,
+            competitors: data.competitors,
+          });
+          if (user) {
+            updateValidation(user.id, currentId, desc, data.result, data.competitors)
+              .catch(() => { toast.error('Failed to update validation.'); });
+          }
+        }
+      } else {
+        // Fresh validation — push new entry
+        const localId = String(Date.now());
+        setCurrentId(localId);
+        pushLocalValidation({
+          id: localId,
+          description: desc,
+          productType,
+          result: data.result,
+          competitors: data.competitors,
+          createdAt: Date.now(),
+        });
 
-      // Also save to DB for logged-in users (cross-device persistence)
-      // After save, swap the temp timestamp ID for the real UUID so the sidebar links to the DB record
-      if (user) {
-        saveValidation
-          .mutateAsync({ description, productType, result: data.result, competitors: data.competitors })
-          .then((uuid) => { if (uuid) updateLocalValidationId(localId, uuid); })
-          .catch(() => { toast.error('Failed to save validation to your account.'); });
+        if (user) {
+          saveValidation
+            .mutateAsync({ description: desc, productType, result: data.result, competitors: data.competitors })
+            .then((uuid) => {
+              if (uuid) {
+                updateLocalValidationId(localId, uuid);
+                setCurrentId(uuid);
+              }
+            })
+            .catch(() => { toast.error('Failed to save validation to your account.'); });
+        }
       }
     } catch (err: unknown) {
       if ((err as { name?: string }).name === 'AbortError') return;
@@ -190,7 +218,7 @@ export function ValidateForm() {
       />
 
       {/* Submit */}
-      <Button onClick={handleSubmit} disabled={!canSubmit}>
+      <Button onClick={() => handleSubmit()} disabled={!canSubmit}>
         {isActive ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -230,9 +258,16 @@ export function ValidateForm() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
-            className="mt-8"
+            className="mt-8 flex flex-col"
           >
             <ValidationReport result={result} competitors={competitors} />
+            <RefinePanel
+              description={description}
+              result={result}
+              version={version}
+              isLoading={isActive}
+              onRevalidate={(newDesc) => handleSubmit(newDesc)}
+            />
           </motion.div>
         )}
 
@@ -253,7 +288,7 @@ export function ValidateForm() {
               <p className="text-xs leading-relaxed text-muted-foreground">{errorMsg}</p>
             </div>
             <button
-              onClick={handleSubmit}
+              onClick={() => handleSubmit()}
               className="mt-1 text-xs font-bold uppercase tracking-widest text-primary transition-all hover:opacity-75"
             >
               Try again →
