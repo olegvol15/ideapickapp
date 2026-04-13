@@ -35,7 +35,7 @@ export function PromptForm() {
     statusLabel,
   } = useResearchStore();
 
-  const { handleGenerate, handleClear, isGenerating, errorMsg } = useResearch(
+  const { handleGenerate, handleCancel, handleClear, isGenerating, errorMsg } = useResearch(
     user?.id
   );
 
@@ -116,9 +116,15 @@ export function PromptForm() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="mt-10 flex justify-center"
+            className="mt-10 flex flex-col items-center gap-4"
           >
             <ThinkingIndicator label="Analyzing your prompt…" />
+            <button
+              onClick={handleCancel}
+              className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50 transition-colors hover:text-muted-foreground"
+            >
+              Cancel
+            </button>
           </motion.div>
         )}
 
@@ -129,9 +135,15 @@ export function PromptForm() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="mt-10 flex justify-center"
+            className="mt-10 flex flex-col items-center gap-4"
           >
             <ThinkingIndicator label={statusLabel} />
+            <button
+              onClick={handleCancel}
+              className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50 transition-colors hover:text-muted-foreground"
+            >
+              Cancel
+            </button>
           </motion.div>
         )}
 

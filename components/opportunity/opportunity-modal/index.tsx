@@ -20,7 +20,6 @@ import { useIdeaActions } from '@/hooks/use-idea-actions';
 import { setPlan } from '@/services/storage.service';
 import { REFINE_PRESETS } from '@/constants/products';
 import { Section } from './Section';
-import { ScoreBar } from './ScoreBar';
 
 const DIFFICULTY_VARIANT: Record<DifficultyLevel, string> = {
   Easy: 'difficulty-easy',
@@ -54,13 +53,21 @@ export function OpportunityModal({ open, onClose }: OpportunityModalProps) {
 
   const {
     displayIdea,
-    validation,
     refining,
-    validating,
     refine,
-    validate,
-    clearValidation,
   } = useIdeaActions();
+
+  function handleValidate() {
+    if (!i) return;
+    const params = new URLSearchParams({
+      description: i.pitch,
+      productType: 'SaaS',
+      ...(i.audience ? { audience: i.audience } : {}),
+      ...(i.problem ? { problem: i.problem } : {}),
+    });
+    onClose();
+    router.push(`/validate?${params.toString()}`);
+  }
 
   const {
     saved,
@@ -275,84 +282,15 @@ export function OpportunityModal({ open, onClose }: OpportunityModalProps) {
                     </Section>
 
                     <Section title="Validate Idea">
-                      {!validation ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={validate}
-                          disabled={validating}
-                          className="text-[10px] tracking-widest h-9 gap-2"
-                        >
-                          {validating ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <ShieldCheck className="h-3 w-3 opacity-60" />
-                          )}
-                          {validating ? 'Validating…' : 'Run Validation'}
-                        </Button>
-                      ) : (
-                        <div className="space-y-4">
-                          <div>
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                                Viability Score
-                              </span>
-                              <span className="text-xs font-bold text-foreground">
-                                {validation.score}/100
-                              </span>
-                            </div>
-                            <ScoreBar value={validation.score} />
-                          </div>
-
-                          <p className="border-l-2 border-primary/20 pl-3 text-xs leading-relaxed italic text-foreground/70">
-                            {validation.verdict}
-                          </p>
-
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <p className="text-[9px] font-bold uppercase tracking-widest text-emerald-600/70 dark:text-emerald-400/70 mb-2">
-                                Signals
-                              </p>
-                              <ul className="space-y-1.5">
-                                {validation.signals.map((s, idx) => (
-                                  <li
-                                    key={idx}
-                                    className="flex items-start gap-2 text-[11px] leading-snug text-foreground/70"
-                                  >
-                                    <span className="mt-[4px] h-[3px] w-[3px] shrink-0 rounded-full bg-emerald-500/50" />
-                                    {s}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                            <div>
-                              <p className="text-[9px] font-bold uppercase tracking-widest text-rose-500/70 mb-2">
-                                Risks
-                              </p>
-                              <ul className="space-y-1.5">
-                                {validation.risks.map((r, idx) => (
-                                  <li
-                                    key={idx}
-                                    className="flex items-start gap-2 text-[11px] leading-snug text-foreground/70"
-                                  >
-                                    <span className="mt-[4px] h-[3px] w-[3px] shrink-0 rounded-full bg-rose-500/50" />
-                                    {r}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          </div>
-
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={clearValidation}
-                            className="h-7 text-[10px] text-muted-foreground"
-                          >
-                            Clear validation
-                          </Button>
-                        </div>
-                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleValidate}
+                        className="text-[10px] tracking-widest h-9 gap-2"
+                      >
+                        <ShieldCheck className="h-3 w-3 opacity-60" />
+                        Run Validation
+                      </Button>
                     </Section>
                   </div>
                 </CardContent>

@@ -74,6 +74,7 @@ export default function ValidationDetailPage({ params }: PageProps) {
       setCompetitors(data.competitors);
       setDescription(newDescription);
       setVersion((v) => v + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
 
       updateLocalValidation(id, {
         description: newDescription,

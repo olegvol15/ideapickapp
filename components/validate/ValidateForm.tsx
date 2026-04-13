@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -47,6 +48,8 @@ function useAnalyzingLabel(active: boolean) {
 
 export function ValidateForm() {
   const { user } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const saveValidation = useSaveValidation(user?.id);
   const pushLocalValidation = useValidateStore((s) => s.pushLocalValidation);
   const updateLocalValidationId = useValidateStore((s) => s.updateLocalValidationId);
@@ -66,6 +69,7 @@ export function ValidateForm() {
   const [currentId, setCurrentId] = useState<string | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
+
   const analyzingLabel = useAnalyzingLabel(phase === 'analyzing');
 
   const researchingLabel =
@@ -76,8 +80,16 @@ export function ValidateForm() {
   const isActive = phase === 'thinking' || phase === 'researching' || phase === 'analyzing';
   const canSubmit = description.trim().length > 0 && productType.length > 0 && !isActive;
 
-  async function handleSubmit(descriptionOverride?: string) {
-    const desc = descriptionOverride ?? description;
+  async function handleSubmit(overrides?: { description?: string; productType?: string; audience?: string; problem?: string }) {
+    const desc = overrides?.description ?? description;
+    const pt = overrides?.productType ?? productType;
+    const aud = overrides?.audience ?? audience;
+    const prob = overrides?.problem ?? problem;
+
+    if (overrides?.description) setDescription(overrides.description);
+    if (overrides?.productType) setProductType(overrides.productType);
+    if (overrides?.audience) setAudience(overrides.audience);
+    if (overrides?.problem) setProblem(overrides.problem);
 
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -98,9 +110,9 @@ export function ValidateForm() {
       const data = await validateIdeaStream(
         {
           description: desc,
-          productType,
-          audience: audience.trim() || undefined,
-          problem: problem.trim() || undefined,
+          productType: pt,
+          audience: aud.trim() || undefined,
+          problem: prob.trim() || undefined,
         },
         {
           signal: controller.signal,
@@ -116,10 +128,10 @@ export function ValidateForm() {
       setCompetitors(data.competitors);
       setPhase('done');
 
-      if (descriptionOverride) {
-        // Re-validation — update the existing entry, don't create a new one
-        setDescription(descriptionOverride);
+      if (currentId && !overrides?.productType) {
+        // Re-validation from RefinePanel — update the existing entry
         setVersion((v) => v + 1);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         if (currentId) {
           updateLocalValidation(currentId, {
             description: desc,
@@ -138,7 +150,7 @@ export function ValidateForm() {
         pushLocalValidation({
           id: localId,
           description: desc,
-          productType,
+          productType: pt,
           result: data.result,
           competitors: data.competitors,
           createdAt: Date.now(),
@@ -146,7 +158,7 @@ export function ValidateForm() {
 
         if (user) {
           saveValidation
-            .mutateAsync({ description: desc, productType, result: data.result, competitors: data.competitors })
+            .mutateAsync({ description: desc, productType: pt, result: data.result, competitors: data.competitors })
             .then((uuid) => {
               if (uuid) {
                 updateLocalValidationId(localId, uuid);
@@ -165,69 +177,85 @@ export function ValidateForm() {
     }
   }
 
+  function handleCancel() {
+    abortRef.current?.abort();
+    setPhase('idle');
+  }
+
   useEffect(() => {
     return () => { abortRef.current?.abort(); };
   }, []);
 
+  // Auto-submit when arriving from the idea modal via query params (runs once on mount).
+  // Immediately strips params from URL so a page refresh doesn't re-trigger.
+  useEffect(() => {
+    const desc = searchParams.get('description');
+    const pt = searchParams.get('productType');
+    if (!desc || !pt) return;
+    const aud = searchParams.get('audience') ?? undefined;
+    const prob = searchParams.get('problem') ?? undefined;
+    router.replace('/validate');
+    handleSubmit({ description: desc, productType: pt, audience: aud, problem: prob });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="flex flex-col gap-5">
-      {/* Description */}
-      <Textarea
-        rows={4}
-        placeholder="A tool that helps freelancers automatically track billable hours from their calendar and generate invoices…"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        className="min-h-[120px]"
-        maxLength={600}
-      />
-
-      {/* Product type + optional fields */}
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="flex-1">
-          <Select
-            value={productType || undefined}
-            onValueChange={setProductType}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Product type (required)" />
-            </SelectTrigger>
-            <SelectContent>
-              {PRODUCT_TYPE_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex-1">
-          <Input
-            placeholder="Who is this for? (optional)"
-            value={audience}
-            onChange={(e) => setAudience(e.target.value)}
-            maxLength={200}
+      {/* Input form — hidden while processing or showing results */}
+      {(phase === 'idle' || phase === 'error') && (
+        <>
+          {/* Description */}
+          <Textarea
+            rows={4}
+            placeholder="A tool that helps freelancers automatically track billable hours from their calendar and generate invoices…"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="min-h-[120px]"
+            maxLength={600}
           />
-        </div>
-      </div>
 
-      <Input
-        placeholder="What pain does it solve? (optional)"
-        value={problem}
-        onChange={(e) => setProblem(e.target.value)}
-        maxLength={300}
-      />
+          {/* Product type + optional fields */}
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex-1">
+              <Select
+                value={productType || undefined}
+                onValueChange={setProductType}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Product type (required)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PRODUCT_TYPE_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1">
+              <Input
+                placeholder="Who is this for? (optional)"
+                value={audience}
+                onChange={(e) => setAudience(e.target.value)}
+                maxLength={200}
+              />
+            </div>
+          </div>
 
-      {/* Submit */}
-      <Button onClick={() => handleSubmit()} disabled={!canSubmit}>
-        {isActive ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Validating…
-          </>
-        ) : (
-          'Validate Idea →'
-        )}
-      </Button>
+          <Input
+            placeholder="What pain does it solve? (optional)"
+            value={problem}
+            onChange={(e) => setProblem(e.target.value)}
+            maxLength={300}
+          />
+
+          {/* Submit */}
+          <Button onClick={() => handleSubmit()} disabled={!canSubmit}>
+            Validate Idea →
+          </Button>
+        </>
+      )}
 
       {/* Phase rendering */}
       <AnimatePresence mode="wait">
@@ -238,7 +266,7 @@ export function ValidateForm() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="mt-10 flex justify-center"
+            className="mt-10 flex flex-col items-center gap-4"
           >
             <ThinkingIndicator
               label={
@@ -249,6 +277,12 @@ export function ValidateForm() {
                   : analyzingLabel
               }
             />
+            <button
+              onClick={handleCancel}
+              className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50 transition-colors hover:text-muted-foreground"
+            >
+              Cancel
+            </button>
           </motion.div>
         )}
 
@@ -266,7 +300,7 @@ export function ValidateForm() {
               result={result}
               version={version}
               isLoading={isActive}
-              onRevalidate={(newDesc) => handleSubmit(newDesc)}
+              onRevalidate={(newDesc) => handleSubmit({ description: newDesc })}
             />
           </motion.div>
         )}

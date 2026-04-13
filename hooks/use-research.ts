@@ -117,6 +117,13 @@ export function useResearch(userId: string | undefined) {
     store.setPhase('done');
   }
 
+  function handleCancel(): void {
+    abortRef.current?.abort();
+    clearAnalysisInterval();
+    const { result } = useResearchStore.getState();
+    store.setPhase(result ? 'done' : 'idle');
+  }
+
   function handleClear(): void {
     abortRef.current?.abort();
     clearAnalysisInterval();
@@ -125,6 +132,7 @@ export function useResearch(userId: string | undefined) {
 
   return {
     handleGenerate,
+    handleCancel,
     handleClear,
     isGenerating,
     errorMsg: store.errorMessage ?? 'Something went wrong',

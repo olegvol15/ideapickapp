@@ -50,8 +50,13 @@ export const POST = async (req: NextRequest): Promise<Response> => {
 
   const stream = new ReadableStream({
     async start(controller) {
-      const emit = (event: object) =>
-        controller.enqueue(encoder.encode(JSON.stringify(event) + '\n'));
+      const emit = (event: object) => {
+        try {
+          controller.enqueue(encoder.encode(JSON.stringify(event) + '\n'));
+        } catch {
+          // Client disconnected before stream closed; swallow silently.
+        }
+      };
 
       try {
         // Step 1: Generate focused search queries
