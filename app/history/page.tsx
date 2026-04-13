@@ -4,11 +4,12 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
-import { History, Loader2 } from 'lucide-react';
+import { History, Loader2, Search, X } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { ValidationHistoryCard } from '@/components/validate/ValidationHistoryCard';
 import { BrainstormHistoryCard } from '@/components/layout/BrainstormHistoryCard';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/auth';
 import { useGetValidations, useDeleteValidation, useRenameValidation } from '@/hooks/use-validations';
 import { useGetGenerations, useDeleteGeneration, useRenameGeneration } from '@/hooks/use-generations';
@@ -22,6 +23,7 @@ export default function HistoryPage() {
   const { user, loading } = useAuth();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<Tab>('validations');
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     if (searchParams.get('tab') === 'brainstorms') setActiveTab('brainstorms');
@@ -77,6 +79,14 @@ export default function HistoryPage() {
         createdAt: h.createdAt,
       }));
 
+  const q = query.trim().toLowerCase();
+  const filteredValidations = q
+    ? validations.filter((v) => v.description.toLowerCase().includes(q))
+    : validations;
+  const filteredBrainstorms = q
+    ? brainstorms.filter((b) => b.prompt.toLowerCase().includes(q))
+    : brainstorms;
+
   function handleDeleteValidation(id: string) {
     removeLocalValidation(id);
     if (user) deleteValidationMutation.mutate(id);
@@ -118,8 +128,9 @@ export default function HistoryPage() {
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 rounded-xl border border-border bg-card/50 p-1 w-fit">
+        {/* Search + Tabs row */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex gap-1 rounded-xl border border-border bg-card/50 p-1 w-fit">
           {(['validations', 'brainstorms'] as Tab[]).map((tab) => (
             <button
               key={tab}
@@ -135,6 +146,27 @@ export default function HistoryPage() {
               {tab}
             </button>
           ))}
+          </div>
+
+          {/* Search input */}
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/40" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search…"
+              className="h-8 pl-8 pr-8 text-sm"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/40 hover:text-muted-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Content */}
@@ -159,7 +191,7 @@ export default function HistoryPage() {
                 <div className="flex items-center gap-2">
                   <h2 className="text-sm font-bold text-foreground">Validations</h2>
                   <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
-                    {validations.length}
+                    {filteredValidations.length}
                   </span>
                 </div>
 
@@ -178,10 +210,14 @@ export default function HistoryPage() {
                       <Link href="/validate">Validate an idea</Link>
                     </Button>
                   </div>
+                ) : filteredValidations.length === 0 ? (
+                  <p className="py-10 text-center text-sm text-muted-foreground">
+                    No validations match &ldquo;{query}&rdquo;
+                  </p>
                 ) : (
                   <AnimatePresence mode="popLayout">
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                      {validations.map((v, index) => (
+                      {filteredValidations.map((v, index) => (
                         <motion.div
                           key={v.id}
                           layout
@@ -215,7 +251,7 @@ export default function HistoryPage() {
                 <div className="flex items-center gap-2">
                   <h2 className="text-sm font-bold text-foreground">Brainstorms</h2>
                   <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
-                    {brainstorms.length}
+                    {filteredBrainstorms.length}
                   </span>
                 </div>
 
@@ -234,10 +270,14 @@ export default function HistoryPage() {
                       <Link href="/">Start brainstorming</Link>
                     </Button>
                   </div>
+                ) : filteredBrainstorms.length === 0 ? (
+                  <p className="py-10 text-center text-sm text-muted-foreground">
+                    No brainstorms match &ldquo;{query}&rdquo;
+                  </p>
                 ) : (
                   <AnimatePresence mode="popLayout">
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                      {brainstorms.map((b, index) => (
+                      {filteredBrainstorms.map((b, index) => (
                         <motion.div
                           key={b.id}
                           layout
