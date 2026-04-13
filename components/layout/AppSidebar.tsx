@@ -9,6 +9,7 @@ import {
   Bookmark,
   ChevronDown,
   Gauge,
+  History,
   LogIn,
   PanelLeftClose,
   Plus,
@@ -87,6 +88,12 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       label: 'Saved ideas',
       icon: Bookmark,
       active: pathname === '/ideas' || pathname === '/saved',
+    },
+    {
+      href: '/history',
+      label: 'History',
+      icon: History,
+      active: pathname.startsWith('/history'),
     },
     ...(!user
       ? [
@@ -233,7 +240,7 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                       ))}
                       {recentValidations.length > 5 && (
                         <Link
-                          href="/validate"
+                          href="/history"
                           onClick={() => { onNavigate?.(); setOpenMobile(false); }}
                           className="flex w-full items-center px-2.5 py-2 text-xs text-muted-foreground/50 transition-colors hover:text-muted-foreground"
                         >
@@ -310,7 +317,7 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                       ))}
                       {recentBrainstorms.length > 5 && (
                         <Link
-                          href="/brainstorms"
+                          href="/history?tab=brainstorms"
                           onClick={() => { onNavigate?.(); setOpenMobile(false); }}
                           className="flex w-full items-center px-2.5 py-2 text-xs text-muted-foreground/50 transition-colors hover:text-muted-foreground"
                         >
