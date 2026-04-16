@@ -67,7 +67,7 @@ const STEP_LABEL: Record<string, string> = {
 
 function SectionHeading({ children, color }: { children: React.ReactNode; color?: string }) {
   return (
-    <p className={cn('text-[10px] font-bold uppercase tracking-widest', color ?? 'text-muted-foreground/50')}>
+    <p className={cn('text-[10px] font-bold uppercase tracking-widest', color ?? 'text-muted-foreground/70')}>
       {children}
     </p>
   );
@@ -87,7 +87,7 @@ function StatTile({ label, value, interpretation, color }: StatTileProps) {
       <span className={cn('text-2xl font-bold tabular-nums leading-none', colorClass(color, 'text'))}>
         {value}
       </span>
-      <span className="text-[11px] text-muted-foreground/55 leading-snug">{interpretation}</span>
+      <span className="text-[11px] text-muted-foreground/75 leading-snug">{interpretation}</span>
       <div className={cn('absolute bottom-0 left-0 right-0 h-0.5', colorClass(color, 'bg'))} />
     </div>
   );
@@ -119,6 +119,8 @@ export function ValidationReport({ result, competitors }: ValidationReportProps)
     marketHardness,
     competitorInsights,
     whereToWin,
+    willingnessToPay,
+    keyInsights,
   } = result;
 
   const mainColor = scoreColor(score);
@@ -264,47 +266,58 @@ export function ValidationReport({ result, competitors }: ValidationReportProps)
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <button
           onClick={() => setEvidenceOpen((v) => !v)}
-          className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-muted/30 transition-colors"
+          className="w-full flex items-center justify-between px-6 py-4 hover:bg-muted/30 transition-colors"
         >
           <div className="flex items-center gap-3">
             <SectionHeading>Evidence</SectionHeading>
-            <span className="text-[10px] text-muted-foreground/40 -mt-[2px]">
+            <span className="text-xs text-muted-foreground/60 -mt-[2px]">
               {allEvidence.length + signalItems.length} sources
             </span>
           </div>
           {evidenceOpen
-            ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground/50" />
-            : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/50" />
+            ? <ChevronUp className="h-4 w-4 text-muted-foreground/50" />
+            : <ChevronDown className="h-4 w-4 text-muted-foreground/50" />
           }
         </button>
 
         {evidenceOpen && (
-          <div className="border-t border-border px-5 pb-5 pt-5 flex flex-col gap-5">
+          <div className="border-t border-border px-6 pb-6 pt-6 flex flex-col gap-6">
 
             {/* 2-col: Competitors | Risks + Where You Can Win */}
-            <div className="grid gap-5 sm:grid-cols-2">
+            <div className="grid gap-6 sm:grid-cols-2">
 
               {/* Competitors */}
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-4">
                 <div>
                   <SectionHeading>Competitors</SectionHeading>
                   {marketHardness && (
-                    <p className="mt-1 text-[11px] text-muted-foreground leading-snug">{marketHardness}</p>
+                    <p className="mt-1.5 text-xs text-muted-foreground leading-snug">{marketHardness}</p>
                   )}
                 </div>
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-4">
                   {competitorItems.length > 0 ? competitorItems.map((c) => {
                     const ins = findInsight(c);
                     return (
-                      <div key={c.url} className="flex flex-col gap-1.5">
+                      <div key={c.url} className="flex flex-col gap-2">
                         <div className="flex items-center gap-2">
                           <CompetitorLogo domain={c.source} name={c.name} />
                           <span className="text-sm font-semibold text-foreground truncate flex-1">{c.name}</span>
+                          {/* Platform / rating chips */}
+                          {c.platform && (
+                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted/50 text-muted-foreground/70">
+                              {c.platform}
+                            </span>
+                          )}
+                          {c.rating != null && (
+                            <span className="text-[10px] font-medium text-amber-400/80">
+                              ★ {c.rating.toFixed(1)}{c.reviewCount ? ` (${c.reviewCount.toLocaleString()})` : ''}
+                            </span>
+                          )}
                           <a
                             href={c.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="shrink-0 flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium text-muted-foreground/60 hover:text-foreground bg-muted/30 hover:bg-muted/60 transition-colors"
+                            className="shrink-0 flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium text-muted-foreground/60 hover:text-foreground bg-muted/30 hover:bg-muted/60 transition-colors"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <ExternalLink className="h-3 w-3" />
@@ -312,39 +325,44 @@ export function ValidationReport({ result, competitors }: ValidationReportProps)
                           </a>
                         </div>
                         {ins ? (
-                          <div className="pl-[26px] flex flex-col gap-0.5">
-                            <p className="text-[11px] text-foreground/55 leading-snug">
-                              <span className="text-emerald-500/70 font-medium">↳ </span>{ins.whyChosen}
+                          <div className="pl-[26px] flex flex-col gap-1">
+                            <p className="text-xs text-foreground/75 leading-snug">
+                              <span className="text-emerald-500/80 font-medium">↳ </span>{ins.whyChosen}
                             </p>
-                            <p className="text-[11px] text-foreground/55 leading-snug">
-                              <span className="text-rose-500/70 font-medium">✕ </span>{ins.weakness}
+                            <p className="text-xs text-foreground/75 leading-snug">
+                              <span className="text-rose-500/80 font-medium">✕ </span>{ins.weakness}
                             </p>
                           </div>
                         ) : c.snippet ? (
-                          <p className="pl-[26px] text-[11px] text-muted-foreground leading-snug line-clamp-2">
+                          <p className="pl-[26px] text-xs text-muted-foreground/80 leading-snug line-clamp-2">
                             {c.snippet}
                           </p>
                         ) : null}
+                        {c.pricingSignal && (
+                          <p className="pl-[26px] text-xs text-muted-foreground/65 leading-snug italic">
+                            {c.pricingSignal}
+                          </p>
+                        )}
                       </div>
                     );
                   }) : (
-                    <p className="text-xs text-muted-foreground">No competitor data available.</p>
+                    <p className="text-sm text-muted-foreground">No competitor data available.</p>
                   )}
                 </div>
               </div>
 
               {/* Risks + Where You Can Win */}
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-5">
                 {/* Why This Could Fail */}
                 <div>
-                  <div className="flex items-center gap-2 mb-2.5">
-                    <AlertTriangle className="h-3.5 w-3.5 text-rose-400 shrink-0" />
+                  <div className="flex items-center gap-2 mb-3">
+                    <AlertTriangle className="h-4 w-4 text-rose-400 shrink-0" />
                     <SectionHeading color="text-rose-400">Why This Could Fail</SectionHeading>
                   </div>
-                  <ul className="flex flex-col gap-2">
+                  <ul className="flex flex-col gap-2.5">
                     {(failureReasons ?? risks).slice(0, 5).map((r, i) => (
-                      <li key={i} className="flex items-start gap-2.5 text-sm text-foreground/75 leading-snug">
-                        <span className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500/70" />
+                      <li key={i} className="flex items-start gap-3 text-sm text-foreground/80 leading-snug">
+                        <span className="mt-[6px] h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500/70" />
                         {r}
                       </li>
                     ))}
@@ -353,38 +371,38 @@ export function ValidationReport({ result, competitors }: ValidationReportProps)
 
                 {/* Where You Can Win */}
                 {whereToWin && whereToWin.length > 0 && (
-                  <div className={cn('border-t pt-4', winSection.borderTop)}>
-                    <div className="flex items-center gap-1.5 mb-3">
-                      <WinIcon className={cn('h-3 w-3 shrink-0', winSection.iconColor)} />
+                  <div className={cn('border-t pt-5', winSection.borderTop)}>
+                    <div className="flex items-center gap-2 mb-4">
+                      <WinIcon className={cn('h-4 w-4 shrink-0', winSection.iconColor)} />
                       <SectionHeading color={winSection.headingColor}>{winSection.heading}</SectionHeading>
                     </div>
                     <div className={cn('flex flex-col divide-y', winSection.divider)}>
                       {whereToWin.map((insight, i) => (
-                        <div key={i} className="py-3.5 first:pt-0 last:pb-0 flex flex-col gap-2">
-                          <span className={cn('inline-flex w-fit text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded', winSection.badge)}>
+                        <div key={i} className="py-4 first:pt-0 last:pb-0 flex flex-col gap-2.5">
+                          <span className={cn('inline-flex w-fit text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded', winSection.badge)}>
                             {insight.title}
                           </span>
-                          <div className="flex flex-col gap-1">
-                            <div className="grid grid-cols-[64px_1fr] gap-2 items-start">
-                              <span className="text-[10px] font-semibold uppercase tracking-wide text-foreground/30 pt-px">They do</span>
-                              <span className="text-xs text-foreground/50 leading-snug">{insight.pattern}</span>
+                          <div className="flex flex-col gap-1.5">
+                            <div className="grid grid-cols-[72px_1fr] gap-2.5 items-start">
+                              <span className="text-xs font-semibold uppercase tracking-wide text-foreground/50 pt-px">They do</span>
+                              <span className="text-sm text-foreground/70 leading-snug">{insight.pattern}</span>
                             </div>
-                            <div className="grid grid-cols-[64px_1fr] gap-2 items-start">
-                              <span className="text-[10px] font-semibold uppercase tracking-wide text-rose-400/80 pt-px">Ignore</span>
-                              <span className="text-xs text-foreground/70 leading-snug">{insight.gap}</span>
+                            <div className="grid grid-cols-[72px_1fr] gap-2.5 items-start">
+                              <span className="text-xs font-semibold uppercase tracking-wide text-rose-400/90 pt-px">Ignore</span>
+                              <span className="text-sm text-foreground/80 leading-snug">{insight.gap}</span>
                             </div>
-                            <div className="grid grid-cols-[64px_1fr] gap-2 items-start">
-                              <span className={cn('text-[10px] font-semibold uppercase tracking-wide pt-px', winSection.openingLabelCls)}>
+                            <div className="grid grid-cols-[72px_1fr] gap-2.5 items-start">
+                              <span className={cn('text-xs font-semibold uppercase tracking-wide pt-px', winSection.openingLabelCls)}>
                                 {winSection.openingLabel}
                               </span>
-                              <span className={cn('text-xs leading-snug', winSection.openingValueCls)}>
+                              <span className={cn('text-sm leading-snug', winSection.openingValueCls)}>
                                 {insight.opportunity}
                               </span>
                             </div>
                             {isDrop && (
-                              <div className="grid grid-cols-[64px_1fr] gap-2 items-start">
-                                <span className="text-[10px] font-semibold uppercase tracking-wide text-rose-400/60 pt-px">But →</span>
-                                <span className="text-xs text-foreground/40 leading-snug italic">
+                              <div className="grid grid-cols-[72px_1fr] gap-2.5 items-start">
+                                <span className="text-xs font-semibold uppercase tracking-wide text-rose-400/80 pt-px">But →</span>
+                                <span className="text-sm text-foreground/60 leading-snug italic">
                                   Not sufficient to overcome established players in this market
                                 </span>
                               </div>
@@ -398,16 +416,64 @@ export function ValidationReport({ result, competitors }: ValidationReportProps)
               </div>
             </div>
 
+            {/* Willingness to Pay + Key Insights */}
+            {(willingnessToPay || (keyInsights && keyInsights.length > 0)) && (
+              <div className="border-t border-border pt-5 grid gap-5 sm:grid-cols-2">
+                {willingnessToPay && (
+                  <div className="flex flex-col gap-3">
+                    <SectionHeading>Willingness to Pay</SectionHeading>
+                    <div className="flex items-center gap-2">
+                      <span className={cn(
+                        'text-2xl font-bold tabular-nums leading-none',
+                        willingnessToPay.level === 'high'   && 'text-emerald-500',
+                        willingnessToPay.level === 'medium' && 'text-amber-500',
+                        willingnessToPay.level === 'low'    && 'text-rose-500',
+                      )}>
+                        {cap(willingnessToPay.level)}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      {willingnessToPay.freeSubstitutes && (
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Free alternatives</span>
+                          <span className="text-sm text-foreground/75 leading-snug">{willingnessToPay.freeSubstitutes}</span>
+                        </div>
+                      )}
+                      {willingnessToPay.paidAlternatives && (
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Paid alternatives</span>
+                          <span className="text-sm text-foreground/75 leading-snug">{willingnessToPay.paidAlternatives}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {keyInsights && keyInsights.length > 0 && (
+                  <div className="flex flex-col gap-3">
+                    <SectionHeading>Key Insights</SectionHeading>
+                    <ul className="flex flex-col gap-2.5">
+                      {keyInsights.map((insight, i) => (
+                        <li key={i} className="flex items-start gap-2.5 text-sm text-foreground/80 leading-snug">
+                          <span className="mt-[6px] h-1.5 w-1.5 shrink-0 rounded-full bg-primary/70" />
+                          {insight}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Full-width: Evidenced signals */}
             {(strongEvidence.length > 0 || otherEvidence.length > 0 || signalItems.length > 0) && (
-              <div className="border-t border-border pt-4 grid gap-4 sm:grid-cols-2">
+              <div className="border-t border-border pt-5 grid gap-5 sm:grid-cols-2">
                 {strongEvidence.length > 0 && (
                   <div>
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-emerald-500/70 mb-2">Strong</p>
-                    <ul className="flex flex-col gap-1.5">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-500/90 mb-2.5">Strong</p>
+                    <ul className="flex flex-col gap-2">
                       {strongEvidence.map((s, i) => (
-                        <li key={i} className="flex items-start gap-2 text-xs text-foreground/75 leading-snug">
-                          <span className="mt-[5px] h-1 w-1 shrink-0 rounded-full bg-emerald-500" />
+                        <li key={i} className="flex items-start gap-2.5 text-sm text-foreground/85 leading-snug">
+                          <span className="mt-[6px] h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
                           {s.text}
                         </li>
                       ))}
@@ -417,11 +483,11 @@ export function ValidationReport({ result, competitors }: ValidationReportProps)
                 <div>
                   {otherEvidence.length > 0 && (
                     <>
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-2">Moderate / Weak</p>
-                      <ul className="flex flex-col gap-1.5 mb-3">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/65 mb-2.5">Moderate / Weak</p>
+                      <ul className="flex flex-col gap-2 mb-4">
                         {otherEvidence.map((s, i) => (
-                          <li key={i} className="flex items-start gap-2 text-xs text-foreground/55 leading-snug">
-                            <span className="mt-[5px] h-1 w-1 shrink-0 rounded-full bg-muted-foreground/40" />
+                          <li key={i} className="flex items-start gap-2.5 text-sm text-foreground/75 leading-snug">
+                            <span className="mt-[6px] h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/60" />
                             {s.text}
                           </li>
                         ))}
@@ -430,20 +496,20 @@ export function ValidationReport({ result, competitors }: ValidationReportProps)
                   )}
                   {signalItems.length > 0 && (
                     <>
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-2">Web Sources</p>
-                      <ul className="flex flex-col gap-1.5">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/65 mb-2.5">Web Sources</p>
+                      <ul className="flex flex-col gap-2">
                         {signalItems.map((c) => (
-                          <li key={c.url} className="flex items-center gap-1.5">
+                          <li key={c.url} className="flex items-center gap-2">
                             <CompetitorLogo domain={c.source} name={c.name} />
                             <a
                               href={c.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-[11px] text-muted-foreground/60 hover:text-muted-foreground transition-colors leading-snug truncate"
+                              className="text-xs text-muted-foreground/80 hover:text-muted-foreground transition-colors leading-snug truncate"
                             >
                               {c.name}
                             </a>
-                            <ExternalLink className="h-2.5 w-2.5 shrink-0 text-muted-foreground/30" />
+                            <ExternalLink className="h-3 w-3 shrink-0 text-muted-foreground/50" />
                           </li>
                         ))}
                       </ul>
@@ -507,8 +573,8 @@ export function ValidationReport({ result, competitors }: ValidationReportProps)
               { k: 'Level', v: cap(validationEffort.difficulty) },
             ].map(({ k, v }) => (
               <div key={k}>
-                <p className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/40">{k}</p>
-                <p className="text-[11px] font-semibold text-foreground/70 mt-0.5">{v}</p>
+                <p className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/60">{k}</p>
+                <p className="text-[11px] font-semibold text-foreground/85 mt-0.5">{v}</p>
               </div>
             ))}
           </div>

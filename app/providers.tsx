@@ -9,7 +9,13 @@ import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 
 // QueryClient is created inside useState so each SSR request gets its own
 // instance, preventing cross-request state sharing.
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({
+  children,
+  nonce,
+}: {
+  children: React.ReactNode;
+  nonce?: string;
+}) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -23,7 +29,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+          nonce={nonce}
+        >
           <ErrorBoundary>
             {children}
           </ErrorBoundary>

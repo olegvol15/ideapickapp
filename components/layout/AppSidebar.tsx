@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { startTransition, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -73,7 +73,10 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     useResearchStore.getState().clear();
     onNavigate?.();
     setOpenMobile(false);
-    window.location.href = '/';
+    startTransition(() => {
+      router.push('/');
+      router.refresh();
+    });
   }
 
   const navigation = [
@@ -109,7 +112,9 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <>
-      <SidebarHeader className={openDesktop ? 'px-3 py-3' : 'px-2 pt-4'}>
+      <SidebarHeader
+        className={openDesktop ? 'px-3 py-3' : 'flex justify-center px-0 pt-4'}
+      >
         {openDesktop ? (
           <div className="flex items-center justify-between">
             <Link
@@ -141,7 +146,7 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <SidebarContent
         className={cn(
           'bg-card/95 text-card-foreground backdrop-blur-xl',
-          openDesktop ? 'px-2 py-1' : 'px-2 pt-3'
+          openDesktop ? 'px-2 py-1' : 'px-0 pt-3'
         )}
       >
         {openDesktop ? (
@@ -331,11 +336,11 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             )}
           </div>
         ) : (
-          <SidebarMenu className="space-y-2">
+          <SidebarMenu className="space-y-2 px-0">
             {navigation.map((item) => {
               const Icon = item.icon;
               return (
-                <SidebarMenuItem key={item.href}>
+                <SidebarMenuItem key={item.href} className="flex justify-center">
                   <SidebarMenuButton
                     asChild
                     isActive={item.active}
@@ -374,7 +379,7 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <SidebarFooter
         className={cn(
           'bg-card/95 backdrop-blur-xl',
-          openDesktop ? 'px-2 pb-4' : 'px-2 pb-4'
+          openDesktop ? 'px-2 pb-4' : 'flex justify-center px-0 pb-4'
         )}
       >
         <UserMenu variant={openDesktop ? 'sidebar' : 'compact'} />
