@@ -49,6 +49,16 @@ export function appToCompetitor(r: AppStoreApp): Competitor {
   };
 }
 
+export function dedupeApps(apps: AppStoreApp[]): AppStoreApp[] {
+  const seen = new Set<string>();
+  return apps.filter((a) => {
+    const key = a.trackViewUrl.split('?')[0];
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 export async function searchAppStore(query: string): Promise<Competitor[]> {
   const apps = await fetchAppStoreApps(query, 6);
   return apps.map(appToCompetitor);

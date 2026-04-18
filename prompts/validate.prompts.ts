@@ -1,5 +1,5 @@
 import type { Competitor } from '@/types';
-import type { MobileMetrics, MobileScores, MobileDecision } from '@/lib/scoring/mobile';
+import type { MobileMetrics, MobileScores, MobileDecision, PainAnalysis, NicheResult, WinAngle } from '@/lib/scoring/mobile';
 import { formatCompetitorBlock } from './formatters';
 
 type ChatMessage = { role: 'system' | 'user'; content: string };
@@ -220,7 +220,12 @@ export function buildMobileAnalysisMessages(
   scores: MobileScores,
   uiScores: { score: number; painScore: number; competitionScore: number; opportunityScore: number },
   rawDecision: MobileDecision,
-  decisionReason: string
+  decisionReason: string,
+  pain: PainAnalysis,
+  marketInsights: string[],
+  opportunityInsights: string[],
+  winAngles: WinAngle[],
+  confidenceScore: number
 ): ChatMessage[] {
   const context = [
     `Product type: ${productType}`,
@@ -231,13 +236,23 @@ export function buildMobileAnalysisMessages(
     .join('\n');
 
   const competitorBlock = formatCompetitorBlock(competitors);
+  const pct = (n: number) => `${Math.round(n * 100)}%`;
 
-  const metricsBlock = `App Store metrics (computed from ${metrics.totalApps} results):
-- avgRating: ${metrics.avgRating.toFixed(2)}
-- avgReviews: ${Math.round(metrics.avgReviews).toLocaleString()}
-- totalReviews: ${metrics.totalReviews.toLocaleString()}
-- top5ReviewShare: ${(metrics.top5ReviewShare * 100).toFixed(1)}%
-- ratingDistributionAbove45: ${(metrics.ratingDistributionAbove45 * 100).toFixed(1)}%
+  const metricsBlock = `App Store distribution metrics (computed from ${metrics.totalApps} apps):
+- top10AvgRating: ${(metrics.top10AvgRating ?? 0).toFixed(2)} (top apps by review volume)
+- bottom40AvgRating: ${(metrics.bottom40AvgRating ?? 0).toFixed(2)} (weaker apps)
+- medianRating: ${(metrics.medianRating ?? 0).toFixed(2)}
+- top1ReviewShare: ${pct(metrics.top1ReviewShare ?? 0)} (market leader concentration)
+- top5ReviewShare: ${pct(metrics.top5ReviewShare ?? 0)}
+- top10ReviewShare: ${pct(metrics.top10ReviewShare ?? 0)}
+- reviewDistributionSkew (Gini): ${(metrics.reviewDistributionSkew ?? 0).toFixed(2)} (0=equal, 1=winner-takes-all)
+- marketDominance: ${metrics.marketDominance ?? 'LOW'}
+- marketLocked: ${metrics.marketLocked ?? false}
+
+Pain analysis (weighted score ${pain.weightedScore}/10):
+${pain.topPainClusters.length > 0
+  ? pain.topPainClusters.map((c) => `- ${c.cluster}: ${c.share}% of signals`).join('\n')
+  : '- No strong pain clusters detected'}
 
 Engine scores (0–10):
 - competitionScore: ${scores.competitionScore}
@@ -247,71 +262,84 @@ Engine scores (0–10):
 - opportunityScore: ${scores.opportunityScore}
 
 Final decision: ${rawDecision} — ${decisionReason}
-UI scores (0–100): score=${uiScores.score}, painScore=${uiScores.painScore}, competitionScore=${uiScores.competitionScore}, opportunityScore=${uiScores.opportunityScore}`;
+Confidence score: ${confidenceScore}/100
+UI scores (0–100): score=${uiScores.score}, painScore=${uiScores.painScore}, competitionScore=${uiScores.competitionScore}, opportunityScore=${uiScores.opportunityScore}
+
+Pre-computed market insights (use these — do not rephrase differently):
+${marketInsights.map((s) => `• ${s}`).join('\n') || '• Insufficient data for market insights'}
+
+Pre-computed opportunity insights:
+${opportunityInsights.map((s) => `• ${s}`).join('\n') || '• No strong opportunity signals detected'}
+
+Pre-computed win angles (format these into whereToWin — do not invent new ones):
+${winAngles.map((a, i) => `${i + 1}. [${a.title}] Signal: "${a.signal}" → Angle: "${a.angle}"`).join('\n') || 'None identified — use competitor gaps from evidence below'}`;
 
   return [
     {
       role: 'system',
       content: `You are a mobile market analyst writing a validation report for a founder.
-The scores and decision below were computed deterministically from real App Store data. Your job is to explain them — not recompute or override them.
+All scores, the decision, market insights, opportunity insights, and win angles were computed deterministically from real App Store distribution data and weighted pain signals. Your job is to explain and narrate — not recompute or override.
 
-DO NOT output: score, painScore, competitionScore, opportunityScore, decision.
-Those fields are controlled by the engine and will be injected separately.
+STRICT RULES:
+- DO NOT output: score, painScore, competitionScore, opportunityScore, decision
+- keyInsights MUST be drawn from the pre-computed market and opportunity insights provided — rephrase them precisely, do not invent
+- whereToWin MUST be formatted from the pre-computed win angles — format each into the JSON shape, do not add new angles
+- confidence MUST reflect the provided confidence score (${confidenceScore < 40 ? 'low' : confidenceScore < 70 ? 'medium' : 'high'})
 
 Return a JSON object with exactly this shape:
 {
-  "signals": ["<positive market signal 1>", "<signal 2>", "<signal 3>"],
-  "risks": ["<risk 1>", "<risk 2>", "<risk 3>"],
-  "verdict": "<2 sentences: what the App Store data says about this idea's viability>",
-  "confidence": <"low" | "medium" | "high">,
-  "confidenceReason": "<1 sentence: why this confidence level based on data coverage>",
-  "keyInsights": ["<specific insight with number/name/observation>", "<insight 2>"],
+  "signals": ["<positive market signal from the data>", "<signal 2>", "<signal 3>"],
+  "risks": ["<risk derived from the metrics>", "<risk 2>", "<risk 3>"],
+  "verdict": "<2 sentences: what the App Store distribution data says about this idea's viability — cite specific numbers>",
+  "confidence": "${confidenceScore < 40 ? 'low' : confidenceScore < 70 ? 'medium' : 'high'}",
+  "confidenceReason": "<1 sentence citing data coverage: ${metrics.totalApps} apps found, signal count>",
+  "keyInsights": ["<rephrase market insight 1 from the provided list>", "<rephrase insight 2>", "<insight 3>"],
   "nextStep": "<one concrete action this week, naming a specific platform or number>",
   "nextStepType": <"reddit-post" | "landing-page" | "interviews" | "prototype" | "survey" | "other">,
   "validationEffort": { "time": "<e.g. 2 days>", "cost": "<e.g. $0–20>", "difficulty": <"easy" | "medium" | "hard"> },
   "scoreBreakdown": {
     "pain": [
-      { "label": "Urgency", "score": <integer 0-100> },
+      { "label": "Urgency", "score": <integer 0-100 roughly matching painScore ${uiScores.painScore}> },
       { "label": "Frequency", "score": <integer 0-100> },
       { "label": "Evidence", "score": <integer 0-100> }
     ],
     "competition": [
-      { "label": "Saturation", "score": <integer 0-100> },
+      { "label": "Saturation", "score": <integer 0-100 roughly matching competitionScore ${uiScores.competitionScore}> },
       { "label": "Incumbents", "score": <integer 0-100> },
       { "label": "Switching Cost", "score": <integer 0-100> }
     ],
     "opportunity": [
-      { "label": "Gap Clarity", "score": <integer 0-100> },
+      { "label": "Gap Clarity", "score": <integer 0-100 roughly matching opportunityScore ${uiScores.opportunityScore}> },
       { "label": "Monetization", "score": <integer 0-100> },
       { "label": "Reachability", "score": <integer 0-100> }
     ]
   },
   "willingnessToPay": {
     "level": <"low" | "medium" | "high">,
-    "freeSubstitutes": "<name any strong free alternatives>",
-    "paidAlternatives": "<do paid alternatives exist? what do they charge?>"
+    "freeSubstitutes": "<name strong free alternatives from competitor data>",
+    "paidAlternatives": "<what do paid alternatives charge? cite names if known>"
   },
-  "evidencedSignals": [{ "text": "<signal>", "strength": <"strong" | "moderate" | "weak"> }],
-  "failureReasons": ["<max 6 words, direct>", "<reason 2>"],
-  "marketHardness": "<1 sentence naming the actual barrier>",
+  "evidencedSignals": [{ "text": "<signal from pain or market data>", "strength": <"strong" | "moderate" | "weak"> }],
+  "failureReasons": ["<max 6 words, direct, from metrics>", "<reason 2>"],
+  "marketHardness": "<1 sentence naming the specific structural barrier from the data>",
   "competitorInsights": [
     { "name": "<app name>", "whyChosen": "<1 short phrase: what users get>", "weakness": "<1 short phrase: the gap>" }
   ],
   "whereToWin": [
     {
-      "title": "<one of: Segment gap, Timing gap, Complexity gap, Pricing gap, Workflow gap, Trust gap, Niche gap, Distribution gap>",
-      "pattern": "<what top apps optimize for — under 10 words>",
-      "gap": "<what they ignore — under 10 words, specific>",
-      "opportunity": "<concrete opening — 1 testable sentence naming segment/channel/behavior>"
+      "title": "<gap type from pre-computed angles>",
+      "pattern": "<what top apps optimize for — under 10 words, from data>",
+      "gap": "<what the angle signal shows they ignore — under 10 words>",
+      "opportunity": "<the pre-computed angle rephrased as a concrete testable opening>"
     }
   ]
 }
 COPY RULES:
-- verdict: 2 sentences max, state what the App Store data actually shows
-- scoreBreakdown averages should roughly match the injected UI scores
-- keyInsights must contain specific claims (numbers, app names, or direct observations)
-- whereToWin: 2–3 items, based on real patterns from competitor data — no generic advice
-- failureReasons and risks: max 6 words each, direct
+- verdict: cite specific numbers (review share %, ratings, app count)
+- keyInsights: MUST echo the pre-computed insights — do not substitute generic claims
+- whereToWin: MUST be formatted from the pre-computed angles provided — 2-3 items
+- failureReasons and risks: max 6 words each, blunt
+- scoreBreakdown sub-scores should average close to their parent UI score
 Respond ONLY with valid JSON. No markdown.`,
     },
     {
@@ -326,6 +354,32 @@ ${metricsBlock}
 
 --- App Store & Signal Evidence ---
 ${competitorBlock}`,
+    },
+  ];
+}
+
+export function buildKeywordExpansionMessages(description: string): ChatMessage[] {
+  return [
+    {
+      role: 'system',
+      content: `You generate App Store search keywords for a mobile app idea.
+Return a JSON object with this exact shape:
+{
+  "base": "<primary market category — 2-4 word App Store search term (e.g. 'meditation app', 'habit tracker')>",
+  "variations": ["<adjacent term 1>", "<adjacent term 2>", "<adjacent term 3>"],
+  "niches": ["<audience-specific term 1 — 3-6 words>", "<audience-specific term 2>", "<audience-specific term 3>"]
+}
+Rules:
+- base: the broad market category this app competes in — what a user would search in the App Store
+- variations: 2-3 adjacent or synonym search terms (different angle, same broad space)
+- niches: 2-3 audience- or problem-scoped variations (e.g. "meditation for anxiety", "habit tracker for ADHD")
+- All must be realistic App Store search queries (2-6 words max)
+- Never use product names, brand names, or generic terms like "better app"
+Respond ONLY with valid JSON. No markdown.`,
+    },
+    {
+      role: 'user',
+      content: `Generate App Store market keywords for this mobile app idea:\n${description}`,
     },
   ];
 }

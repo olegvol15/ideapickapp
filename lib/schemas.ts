@@ -100,11 +100,22 @@ const ValidationScoreBreakdownSchema = z.object({
 
 export const MobileMetricsSchema = z.object({
   totalApps: z.number(),
-  avgRating: z.number(),
-  avgReviews: z.number(),
   totalReviews: z.number(),
-  top5ReviewShare: z.number(),
-  ratingDistributionAbove45: z.number(),
+  // Distribution metrics
+  top10AvgRating: z.number().optional(),
+  bottom40AvgRating: z.number().optional(),
+  medianRating: z.number().optional(),
+  ratingVariance: z.number().optional(),
+  top1ReviewShare: z.number().optional(),
+  top5ReviewShare: z.number().optional(),
+  top10ReviewShare: z.number().optional(),
+  reviewDistributionSkew: z.number().optional(),
+  ratingDistributionAbove45: z.number().optional(),
+  marketDominance: z.enum(['HIGH', 'MEDIUM', 'LOW']).optional(),
+  marketLocked: z.boolean().optional(),
+  // Legacy fields kept optional so old saved validations still parse
+  avgRating: z.number().optional(),
+  avgReviews: z.number().optional(),
 });
 
 export const MobileScoresSchema = z.object({
@@ -113,6 +124,19 @@ export const MobileScoresSchema = z.object({
   qualityBarrierScore: z.number(),
   marketPowerScore: z.number(),
   opportunityScore: z.number(),
+});
+
+export const PainClusterSchema = z.object({
+  cluster: z.enum(['bugs', 'performance', 'pricing', 'missing_features', 'ux']),
+  share: z.number(),
+});
+
+export const NicheResultSchema = z.object({
+  query: z.string(),
+  totalApps: z.number(),
+  top5ReviewShare: z.number(),
+  reviewDistributionSkew: z.number(),
+  marketDominance: z.enum(['HIGH', 'MEDIUM', 'LOW']),
 });
 
 // Fields the LLM returns on the mobile path — narrative only, no scores/decision
@@ -167,6 +191,25 @@ export const EnhancedValidationResultSchema = z.object({
   metrics: MobileMetricsSchema.optional(),
   rawScores: MobileScoresSchema.optional(),
   rawDecision: z.string().optional(),
+  painAnalysis: z.object({
+    weightedScore: z.number(),
+    topPainClusters: z.array(PainClusterSchema),
+  }).optional(),
+  niches: z.array(NicheResultSchema).optional(),
+  marketInsights: z.array(z.string()).optional(),
+  opportunityInsights: z.array(z.string()).optional(),
+  confidenceScore: z.number().optional(),
+
+  // Optional — multi-keyword niche discovery
+  nicheAnalysis: z.object({
+    evaluatedKeywords: z.array(z.string()),
+    bestKeyword: z.string(),
+    bestKeywordScores: MobileScoresSchema,
+    alternativeKeywords: z.array(z.string()),
+    reasoning: z.string(),
+    comparisonNote: z.string().optional(),
+  }).optional(),
+  bestEntryStrategy: z.enum(['ENTER_VIA_NICHE', 'BROAD_MARKET', 'NO_VIABLE_ENTRY']).optional(),
 });
 export type EnhancedValidationResult = z.infer<typeof EnhancedValidationResultSchema>;
 
