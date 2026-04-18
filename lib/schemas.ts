@@ -85,6 +85,57 @@ const WillingnessToPaySchema = z.object({
   paidAlternatives: z.string(),
 });
 
+const ValidationSubScoreSchema = z.object({
+  label: z.string(),
+  score: z.number().min(0).max(100),
+});
+
+const ValidationScoreBreakdownSchema = z.object({
+  pain: z.array(ValidationSubScoreSchema).length(3).optional(),
+  competition: z.array(ValidationSubScoreSchema).length(3).optional(),
+  opportunity: z.array(ValidationSubScoreSchema).length(3).optional(),
+});
+
+// ─── Mobile deterministic engine schemas ─────────────────────────────────────
+
+export const MobileMetricsSchema = z.object({
+  totalApps: z.number(),
+  avgRating: z.number(),
+  avgReviews: z.number(),
+  totalReviews: z.number(),
+  top5ReviewShare: z.number(),
+  ratingDistributionAbove45: z.number(),
+});
+
+export const MobileScoresSchema = z.object({
+  competitionScore: z.number(),
+  saturationScore: z.number(),
+  qualityBarrierScore: z.number(),
+  marketPowerScore: z.number(),
+  opportunityScore: z.number(),
+});
+
+// Fields the LLM returns on the mobile path — narrative only, no scores/decision
+export const MobileExplanationSchema = z.object({
+  signals: z.array(z.string()),
+  risks: z.array(z.string()),
+  verdict: z.string(),
+  confidence: z.enum(['low', 'medium', 'high']).optional(),
+  confidenceReason: z.string().optional(),
+  keyInsights: z.array(z.string()).optional(),
+  nextStep: z.string().optional(),
+  nextStepType: z.enum(['reddit-post', 'landing-page', 'interviews', 'prototype', 'survey', 'other']).optional(),
+  validationEffort: ValidationEffortSchema.optional(),
+  willingnessToPay: WillingnessToPaySchema.optional(),
+  scoreBreakdown: ValidationScoreBreakdownSchema.optional(),
+  evidencedSignals: z.array(EvidencedSignalSchema).optional(),
+  failureReasons: z.array(z.string()).optional(),
+  marketHardness: z.string().optional(),
+  competitorInsights: z.array(CompetitorInsightSchema).optional(),
+  whereToWin: z.array(WinInsightSchema).optional(),
+});
+export type MobileExplanation = z.infer<typeof MobileExplanationSchema>;
+
 export const EnhancedValidationResultSchema = z.object({
   // Required — always present
   score: z.number().min(0).max(100),
@@ -105,11 +156,17 @@ export const EnhancedValidationResultSchema = z.object({
   nextStepType: z.enum(['reddit-post', 'landing-page', 'interviews', 'prototype', 'survey', 'other']).optional(),
   validationEffort: ValidationEffortSchema.optional(),
   willingnessToPay: WillingnessToPaySchema.optional(),
+  scoreBreakdown: ValidationScoreBreakdownSchema.optional(),
   evidencedSignals: z.array(EvidencedSignalSchema).optional(),
   failureReasons: z.array(z.string()).optional(),
   marketHardness: z.string().optional(),
   competitorInsights: z.array(CompetitorInsightSchema).optional(),
   whereToWin: z.array(WinInsightSchema).optional(),
+
+  // Optional — deterministic mobile engine output
+  metrics: MobileMetricsSchema.optional(),
+  rawScores: MobileScoresSchema.optional(),
+  rawDecision: z.string().optional(),
 });
 export type EnhancedValidationResult = z.infer<typeof EnhancedValidationResultSchema>;
 

@@ -4,12 +4,23 @@ import {
   buildValidationQueryMessages,
   buildCompetitorMessages,
   buildValidationAnalysisMessages,
+  buildMobileAnalysisMessages,
 } from '@/prompts/validate.prompts';
 import { requireAuth, checkRateLimit } from '@/lib/supabase/auth';
 import { validateLimiter } from '@/lib/rate-limit';
 import { validateValidateInput } from '@/lib/validate-input';
-import { EnhancedValidationResultSchema } from '@/lib/schemas';
+import { EnhancedValidationResultSchema, MobileExplanationSchema } from '@/lib/schemas';
+import type { EnhancedValidationResult } from '@/lib/schemas';
 import { searchAll } from '@/lib/search';
+import { fetchAppStoreApps, appToCompetitor } from '@/lib/discovery/mobile';
+import {
+  computeAppStoreMetrics,
+  computePainSignalScore,
+  computeMobileScores,
+  computeDecision,
+  mapToUIScores,
+  mapDecisionToUI,
+} from '@/lib/scoring/mobile';
 import { AppError } from '@/lib/errors/app-error';
 import { logger } from '@/lib/logger';
 import type { ValidateRequest } from '@/types/validate.types';
@@ -87,47 +98,120 @@ export const POST = async (req: NextRequest): Promise<Response> => {
           llmCompetitors = Array.isArray(c.competitors) ? c.competitors : [];
         } catch { /* use empty fallback */ }
 
-        // Step 2: Tavily — signals only (Reddit/forum pain signals) (~2-4s)
-        const signalResults = signalQuery
-          ? await searchAll([{ query: signalQuery, type: 'signal' }])
-          : [];
+        if (productType === 'Mobile App') {
+          // Step 2M: Fetch 50 App Store apps + Tavily signals in parallel (~2-4s)
+          const [signalResults, rawApps] = await Promise.all([
+            signalQuery
+              ? searchAll([{ query: signalQuery, type: 'signal' }])
+              : Promise.resolve([]),
+            fetchAppStoreApps(description, 50),
+          ]);
 
-        const competitors = [
-          ...llmCompetitors.map((c) => ({ ...c, type: 'competitor' as const })),
-          ...signalResults,
-        ];
+          const appStoreCompetitors = rawApps.slice(0, 10).map(appToCompetitor);
+          const competitors = dedupeCompetitors([
+            ...llmCompetitors.map((c) => ({ ...c, type: 'competitor' as const })),
+            ...appStoreCompetitors.map((c) => ({ ...c, type: 'competitor' as const })),
+            ...signalResults,
+          ]);
 
-        // Emit early — client shows progress while step 3 runs
-        emit({ type: 'research', data: { competitors } });
+          emit({ type: 'research', data: { competitors } });
 
-        // Step 3: LLM validation analysis (~8-15s)
-        const analysisCompletion = await openai.chat.completions.create({
-          model: 'gpt-4o-mini',
-          messages: buildValidationAnalysisMessages(
-            description,
-            productType,
-            audience,
-            problem,
-            competitors
-          ),
-          temperature: 0.4,
-          max_tokens: 2000,
-          response_format: { type: 'json_object' },
-        });
-
-        let analysisJson: unknown = {};
-        try {
-          analysisJson = JSON.parse(
-            analysisCompletion.choices[0]?.message?.content ?? '{}'
+          // Deterministic scoring
+          const metrics = computeAppStoreMetrics(rawApps);
+          const painSignalScore = computePainSignalScore(
+            signalResults.filter((r) => r.type === 'signal')
           );
-        } catch { /* use empty fallback */ }
+          const scores = computeMobileScores(metrics, painSignalScore);
+          const { verdict: rawDecision, reason: rawReason } = computeDecision(scores);
+          const uiScores = mapToUIScores(scores, painSignalScore);
+          const decision = mapDecisionToUI(rawDecision);
 
-        const parsed = EnhancedValidationResultSchema.safeParse(analysisJson);
-        if (!parsed.success) {
-          throw AppError.invalidAiResponse('Validation failed. Please try again.');
+          // Step 3M: LLM explains the already-computed result (~6-10s)
+          const analysisCompletion = await openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: buildMobileAnalysisMessages(
+              description,
+              productType,
+              audience,
+              problem,
+              competitors,
+              metrics,
+              scores,
+              uiScores,
+              rawDecision,
+              rawReason
+            ),
+            temperature: 0.4,
+            max_tokens: 1500,
+            response_format: { type: 'json_object' },
+          });
+
+          let explanationJson: unknown = {};
+          try {
+            explanationJson = JSON.parse(
+              analysisCompletion.choices[0]?.message?.content ?? '{}'
+            );
+          } catch { /* use empty fallback */ }
+
+          const explanationParsed = MobileExplanationSchema.safeParse(explanationJson);
+          if (!explanationParsed.success) {
+            throw AppError.invalidAiResponse('Validation failed. Please try again.');
+          }
+
+          const result: EnhancedValidationResult = {
+            ...explanationParsed.data,
+            ...uiScores,
+            decision,
+            decisionReason: rawReason,
+            metrics,
+            rawScores: scores,
+            rawDecision,
+          };
+
+          emit({ type: 'done', data: { result, competitors } });
+        } else {
+          // Step 2: Tavily signals (~2-4s)
+          const signalResults = signalQuery
+            ? await searchAll([{ query: signalQuery, type: 'signal' }])
+            : [];
+
+          const competitors = dedupeCompetitors([
+            ...llmCompetitors.map((c) => ({ ...c, type: 'competitor' as const })),
+            ...signalResults,
+          ]);
+
+          // Emit early — client shows progress while step 3 runs
+          emit({ type: 'research', data: { competitors } });
+
+          // Step 3: LLM validation analysis (~8-15s)
+          const analysisCompletion = await openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: buildValidationAnalysisMessages(
+              description,
+              productType,
+              audience,
+              problem,
+              competitors
+            ),
+            temperature: 0.4,
+            max_tokens: 2000,
+            response_format: { type: 'json_object' },
+          });
+
+          let analysisJson: unknown = {};
+          try {
+            analysisJson = JSON.parse(
+              analysisCompletion.choices[0]?.message?.content ?? '{}'
+            );
+          } catch { /* use empty fallback */ }
+
+          const parsed = EnhancedValidationResultSchema.safeParse(analysisJson);
+          if (!parsed.success) {
+            throw AppError.invalidAiResponse('Validation failed. Please try again.');
+          }
+
+          emit({ type: 'done', data: { result: parsed.data, competitors } });
         }
-
-        emit({ type: 'done', data: { result: parsed.data, competitors } });
       } catch (err) {
         if (err instanceof AppError) {
           if (err.statusCode >= 500) logger.error({ err }, err.message);
@@ -149,3 +233,17 @@ export const POST = async (req: NextRequest): Promise<Response> => {
     },
   });
 };
+
+function dedupeCompetitors<T extends { url: string }>(items: T[]): T[] {
+  const seen = new Set<string>();
+  const deduped: T[] = [];
+
+  for (const item of items) {
+    const key = item.url.split('?')[0];
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(item);
+  }
+
+  return deduped;
+}

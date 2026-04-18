@@ -1,4 +1,5 @@
 import type { Competitor } from '@/types';
+import type { MobileMetrics, MobileScores, MobileDecision } from '@/lib/scoring/mobile';
 import { formatCompetitorBlock } from './formatters';
 
 type ChatMessage = { role: 'system' | 'user'; content: string };
@@ -136,6 +137,23 @@ Analyze the idea and evidence, then return a JSON report with this exact shape:
     "cost": "<e.g. $0–20>",
     "difficulty": <"easy" | "medium" | "hard">
   },
+  "scoreBreakdown": {
+    "pain": [
+      { "label": "Urgency", "score": <integer 0-100> },
+      { "label": "Frequency", "score": <integer 0-100> },
+      { "label": "Evidence", "score": <integer 0-100> }
+    ],
+    "competition": [
+      { "label": "Saturation", "score": <integer 0-100> },
+      { "label": "Incumbents", "score": <integer 0-100> },
+      { "label": "Switching Cost", "score": <integer 0-100> }
+    ],
+    "opportunity": [
+      { "label": "Gap Clarity", "score": <integer 0-100> },
+      { "label": "Monetization", "score": <integer 0-100> },
+      { "label": "Reachability", "score": <integer 0-100> }
+    ]
+  },
   "willingnessToPay": {
     "level": <"low" | "medium" | "high">,
     "freeSubstitutes": "<are there strong free alternatives? name them>",
@@ -164,6 +182,7 @@ Analyze the idea and evidence, then return a JSON report with this exact shape:
 COPY RULES — follow exactly, no exceptions:
 - decision: pick one, no hedging. If uncertain, pick "test-first".
 - decisionReason: max 15 words. No "it's essential to", no "users are increasingly", no "in today's market". Write like a blunt investor. Example: "Crowded market. No clear moat. Differentiation is weak."
+- scoreBreakdown: always include exactly 3 sub-scores for pain, 3 for competition, and 3 for opportunity using the labels above. The average of each group should roughly match painScore, competitionScore, and opportunityScore.
 - keyInsights: max 1 sentence each. Must contain a specific claim (number, name, or direct observation). BAD: "There is growing demand for this type of solution." GOOD: "3 funded competitors exist — Notion, Coda, Outline — all targeting the same segment."
 - confidenceReason: 1 sentence, no filler. State the actual limitation or strength. BAD: "The evidence quality is moderate due to limited data." GOOD: "Only 2 search results matched — thin data."
 - nextStep: name a specific number or platform. BAD: "Talk to potential users." GOOD: "Post in r/productivity asking if people pay for X — target 20 upvotes in 48h."
@@ -186,6 +205,126 @@ ${description}
 ${context}
 
 --- Web Research Results ---
+${competitorBlock}`,
+    },
+  ];
+}
+
+export function buildMobileAnalysisMessages(
+  description: string,
+  productType: string,
+  audience: string | undefined,
+  problem: string | undefined,
+  competitors: Competitor[],
+  metrics: MobileMetrics,
+  scores: MobileScores,
+  uiScores: { score: number; painScore: number; competitionScore: number; opportunityScore: number },
+  rawDecision: MobileDecision,
+  decisionReason: string
+): ChatMessage[] {
+  const context = [
+    `Product type: ${productType}`,
+    audience ? `Target audience: ${audience}` : null,
+    problem ? `Problem it solves: ${problem}` : null,
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  const competitorBlock = formatCompetitorBlock(competitors);
+
+  const metricsBlock = `App Store metrics (computed from ${metrics.totalApps} results):
+- avgRating: ${metrics.avgRating.toFixed(2)}
+- avgReviews: ${Math.round(metrics.avgReviews).toLocaleString()}
+- totalReviews: ${metrics.totalReviews.toLocaleString()}
+- top5ReviewShare: ${(metrics.top5ReviewShare * 100).toFixed(1)}%
+- ratingDistributionAbove45: ${(metrics.ratingDistributionAbove45 * 100).toFixed(1)}%
+
+Engine scores (0–10):
+- competitionScore: ${scores.competitionScore}
+- saturationScore: ${scores.saturationScore}
+- qualityBarrierScore: ${scores.qualityBarrierScore}
+- marketPowerScore: ${scores.marketPowerScore}
+- opportunityScore: ${scores.opportunityScore}
+
+Final decision: ${rawDecision} — ${decisionReason}
+UI scores (0–100): score=${uiScores.score}, painScore=${uiScores.painScore}, competitionScore=${uiScores.competitionScore}, opportunityScore=${uiScores.opportunityScore}`;
+
+  return [
+    {
+      role: 'system',
+      content: `You are a mobile market analyst writing a validation report for a founder.
+The scores and decision below were computed deterministically from real App Store data. Your job is to explain them — not recompute or override them.
+
+DO NOT output: score, painScore, competitionScore, opportunityScore, decision.
+Those fields are controlled by the engine and will be injected separately.
+
+Return a JSON object with exactly this shape:
+{
+  "signals": ["<positive market signal 1>", "<signal 2>", "<signal 3>"],
+  "risks": ["<risk 1>", "<risk 2>", "<risk 3>"],
+  "verdict": "<2 sentences: what the App Store data says about this idea's viability>",
+  "confidence": <"low" | "medium" | "high">,
+  "confidenceReason": "<1 sentence: why this confidence level based on data coverage>",
+  "keyInsights": ["<specific insight with number/name/observation>", "<insight 2>"],
+  "nextStep": "<one concrete action this week, naming a specific platform or number>",
+  "nextStepType": <"reddit-post" | "landing-page" | "interviews" | "prototype" | "survey" | "other">,
+  "validationEffort": { "time": "<e.g. 2 days>", "cost": "<e.g. $0–20>", "difficulty": <"easy" | "medium" | "hard"> },
+  "scoreBreakdown": {
+    "pain": [
+      { "label": "Urgency", "score": <integer 0-100> },
+      { "label": "Frequency", "score": <integer 0-100> },
+      { "label": "Evidence", "score": <integer 0-100> }
+    ],
+    "competition": [
+      { "label": "Saturation", "score": <integer 0-100> },
+      { "label": "Incumbents", "score": <integer 0-100> },
+      { "label": "Switching Cost", "score": <integer 0-100> }
+    ],
+    "opportunity": [
+      { "label": "Gap Clarity", "score": <integer 0-100> },
+      { "label": "Monetization", "score": <integer 0-100> },
+      { "label": "Reachability", "score": <integer 0-100> }
+    ]
+  },
+  "willingnessToPay": {
+    "level": <"low" | "medium" | "high">,
+    "freeSubstitutes": "<name any strong free alternatives>",
+    "paidAlternatives": "<do paid alternatives exist? what do they charge?>"
+  },
+  "evidencedSignals": [{ "text": "<signal>", "strength": <"strong" | "moderate" | "weak"> }],
+  "failureReasons": ["<max 6 words, direct>", "<reason 2>"],
+  "marketHardness": "<1 sentence naming the actual barrier>",
+  "competitorInsights": [
+    { "name": "<app name>", "whyChosen": "<1 short phrase: what users get>", "weakness": "<1 short phrase: the gap>" }
+  ],
+  "whereToWin": [
+    {
+      "title": "<one of: Segment gap, Timing gap, Complexity gap, Pricing gap, Workflow gap, Trust gap, Niche gap, Distribution gap>",
+      "pattern": "<what top apps optimize for — under 10 words>",
+      "gap": "<what they ignore — under 10 words, specific>",
+      "opportunity": "<concrete opening — 1 testable sentence naming segment/channel/behavior>"
+    }
+  ]
+}
+COPY RULES:
+- verdict: 2 sentences max, state what the App Store data actually shows
+- scoreBreakdown averages should roughly match the injected UI scores
+- keyInsights must contain specific claims (numbers, app names, or direct observations)
+- whereToWin: 2–3 items, based on real patterns from competitor data — no generic advice
+- failureReasons and risks: max 6 words each, direct
+Respond ONLY with valid JSON. No markdown.`,
+    },
+    {
+      role: 'user',
+      content: `Write the validation report for this Mobile App idea:
+${description}
+
+${context}
+
+--- Deterministic Engine Output ---
+${metricsBlock}
+
+--- App Store & Signal Evidence ---
 ${competitorBlock}`,
     },
   ];

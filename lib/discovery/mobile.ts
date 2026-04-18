@@ -10,7 +10,7 @@ function coreSearchTerm(query: string): string {
     .trim();
 }
 
-interface ItunesResult {
+export interface AppStoreApp {
   trackName: string;
   trackViewUrl: string;
   averageUserRating?: number;
@@ -19,33 +19,39 @@ interface ItunesResult {
   description?: string;
 }
 
-async function searchAppStore(query: string): Promise<Competitor[]> {
+export async function fetchAppStoreApps(query: string, limit: number): Promise<AppStoreApp[]> {
   const term = encodeURIComponent(coreSearchTerm(query));
   try {
     const res = await fetch(
-      `https://itunes.apple.com/search?term=${term}&entity=software&limit=6&country=us`
+      `https://itunes.apple.com/search?term=${term}&entity=software&limit=${limit}&country=us`
     );
     if (!res.ok) return [];
-
     const data = await res.json();
-    return (data.results ?? []).map(
-      (r: ItunesResult): Competitor => ({
-        name: r.trackName,
-        url: r.trackViewUrl,
-        snippet: (r.description ?? '').slice(0, 280),
-        source: 'appstore',
-        platform: 'iOS',
-        rating:
-          r.averageUserRating != null
-            ? Math.round(r.averageUserRating * 10) / 10
-            : undefined,
-        reviewCount: r.userRatingCount,
-        category: r.primaryGenreName,
-      })
-    );
+    return data.results ?? [];
   } catch {
     return [];
   }
+}
+
+export function appToCompetitor(r: AppStoreApp): Competitor {
+  return {
+    name: r.trackName,
+    url: r.trackViewUrl,
+    snippet: (r.description ?? '').slice(0, 280),
+    source: 'appstore',
+    platform: 'iOS',
+    rating:
+      r.averageUserRating != null
+        ? Math.round(r.averageUserRating * 10) / 10
+        : undefined,
+    reviewCount: r.userRatingCount,
+    category: r.primaryGenreName,
+  };
+}
+
+export async function searchAppStore(query: string): Promise<Competitor[]> {
+  const apps = await fetchAppStoreApps(query, 6);
+  return apps.map(appToCompetitor);
 }
 
 async function searchGooglePlay(query: string): Promise<Competitor[]> {
