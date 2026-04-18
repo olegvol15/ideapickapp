@@ -504,7 +504,10 @@ export function ValidationReport({ result, competitors }: ValidationReportProps)
             </span>
           </div>
           {/* Score — visually deprioritized */}
-          <span className="text-xs font-mono text-muted-foreground/35 mt-1 shrink-0 tabular-nums">{score}/100</span>
+          <div className="flex flex-col items-end shrink-0">
+            <span className={cn('text-2xl font-black tabular-nums leading-none', colorClass(marketColor, 'text'))}>{score}</span>
+            <span className="text-[10px] text-muted-foreground/50 font-medium">/ 100</span>
+          </div>
         </div>
 
         {/* Level 2 — entry possibility (secondary) */}

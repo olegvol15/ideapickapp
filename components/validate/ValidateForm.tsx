@@ -14,7 +14,7 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
-import { ThinkingIndicator } from '@/components/research/ThinkingIndicator';
+import { ValidationProgress } from './ValidationProgress';
 import { ValidationReport } from './ValidationReport';
 import { RefinePanel } from './RefinePanel';
 import { validateIdeaStream } from '@/services/validate.service';
@@ -29,22 +29,6 @@ import type { Competitor } from '@/types';
 
 type Phase = 'idle' | 'thinking' | 'researching' | 'analyzing' | 'done' | 'error';
 
-const ANALYZING_LABELS = [
-  'Scoring pain evidence…',
-  'Assessing competition…',
-  'Identifying opportunities…',
-  'Almost there…',
-];
-
-function useAnalyzingLabel(active: boolean) {
-  const [idx, setIdx] = useState(0);
-  useEffect(() => {
-    if (!active) { setIdx(0); return; }
-    const id = setInterval(() => setIdx((i) => (i + 1) % ANALYZING_LABELS.length), 3000);
-    return () => clearInterval(id);
-  }, [active]);
-  return ANALYZING_LABELS[idx];
-}
 
 export function ValidateForm() {
   const { user } = useAuth();
@@ -69,13 +53,6 @@ export function ValidateForm() {
   const [currentId, setCurrentId] = useState<string | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
-
-  const analyzingLabel = useAnalyzingLabel(phase === 'analyzing');
-
-  const researchingLabel =
-    competitorCount > 0
-      ? `Found ${competitorCount} signals, analyzing…`
-      : 'Searching for market evidence…';
 
   const isActive = phase === 'thinking' || phase === 'researching' || phase === 'analyzing';
   const canSubmit = description.trim().length > 0 && productType.length > 0 && !isActive;
@@ -266,23 +243,14 @@ export function ValidateForm() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="mt-10 flex flex-col items-center gap-4"
           >
-            <ThinkingIndicator
-              label={
-                phase === 'thinking'
-                  ? 'Preparing research queries…'
-                  : phase === 'researching'
-                  ? researchingLabel
-                  : analyzingLabel
-              }
+            <ValidationProgress
+              phase={phase}
+              competitors={competitors}
+              productType={productType}
+              description={description}
+              onCancel={handleCancel}
             />
-            <button
-              onClick={handleCancel}
-              className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50 transition-colors hover:text-muted-foreground"
-            >
-              Cancel
-            </button>
           </motion.div>
         )}
 
