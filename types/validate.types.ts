@@ -5,4 +5,10 @@ export interface ValidateRequest {
   problem?: string;
 }
 
+export interface IdeaContext {
+  description: string;
+  audience?: string;
+  problem?: string;
+}
+
 export type { EnhancedValidationResult } from '@/lib/schemas';

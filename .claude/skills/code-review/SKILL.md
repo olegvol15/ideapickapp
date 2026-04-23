@@ -21,4 +21,4 @@ A high-level overview of the implementation quality.
 - Consistency with existing design patterns
 
 ## Verdict
-[LGTM] / [Needs Work] / [Critical Changes Required]
+[LGTM] / [Needs Work] / [Critical Changes Required] 

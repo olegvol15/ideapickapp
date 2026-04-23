@@ -7,6 +7,7 @@ import type { EnhancedValidationResult } from '@/lib/schemas';
 import type { Competitor } from '@/types';
 
 export function useSaveValidation(userId: string | undefined) {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (params: {
       description: string;
@@ -16,6 +17,9 @@ export function useSaveValidation(userId: string | undefined) {
     }) => {
       if (!userId) return Promise.resolve('');
       return saveValidation({ userId, ...params });
+    },
+    onSuccess: () => {
+      if (userId) queryClient.invalidateQueries({ queryKey: validationKeys.all(userId) });
     },
   });
 }

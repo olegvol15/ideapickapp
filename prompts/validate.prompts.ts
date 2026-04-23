@@ -195,6 +195,12 @@ COPY RULES — follow exactly, no exceptions:
 - verdict: max 2 sentences. No fluff. State what the data says.
 - whereToWin: 2–3 items only. Each must describe a real, observable pattern from the competitor data — not generic advice. BANNED: "better UX", "add AI", "more features", "faster", "better personalization". title must be a gap type from the allowed list. pattern and gap must be factual and short (under 10 words each). opportunity must name a specific segment, channel, use-case, or behavior — not vague improvement.
 - nextStep: if whereToWin has insights, the nextStep must specifically test the angle in whereToWin[0].opportunity — not a generic validation step.
+IDEA-SPECIFIC RULES — every text field must feel specific to THIS idea, not reusable:
+- signals, risks, failureReasons: each must reference the idea's use case, audience, or core feature. NEVER write a statement that could apply to any product in any market.
+- BANNED phrases: "Users are increasingly looking for", "The market is growing", "There is demand for", "alternatives exist"
+- verdict: must name the specific idea or its core concept at least once
+- competitorInsights.weakness: explain concretely how THIS idea could exploit each competitor weakness (e.g. "has no mobile app → [this idea] targets mobile-first users [competitor] ignores")
+- whereToWin.opportunity: frame each opening in terms of what THIS idea does or who it serves — not "focus on X segment" but how THIS idea's specific feature or audience positions it to win
 Respond ONLY with valid JSON. No markdown.`,
     },
     {
@@ -282,9 +288,14 @@ All scores, the decision, market insights, opportunity insights, and win angles 
 
 STRICT RULES:
 - DO NOT output: score, painScore, competitionScore, opportunityScore, decision
-- keyInsights MUST be drawn from the pre-computed market and opportunity insights provided — rephrase them precisely, do not invent
+- keyInsights MUST be drawn from the pre-computed market and opportunity insights provided — rephrase each in terms of what it means for THIS specific idea, not just what the market data shows
 - whereToWin MUST be formatted from the pre-computed win angles — format each into the JSON shape, do not add new angles
 - confidence MUST reflect the provided confidence score (${confidenceScore < 40 ? 'low' : confidenceScore < 70 ? 'medium' : 'high'})
+IDEA-SPECIFIC RULES:
+- signals, risks, failureReasons, marketHardness: explain what the data means for THIS specific idea — not the market in isolation. Reference the idea's use case, audience, or core feature in each bullet.
+- keyInsights: add what each pre-computed insight means for THIS idea (e.g. not "top 5 apps control 88%" but "top 5 apps control 88% — this idea enters with no brand recognition against incumbents with 10x more reviews")
+- whereToWin.opportunity: explain how THIS idea's specific feature or target audience exploits the angle — not a generic "new entrant could..."
+- competitorInsights.weakness: explain how THIS idea can capitalize on each gap given its stated audience or problem
 
 Return a JSON object with exactly this shape:
 {
@@ -349,6 +360,8 @@ ${description}
 
 ${context}
 
+Every insight you write must reference THIS specific idea — not the market in general. Name the idea's use case, audience, or core feature in signals, risks, failureReasons, and verdict.
+
 --- Deterministic Engine Output ---
 ${metricsBlock}
 
@@ -365,16 +378,27 @@ export function buildKeywordExpansionMessages(description: string): ChatMessage[
       content: `You generate App Store search keywords for a mobile app idea.
 Return a JSON object with this exact shape:
 {
-  "base": "<primary market category — 2-4 word App Store search term (e.g. 'meditation app', 'habit tracker')>",
-  "variations": ["<adjacent term 1>", "<adjacent term 2>", "<adjacent term 3>"],
-  "niches": ["<audience-specific term 1 — 3-6 words>", "<audience-specific term 2>", "<audience-specific term 3>"]
+  "base": "<the most direct 2-5 word App Store search term for this specific idea>",
+  "variations": ["<same specificity, different angle — 2-5 words>", "<variation 2>", "<variation 3>"],
+  "niches": ["<narrower: same core concept + specific audience or use case — 3-6 words>", "<niche 2>", "<niche 3>"]
 }
-Rules:
-- base: the broad market category this app competes in — what a user would search in the App Store
-- variations: 2-3 adjacent or synonym search terms (different angle, same broad space)
-- niches: 2-3 audience- or problem-scoped variations (e.g. "meditation for anxiety", "habit tracker for ADHD")
-- All must be realistic App Store search queries (2-6 words max)
-- Never use product names, brand names, or generic terms like "better app"
+
+CRITICAL RULES — read carefully:
+- NEVER make any keyword more generic or broader than the original idea.
+- base: the most natural search term a user would type to find THIS specific app. Must include the core concept (e.g. the main function or domain). NOT a parent category.
+- variations: same level of specificity as base, approached from a different angle or synonym. Must still include the core concept.
+- niches: strictly MORE specific than base. Narrow by audience (e.g. "for beginners", "for ADHD") OR use case (e.g. "at home", "for ecommerce"). Must still contain the core concept.
+- All terms must be realistic App Store search queries (2-6 words max).
+- Never use product names, brand names, or vague terms like "better app" or "easy app".
+
+BAD (too broad / drops core concept):
+  idea: "makeup simulator with AR try-on"  →  base: "beauty app"  ✗
+  idea: "habit tracker for ADHD users"     →  niche: "productivity app"  ✗
+
+GOOD (preserves or narrows):
+  idea: "makeup simulator with AR try-on"  →  base: "makeup AR try-on", niche: "makeup simulator for beginners"  ✓
+  idea: "habit tracker for ADHD users"     →  base: "ADHD habit tracker", niche: "ADHD daily routine tracker"  ✓
+
 Respond ONLY with valid JSON. No markdown.`,
     },
     {

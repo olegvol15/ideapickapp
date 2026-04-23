@@ -26,7 +26,7 @@ import {
   useDeleteGeneration,
   useRenameGeneration,
 } from '@/hooks/use-generations';
-import { useDeleteValidation, useRenameValidation } from '@/hooks/use-validations';
+import { useDeleteValidation, useRenameValidation, useGetValidations } from '@/hooks/use-validations';
 import { cn } from '@/lib/utils';
 import {
   Sidebar,
@@ -63,11 +63,14 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         createdAt: String(h.createdAt),
       }));
 
-  // Validations — always use local store for immediate display; DB save is for persistence only
+  // Validations — logged-in users use React Query (DB), others use Zustand store
   const localValidations = useValidateStore((s) => s.localValidations);
   const removeLocalValidation = useValidateStore((s) => s.removeLocalValidation);
   const renameLocalValidation = useValidateStore((s) => s.renameLocalValidation);
-  const recentValidations = localValidations.map((v) => ({ id: v.id, description: v.description }));
+  const { data: dbValidations } = useGetValidations(user?.id);
+  const recentValidations = user
+    ? (dbValidations ?? []).map((v) => ({ id: v.id, description: v.description }))
+    : localValidations.map((v) => ({ id: v.id, description: v.description }));
 
   function handleNewBrainstorm() {
     useResearchStore.getState().clear();

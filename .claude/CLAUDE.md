@@ -1,177 +1,297 @@
+Here is the same version, cleaned up and without any emojis or decorative elements:
+
+---
+
 # ideapickapp — Development Rules
 
+## Core Principle
+
+> If a file becomes hard to read — it’s already wrong.
+
+* One file = one responsibility
+* Readability over cleverness
+* If logic is hard to follow, refactor immediately
+* Avoid “temporary” solutions — they become permanent
+
+---
+
 ## Stack
-- **Next.js 16** App Router (TypeScript strict mode)
-- **Tailwind CSS v4** + shadcn/ui (Radix UI primitives)
-- **Zustand** (client state) + **TanStack React Query** (server state)
-- **Supabase** (auth + database)
-- **Zod** (schema validation + type inference)
-- **pnpm** (package manager)
+
+* Next.js 16 (App Router, server-first)
+* TypeScript (strict mode)
+* Tailwind CSS v4 + shadcn/ui (Radix primitives)
+* Zustand (client state)
+* TanStack React Query (server state)
+* Supabase (auth + database)
+* Zod (validation + type inference)
+* pnpm
+
+---
+
+## Architecture
+
+Strict separation of concerns:
+
+| Layer      | Responsibility                     |
+| ---------- | ---------------------------------- |
+| Components | UI only                            |
+| Hooks      | orchestration and data preparation |
+| Services   | business logic and data access     |
+| Utils      | pure helper functions              |
+
+### Forbidden
+
+* Business logic inside components
+* API or database calls inside components
+* Complex logic inside JSX
+* Mixing multiple responsibilities in one file
 
 ---
 
 ## File & Folder Conventions
 
-| Type | Convention | Example |
-|------|-----------|---------|
-| Components | PascalCase | `AuthForm.tsx`, `OpportunityCard.tsx` |
-| Hooks | `use-` kebab-case | `use-generations.ts` |
-| Stores | kebab-case `.store.ts` | `research.store.ts` |
-| Services | kebab-case `.service.ts` | `db.service.ts` |
-| Types | kebab-case `.types.ts` | `idea.types.ts` |
-| Utils/lib | kebab-case | `validate-input.ts`, `api-keys.ts` |
-| Pages/layouts | lowercase | `page.tsx`, `layout.tsx`, `route.ts` |
-| Constants | camelCase files, `UPPER_CASE` vars | `PRODUCT_TYPE_OPTIONS` |
+| Type          | Convention                      | Example              |
+| ------------- | ------------------------------- | -------------------- |
+| Components    | PascalCase                      | AuthForm.tsx         |
+| Hooks         | use- kebab-case                 | use-generations.ts   |
+| Stores        | kebab-case .store.ts            | research.store.ts    |
+| Services      | kebab-case .service.ts          | score.service.ts     |
+| Types         | kebab-case .types.ts            | idea.types.ts        |
+| Utils/lib     | kebab-case                      | validate-input.ts    |
+| Pages/layouts | lowercase                       | page.tsx             |
+| Constants     | camelCase file, UPPER_CASE vars | PRODUCT_TYPE_OPTIONS |
 
 ---
 
 ## TypeScript
 
-- Strict mode always — no `any`, no type suppression
-- Define types in `types/` and re-export via `types/index.ts`
-- Use `z.infer<typeof schema>` for Zod-derived types — don't duplicate
-- Use `import type { ... }` for type-only imports
-- Prefer `interface` for object shapes, `type` for unions/aliases
+* Strict mode always — no `any`, no suppression
+* Define types in `types/` and re-export via `types/index.ts`
+* Use `z.infer<typeof schema>` — do not duplicate types
+* Use `import type` for type-only imports
+* Prefer:
+
+  * interface for object shapes
+  * type for unions and transformations
 
 ---
 
 ## Components
 
-- **Named exports only** — no default exports for components
-- Add `'use client'` only when the component uses hooks, browser APIs, or event handlers — default to Server Components
-- Type props with an `interface` (e.g., `interface CardProps { ... }`)
-- Use `cn()` from `@/lib/utils` for conditional Tailwind classes
-- Use CVA (`class-variance-authority`) for multi-variant components
-- Use `React.forwardRef` + `displayName` for UI primitives
-- Colocate sub-components in the same directory with an `index.tsx` barrel
+### Rules
+
+* Named exports only — no default exports
+* Add 'use client' only when required
+* Props typed with interface
+* No business logic inside components
+* No nested components inside the same file
+* Avoid deeply nested JSX — extract subcomponents
+
+### Structure
+
+* components/ui/ → primitives (Button, Card)
+* features/.../components/ → feature-specific UI
+
+### Styling
+
+* Use cn() for class merging
+* Use CVA for variants
+* Never hardcode colors — use CSS variables
 
 ---
 
-## Imports
+## Hooks
 
-- Always use the `@/` alias — never relative paths (`../`)
-- Import order: external packages → `@/types` → `@/lib` → `@/components`, `@/services`, `@/stores` → type imports
-- Use barrel exports where they exist (e.g., `@/types`)
+Use hooks for:
+
+* Data transformation
+* Orchestration logic
+* Combining multiple sources of state
+
+### Rules
+
+* No UI inside hooks
+* No direct database access inside hooks
+* Keep hooks focused and composable
+
+---
+
+## Services
+
+* Pure business logic and data access
+* No React, no UI, no HTTP layer
+
+### Rules
+
+* Explicit input/output types
+* One responsibility per service
+* No uncontrolled side effects
+
+### Database behavior
+
+* Reads return null or empty array on failure
+* Writes throw AppError
 
 ---
 
 ## State Management
 
-### Zustand stores (`stores/`)
-- Name stores `use*Store` (hook convention)
-- Use `persist` middleware with `partialize` to control what's persisted
-- Namespace storage keys as `ideapick:<feature>` (e.g., `ideapick:research`)
-- Define a separate `*PersistedState` interface for persisted fields
+### Zustand
 
-### React Query (`hooks/`)
-- Use query key factories from `lib/api-keys.ts` — never hardcode keys
-- Always scope keys by `userId` for multi-user correctness
-- `staleTime: 0` — treat all queries as stale (set in root `QueryClient`)
-- `mutations: { retry: false }` — never auto-retry AI/mutation calls
-- Invalidate queries via `queryClient.invalidateQueries` in `onSuccess`
+* Store names follow use*Store convention
+* Use persist with partialize
+* Storage keys: ideapick:<feature>
+* Define explicit persisted state types
 
 ---
 
-## API Routes (`app/api/`)
+### React Query
 
-Every route handler must:
-1. Authenticate: `requireAuth()`
-2. Rate-limit: `checkRateLimit()`
-3. Validate input: `validateGenerateInput()` (or equivalent Zod parse)
-4. Delegate business logic to a service in `services/`
-
-- Handler signature: `(req: NextRequest): Promise<Response>`
-- Use named exports: `export async function POST(...)`
-- Streaming responses use `ReadableStream` with NDJSON (one JSON object per line)
-- Return errors using `AppError` factory methods (see below)
+* Use query key factories from lib/api-keys.ts
+* Always scope queries by userId
+* staleTime: 0
+* No automatic retries for mutations
+* Invalidate queries on success
 
 ---
 
-## Services (`services/`)
+## API Routes (app/api/)
 
-- Pure business logic + DB operations — no React, no HTTP context
-- Function signature: explicitly typed params object + typed return
-- DB reads: return empty array / null on error (silent fallback)
-- DB writes: throw `AppError` on failure
+Each route must:
+
+1. Authenticate using requireAuth()
+2. Apply rate limiting using checkRateLimit()
+3. Validate input using Zod
+4. Delegate logic to a service
+
+### Rules
+
+* No business logic in route handlers
+* Signature: (req: NextRequest) => Promise<Response>
+* Named exports only
+* Use streaming (NDJSON) where needed
+* Return errors using AppError
 
 ---
 
 ## Error Handling
 
-Use `AppError` static factories from `@/lib/errors`:
+Use AppError factory methods:
 
-| Factory | Status |
-|---------|--------|
-| `AppError.validation(msg)` | 400 |
-| `AppError.authRequired()` | 401 |
-| `AppError.forbidden()` | 403 |
-| `AppError.notFound()` | 404 |
-| `AppError.rateLimit(ms)` | 429 |
-| `AppError.ai(msg)` | 500 |
-| `AppError.internal(msg)` | 500 |
+| Method       | Status |
+| ------------ | ------ |
+| validation   | 400    |
+| authRequired | 401    |
+| forbidden    | 403    |
+| notFound     | 404    |
+| rateLimit    | 429    |
+| ai           | 500    |
+| internal     | 500    |
 
-Client-side: use Sonner toasts for 5xx/429; inline messages for 400/422; auto-redirect on 401/403.
+### Client behavior
+
+* 5xx and 429 → toast
+* 4xx → inline errors
+* 401 and 403 → redirect
 
 ---
 
 ## Styling
 
-- Tailwind v4 — use CSS variables from `globals.css` (e.g., `bg-[var(--bg)]`)
-- Dark/light mode via `--dark` class + CSS custom properties — never hardcode colors
-- `cn()` for all conditional class merging
-- Use existing custom utilities: `bg-page-grid`, `bg-surface-frosted`, `bg-dot-grid`
-- Follow the text hierarchy: `--text-1` (primary) → `--text-4` (muted)
-- Brand color: `--brand-color: #0077b6`
+* Tailwind v4 with CSS variables
+* Dark/light mode via --dark class
+* Never hardcode colors
+
+### Text hierarchy
+
+* --text-1 → primary
+* --text-4 → muted
+
+### Brand
+
+* --brand-color: #0077b6
 
 ---
 
 ## AI / LLM
 
-- Model: `gpt-4o-mini`
-- Store prompt templates in `prompts/` as functions returning message arrays
-- Always validate LLM JSON output with Zod; throw `AppError.invalidAiResponse()` on failure
-- Temperature: 0.4 for structured/focused output, 0.7 for creative output
-- Wrap all JSON parsing in try-catch
+* Model: gpt-4o-mini
+* Prompts stored in prompts/ as functions
+* Always validate output with Zod
+* Throw AppError.invalidAiResponse() on invalid output
+
+### Rules
+
+* Temperature:
+
+  * 0.4 for structured output
+  * 0.7 for creative output
+* Wrap parsing in try/catch
 
 ---
 
 ## Database (Supabase)
 
-- Use SSR Supabase client in server components/middleware
-- Use browser client in client components via `@/lib/supabase/client`
-- Tables: `generations`, `saved_ideas`, `validations`, `roadmaps`
-- Always type DB rows explicitly — no raw `any` from Supabase
+* Use SSR client for server
+* Use browser client for client
+* Always type database responses
+* No raw any
+
+Tables:
+
+* generations
+* saved_ideas
+* validations
+* roadmaps
 
 ---
 
 ## Auth
 
-- `requireAuth()` in every protected API route
-- `useAuth()` hook for client-side auth state
-- Session management handled by middleware — don't manually manage cookies
-- Middleware refreshes session on every request automatically
+* requireAuth() in protected routes
+* useAuth() for client state
+* Middleware handles session refresh
+* Do not manually manage cookies
 
 ---
 
 ## Validation
 
-- All external input (API routes, forms) validated with Zod schemas from `lib/schemas.ts`
-- Add new schemas to `lib/schemas.ts` — don't define inline in route handlers
-- Enum values validated against `constants/` collections
+* All input validated with Zod (lib/schemas.ts)
+* No inline schemas in route handlers
+* Enums validated against constants
 
 ---
 
 ## Logging
 
-- Use Pino logger from `@/lib/logger` — **server-side only**
-- Never use `console.log` in production paths
-- Logger is `server-only` — do not import in client components
+* Use Pino (server only)
+* No console.log in production
+* Do not import logger in client code
 
 ---
 
-## General
+## Code Quality
 
-- No test framework — rely on TypeScript strict mode for correctness
-- No unused variables, imports, or dead code
-- Keep components, hooks, and services focused — one responsibility per file
-- Don't add comments unless logic is genuinely non-obvious
+* No unused code
+* No duplicate logic
+* No dead components
+* Delete anything not used
+* Refactor when complexity increases
+
+---
+
+## Anti-Patterns
+
+* Large multi-purpose files
+* Business logic in components
+* Nested components
+* Duplicated logic
+* Temporary hacks
+* Unused UI components
+
+---
+
+## Final Rule
+
+> Clean code is not written once — it is continuously refined.
