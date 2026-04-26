@@ -74,10 +74,7 @@ export async function unsaveIdeaFromDB(
     .eq('user_id', userId)
     .eq('id', ideaId);
 
-  if (error) {
-    console.error('[db] unsaveIdeaFromDB', error.message);
-    throw error;
-  }
+  if (error) throw error;
 }
 
 export async function getSavedIdeasFromDB(
@@ -90,10 +87,7 @@ export async function getSavedIdeasFromDB(
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('[db] getSavedIdeasFromDB', error.message);
-    return [];
-  }
+  if (error) return [];
   return (data ?? []) as SavedIdeaRow[];
 }
 
@@ -130,10 +124,7 @@ export async function getGenerations(userId: string): Promise<GenerationRow[]> {
     .order('created_at', { ascending: false })
     .limit(20);
 
-  if (error) {
-    console.error('[db] getGenerations', error.message);
-    return [];
-  }
+  if (error) return [];
   return (data ?? []) as GenerationRow[];
 }
 
@@ -148,10 +139,7 @@ export async function isIdeaSavedInDB(
     .eq('user_id', userId)
     .eq('idea_json->>title', ideaTitle);
 
-  if (error) {
-    console.error('[db] isIdeaSavedInDB', error.message);
-    return false;
-  }
+  if (error) return false;
 
   return (count ?? 0) > 0;
 }
@@ -234,10 +222,7 @@ export async function getValidations(userId: string): Promise<ValidationRow[]> {
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
     .limit(20);
-  if (error) {
-    console.error('[db] getValidations', error.message);
-    return [];
-  }
+  if (error) return [];
   return (data ?? []) as ValidationRow[];
 }
 
@@ -314,10 +299,7 @@ export async function getRoadmapsFromDB(userId: string): Promise<RoadmapRow[]> {
     .select('slug, idea_json')
     .eq('user_id', userId)
     .order('updated_at', { ascending: false });
-  if (error) {
-    console.error('[db] getRoadmapsFromDB', error.message);
-    return [];
-  }
+  if (error) return [];
   return (data ?? []).map((row) => ({
     slug: row.slug,
     title: (row.idea_json as Idea).title,

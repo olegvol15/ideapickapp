@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { openai } from '@/lib/openai';
 import { buildValidationQueryMessages, buildCompetitorMessages } from '@/prompts/validate.prompts';
 import { requireAuth, checkRateLimit } from '@/lib/supabase/auth';
-import { validateLimiter } from '@/lib/rate-limit';
+import { validateLimiter, validateDailyLimiter } from '@/lib/rate-limit';
 import { validateValidateInput } from '@/lib/validate-input';
 import { runMobileValidation } from '@/services/validate-mobile.service';
 import { runSaasValidation } from '@/services/validate-saas.service';
@@ -17,6 +17,7 @@ export const POST = async (req: NextRequest): Promise<Response> => {
   try {
     const user = await requireAuth();
     await checkRateLimit(validateLimiter, user.id);
+    await checkRateLimit(validateDailyLimiter, user.id);
 
     try {
       body = await req.json();

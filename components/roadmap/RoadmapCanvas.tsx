@@ -21,7 +21,9 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import '@xyflow/react/dist/style.css';
 
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { typedApi } from '@/lib/api/client';
 import type { Idea } from '@/types';
 import type { RoadmapNode, RoadmapNodeType } from '@/types/roadmap.types';
 import {
@@ -261,20 +263,13 @@ export function RoadmapCanvas({
       }
 
       try {
-        const res = await fetch('/api/roadmap/expand', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ideaTitle: idea.title,
-            ideaPitch: idea.pitch,
-            nodeId,
-            nodeLabel,
-            parentPath: path,
-          }),
+        const { nodes: newRm } = await typedApi.post<{ nodes: RoadmapNode[] }>('/api/roadmap/expand', {
+          ideaTitle: idea.title,
+          ideaPitch: idea.pitch,
+          nodeId,
+          nodeLabel,
+          parentPath: path,
         });
-        if (!res.ok) throw new Error('expand failed');
-
-        const { nodes: newRm }: { nodes: RoadmapNode[] } = await res.json();
 
         const parent = rfNodes.find((n) => n.id === nodeId);
         if (!parent) {
@@ -310,6 +305,7 @@ export function RoadmapCanvas({
         );
         persistState();
       } catch {
+        toast.error('Failed to expand this step. Please try again.');
         store.patchNode(nodeId, { expanding: false });
       } finally {
         store.setBusy(null);
@@ -370,14 +366,7 @@ export function RoadmapCanvas({
     freshGenerationRef.current = true;
     (async () => {
       try {
-        const res = await fetch('/api/roadmap', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ idea }),
-        });
-        if (!res.ok) throw new Error('Failed to generate roadmap');
-
-        const { nodes }: { nodes: RoadmapNode[] } = await res.json();
+        const { nodes } = await typedApi.post<{ nodes: RoadmapNode[] }>('/api/roadmap', { idea });
 
         const flowNodes: Node[] = nodes.map((rn) => ({
           id: rn.id,
@@ -416,8 +405,8 @@ export function RoadmapCanvas({
           state: initialState,
           bumpTimestamp: true,
         });
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong');
+      } catch {
+        setError('Failed to generate roadmap.');
       } finally {
         setLoading(false);
       }

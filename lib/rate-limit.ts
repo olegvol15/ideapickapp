@@ -11,6 +11,12 @@ export const generateLimiter = new Ratelimit({
   prefix: 'rl:generate',
 });
 
+export const generateDailyLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(50, '24 h'),
+  prefix: 'rl:generate:daily',
+});
+
 // refine / validate / roadmap are single-call operations.
 export const refineLimiter = new Ratelimit({
   redis,
@@ -22,6 +28,12 @@ export const validateLimiter = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(30, '1 h'),
   prefix: 'rl:validate',
+});
+
+export const validateDailyLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(100, '24 h'),
+  prefix: 'rl:validate:daily',
 });
 
 export const roadmapLimiter = new Ratelimit({

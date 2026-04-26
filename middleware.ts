@@ -60,7 +60,16 @@ export async function middleware(request: NextRequest) {
   // Refresh the session — required for Server Component auth to work.
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user && request.nextUrl.pathname.startsWith('/api/') && !request.nextUrl.pathname.startsWith('/api/auth/')) {
+  const isApiRoute = request.nextUrl.pathname.startsWith('/api/') && !request.nextUrl.pathname.startsWith('/api/auth/');
+
+  if (isApiRoute) {
+    const contentLength = Number(request.headers.get('content-length') ?? 0);
+    if (contentLength > 100 * 1024) {
+      return NextResponse.json({ error: 'Request body too large' }, { status: 413 });
+    }
+  }
+
+  if (!user && isApiRoute) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

@@ -9,7 +9,7 @@ function errorResponse(err: AppError): NextResponse {
       code: err.errorCode,
       message: err.message,
       data: err.payload,
-      ...(process.env.NODE_ENV !== 'production' && { stack: err.stack }),
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
     },
     {
       status: err.statusCode,

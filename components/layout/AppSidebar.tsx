@@ -39,6 +39,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { toast } from 'sonner';
 
 function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();

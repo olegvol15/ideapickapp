@@ -6,7 +6,7 @@ import {
   buildAnalysisMessages,
 } from '@/prompts/generate.prompts';
 import { requireAuth, checkRateLimit } from '@/lib/supabase/auth';
-import { generateLimiter } from '@/lib/rate-limit';
+import { generateLimiter, generateDailyLimiter } from '@/lib/rate-limit';
 import { validateGenerateInput } from '@/lib/validate-input';
 import { GenerateLLMOutputSchema } from '@/lib/schemas';
 import { AppError } from '@/lib/errors/app-error';
@@ -21,6 +21,7 @@ export const POST = async (req: NextRequest): Promise<Response> => {
   try {
     const user = await requireAuth();
     await checkRateLimit(generateLimiter, user.id);
+    await checkRateLimit(generateDailyLimiter, user.id);
 
     try {
       body = await req.json();
