@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": ["Bash(npm run lint)", "Bash(npm run test *)"],
+    "deny": [
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(**/*.env)",
+
+      "Read(**/*.key)",
+      "Read(**/*.pem)",
+      "Read(**/*.crt)",
+
+      "Read(**/*.local)",
+      "Read(**/*.secret)",
+      "Read(**/*secret*)",
+
+      "Read(**/*.json)",
+
+      "Read(**/secrets/**)",
+      "Read(**/config/**)",
+      "Read(**/credentials/**)",
+      "Read(**/private/**)"
+    ]
+  }
+}

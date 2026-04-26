@@ -44,7 +44,7 @@ Respond ONLY with valid JSON. No markdown.`,
     },
     {
       role: 'user',
-      content: `Generate research queries for this idea:\n${description}\n\n${context}`,
+      content: `Generate research queries for this idea:\n<user_input>\n${description}\n</user_input>\n\n${context}`,
     },
   ];
 }
@@ -93,7 +93,7 @@ Respond ONLY with valid JSON. No markdown.`,
     },
     {
       role: 'user',
-      content: `Find the top direct competitors for this idea:\n${description}\n\n${context}`,
+      content: `Find the top direct competitors for this idea:\n<user_input>\n${description}\n</user_input>\n\n${context}`,
     },
   ];
 }
@@ -206,7 +206,9 @@ Respond ONLY with valid JSON. No markdown.`,
     {
       role: 'user',
       content: `Validate this idea:
+<user_input>
 ${description}
+</user_input>
 
 ${context}
 

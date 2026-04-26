@@ -75,17 +75,25 @@ export const POST = async (req: NextRequest): Promise<Response> => {
             : Promise.resolve(null),
         ]);
 
+        const rawQuery = queryCompletion.choices[0]?.message?.content;
+        if (!rawQuery) throw AppError.ai('LLM returned empty response');
         let signalQuery: string | undefined;
         try {
-          const q = JSON.parse(queryCompletion.choices[0]?.message?.content ?? '{}');
+          const q = JSON.parse(rawQuery);
           signalQuery = q.signalQuery;
-        } catch { /* use empty fallback */ }
+        } catch {
+          throw AppError.ai('LLM returned invalid JSON');
+        }
 
+        const rawCompetitors = competitorCompletion.choices[0]?.message?.content;
+        if (!rawCompetitors) throw AppError.ai('LLM returned empty response');
         let llmCompetitors: Array<{ name: string; url: string; source: string; snippet: string }> = [];
         try {
-          const c = JSON.parse(competitorCompletion.choices[0]?.message?.content ?? '{}');
+          const c = JSON.parse(rawCompetitors);
           llmCompetitors = Array.isArray(c.competitors) ? c.competitors : [];
-        } catch { /* use empty fallback */ }
+        } catch {
+          throw AppError.ai('LLM returned invalid JSON');
+        }
 
         // Step 2+3: delegate to the appropriate pipeline service
         if (productType === 'Mobile App') {

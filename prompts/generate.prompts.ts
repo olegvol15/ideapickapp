@@ -30,7 +30,10 @@ Rules:
     },
     {
       role: 'user',
-      content: `User's goal: ${prompt}
+      content: `User's goal:
+<user_input>
+${prompt}
+</user_input>
 Each query MUST include one of: ${terms.map((t) => `"${t}"`).join(', ')}.
 Generate 2–3 queries to find real digital products in this market.`,
     },
@@ -79,7 +82,10 @@ ${RESPONSE_SCHEMA}`,
     },
     {
       role: 'user',
-      content: `Goal: ${prompt}${filterBlock}
+      content: `Goal:
+<user_input>
+${prompt}
+</user_input>${filterBlock}
 
 Competitors found (${competitors.length}):
 ${competitorBlock}

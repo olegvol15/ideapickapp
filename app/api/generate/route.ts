@@ -68,13 +68,16 @@ export const POST = async (req: NextRequest): Promise<Response> => {
           response_format: { type: 'json_object' },
         });
 
-        let parsedQueries: { queries?: string[] } = {};
+        const rawQueries = queryCompletion.choices[0]?.message?.content;
+        if (!rawQueries) throw AppError.ai('LLM returned empty response');
+        let parsedQueries: { queries?: string[] };
         try {
-          parsedQueries = JSON.parse(
-            queryCompletion.choices[0]?.message?.content ?? '{}'
-          );
-        } catch { /* use empty fallback */ }
+          parsedQueries = JSON.parse(rawQueries);
+        } catch {
+          throw AppError.ai('LLM returned invalid JSON');
+        }
         const { queries = [] } = parsedQueries;
+        if (queries.length === 0) throw AppError.ai('LLM returned no search queries');
 
         // Step 2: Discover competitors via product-type-aware strategy
         const competitors = await discoverCompetitors(queries.slice(0, 3), productType);
@@ -91,12 +94,14 @@ export const POST = async (req: NextRequest): Promise<Response> => {
           response_format: { type: 'json_object' },
         });
 
-        let analysisJson: unknown = {};
+        const rawAnalysis = analysisCompletion.choices[0]?.message?.content;
+        if (!rawAnalysis) throw AppError.ai('LLM returned empty response');
+        let analysisJson: unknown;
         try {
-          analysisJson = JSON.parse(
-            analysisCompletion.choices[0]?.message?.content ?? '{}'
-          );
-        } catch { /* use empty fallback */ }
+          analysisJson = JSON.parse(rawAnalysis);
+        } catch {
+          throw AppError.ai('LLM returned invalid JSON');
+        }
 
         const parsed = GenerateLLMOutputSchema.safeParse(analysisJson);
         if (!parsed.success) {

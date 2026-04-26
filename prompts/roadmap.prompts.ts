@@ -29,7 +29,7 @@ Rules:
     },
     {
       role: 'user' as const,
-      content: `Idea: ${idea.title}\nPitch: ${idea.pitch}`,
+      content: `Idea:\n<user_input>${idea.title}</user_input>\nPitch:\n<user_input>${idea.pitch}</user_input>`,
     },
   ];
 }
@@ -68,7 +68,7 @@ Rules:
     },
     {
       role: 'user' as const,
-      content: `Startup: ${ideaTitle}\nPitch: ${ideaPitch}\nExpand: "${nodeLabel}"\nContext: ${pathStr}`,
+      content: `Startup:\n<user_input>${ideaTitle}</user_input>\nPitch:\n<user_input>${ideaPitch}</user_input>\nExpand:\n<user_input>${nodeLabel}</user_input>\nContext: ${pathStr}`,
     },
   ];
 }

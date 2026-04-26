@@ -64,6 +64,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const PROTECTED_PAGES = ['/ideas'];
+  if (!user && PROTECTED_PAGES.some(p => request.nextUrl.pathname.startsWith(p))) {
+    return NextResponse.redirect(new URL('/auth', request.url));
+  }
+
   // Set the per-request CSP on whatever response Supabase ended up with.
   supabaseResponse.headers.set('Content-Security-Policy', buildCsp(nonce));
 

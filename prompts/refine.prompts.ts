@@ -16,7 +16,10 @@ Respond ONLY with valid JSON. No markdown, no explanation.`,
     },
     {
       role: 'user',
-      content: `Refinement instruction: "${instruction}"
+      content: `Refinement instruction:
+<user_input>
+${instruction}
+</user_input>
 
 Current idea:
 ${JSON.stringify(idea, null, 2)}

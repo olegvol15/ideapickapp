@@ -39,10 +39,14 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     messages: buildRefineMessages(idea, instruction),
   });
 
-  let refineJson: unknown = {};
+  const raw = completion.choices[0]?.message?.content;
+  if (!raw) throw AppError.invalidAiResponse('Refinement failed. Please try again.');
+  let refineJson: unknown;
   try {
-    refineJson = JSON.parse(completion.choices[0]?.message?.content ?? '{}');
-  } catch { /* use empty fallback */ }
+    refineJson = JSON.parse(raw);
+  } catch {
+    throw AppError.invalidAiResponse('Refinement failed. Please try again.');
+  }
   const parsed = IdeaSchema.safeParse(refineJson);
 
   if (!parsed.success) {

@@ -3,7 +3,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
-import { typedApi } from '@/lib/api/client';
 
 interface AuthResult {
   error: string | null;
@@ -53,16 +52,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function signUp(email: string, password: string): Promise<AuthResult> {
-    try {
-      const { exists } = await typedApi.post<{ exists: boolean }>('/api/auth/check-email', { email });
-      if (exists) {
-        return { error: 'An account with this email already exists. Try signing in.' };
-      }
-    } catch {
-      // If the check fails, fall through and let signUp handle it
-    }
-
     const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error?.message === 'User already registered') {
+      return { error: 'An account with this email already exists. Try signing in.' };
+    }
     return {
       error: error?.message ?? null,
       requiresEmailConfirmation: !error && !data.session,
