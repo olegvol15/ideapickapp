@@ -24,6 +24,7 @@ export function ValidationAdvancedBlock({ result, competitors }: ValidationAdvan
     competitionScore, opportunityScore,
     scoreBreakdown, willingnessToPay, evidencedSignals, signals,
     nicheAnalysis, rawScores, metrics, bestEntryStrategy,
+    marketInsights,
   } = result;
 
   const signalItems     = competitors.filter((c) => c.type === 'signal').slice(0, 4);
@@ -50,7 +51,7 @@ export function ValidationAdvancedBlock({ result, competitors }: ValidationAdvan
   const nicheComp = nicheAnalysis?.bestKeywordScores.competitionScore ?? 0;
   const nicheOpp  = nicheAnalysis?.bestKeywordScores.opportunityScore ?? 0;
 
-  const hasContent = !!(competitorItems.length || signalItems.length || detailedBreakdown || willingnessToPay || allEvidence.length);
+  const hasContent = !!(competitorItems.length || signalItems.length || detailedBreakdown || willingnessToPay || allEvidence.length || (marketInsights && marketInsights.length > 0));
   if (!hasContent) return null;
 
   return (
@@ -129,6 +130,20 @@ export function ValidationAdvancedBlock({ result, competitors }: ValidationAdvan
                 <CompareRow label="Competition" base={baseComp} niche={nicheComp} lowerBetter />
                 <CompareRow label="Opportunity" base={baseOpp}  niche={nicheOpp}  lowerBetter={false} />
               </div>
+            </div>
+          )}
+
+          {marketInsights && marketInsights.length > 0 && (
+            <div className="border-t border-border pt-5 flex flex-col gap-3">
+              <SectionHeading>Market data</SectionHeading>
+              <ul className="flex flex-col gap-1.5">
+                {marketInsights.map((insight, i) => (
+                  <li key={i} className="flex items-start gap-2 text-xs text-foreground/70 leading-snug">
+                    <span className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/40" />
+                    {insight}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 

@@ -1,4 +1,5 @@
 import type { AppStoreApp } from '@/lib/discovery/mobile';
+import { estimateMonthlyRevenue, keywordInTopTitles, hasWeakIncumbents } from '@/lib/discovery/mobile';
 import type { Competitor } from '@/types';
 
 // ─── Thresholds ───────────────────────────────────────────────────────────────
@@ -66,6 +67,9 @@ export interface NicheResult {
   top5ReviewShare: number;
   reviewDistributionSkew: number;
   marketDominance: 'HIGH' | 'MEDIUM' | 'LOW';
+  keywordInTopTitles?: boolean;
+  hasWeakIncumbents?: boolean;
+  topAppRevEstimate?: { low: number; high: number } | null;
 }
 
 export interface WinAngle {
@@ -185,8 +189,17 @@ export function computeNicheMetrics(apps: AppStoreApp[], query: string): NicheRe
   const top5ReviewShare = reviewShare(byReviews, 0, 5, totalReviews);
   const top1ReviewShare = reviewShare(byReviews, 0, 1, totalReviews);
   const reviewDistributionSkew = giniApproximation(byReviews.map((a) => a.userRatingCount ?? 0));
-  const marketDominance = dominanceLabel(top5ReviewShare, top1ReviewShare);
-  return { query, totalApps: apps.length, top5ReviewShare, reviewDistributionSkew, marketDominance };
+  const marketDominance  = dominanceLabel(top5ReviewShare, top1ReviewShare);
+  const kwInTitles       = keywordInTopTitles(apps, query);
+  const weakIncumbents   = hasWeakIncumbents(apps);
+  const topRev           = apps[0] ? estimateMonthlyRevenue(apps[0]) : null;
+  return {
+    query, totalApps: apps.length,
+    top5ReviewShare, reviewDistributionSkew, marketDominance,
+    keywordInTopTitles: kwInTitles,
+    hasWeakIncumbents: weakIncumbents,
+    topAppRevEstimate: (topRev && (topRev.low > 0 || topRev.high > 0)) ? topRev : null,
+  };
 }
 
 // ─── Pain analysis ────────────────────────────────────────────────────────────
@@ -283,6 +296,10 @@ export function computeMobileScores(
     opportunityScore += 1;
   }
 
+  // ASO-proxy bonuses — cheap entry-ease signals
+  if (bestNiche?.keywordInTopTitles === false) opportunityScore += 1.0;
+  if (bestNiche?.hasWeakIncumbents === true)   opportunityScore += 1.5;
+
   opportunityScore = Math.min(10, Math.max(0, opportunityScore));
 
   return { competitionScore, saturationScore, qualityBarrierScore, marketPowerScore, opportunityScore };
@@ -298,6 +315,12 @@ export function computeDecision(
     return {
       verdict: 'DO_NOT_BUILD',
       reason: 'Market is locked by incumbents with no viable entry angle.',
+    };
+  }
+  if (scores.competitionScore >= 8 && scores.opportunityScore < 4) {
+    return {
+      verdict: 'DO_NOT_BUILD',
+      reason: 'Market is extremely saturated with no viable pain signal to exploit.',
     };
   }
   if (scores.competitionScore >= 7 && scores.opportunityScore >= 6) {
@@ -384,6 +407,13 @@ export function computeOpportunityInsights(
     insights.push(`Niche angle "${bestNiche.query}" shows lower market concentration (${Math.round(bestNiche.top5ReviewShare * 100)}% vs ${Math.round(metrics.top5ReviewShare * 100)}% broad)`);
   }
 
+  if (bestNiche?.keywordInTopTitles === false) {
+    insights.push(`Keyword "${bestNiche.query}" isn't in any top-5 app title — organic ranking gap exists`);
+  }
+  if (bestNiche?.hasWeakIncumbents === true) {
+    insights.push(`At least 2 of the top-5 apps in "${bestNiche.query}" are new with < 500 reviews — real entry window`);
+  }
+
   if (pain.weightedScore >= 7) {
     insights.push('Strong pain signals — real user frustration exists in this space');
   } else if (pain.weightedScore <= 3) {
@@ -454,7 +484,7 @@ export function mapToUIScores(
   const painScore        = Math.round(painWeightedScore * 10);
   const competitionScore = Math.round(scores.competitionScore * 10);
   const opportunityScore = Math.round(scores.opportunityScore * 10);
-  const score            = Math.round((painScore + (100 - competitionScore) + opportunityScore) / 3);
+  const score            = Math.round(opportunityScore * 0.6 + painScore * 0.25 + (100 - competitionScore) * 0.15);
   return { score, painScore, competitionScore, opportunityScore };
 }
 

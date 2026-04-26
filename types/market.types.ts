@@ -9,6 +9,7 @@ export interface Competitor {
   reviewCount?: number;
   category?: string;
   pricingSignal?: string;
+  revenueEstimate?: { low: number; high: number };
 }
 
 export interface CompetitorAnalysis {

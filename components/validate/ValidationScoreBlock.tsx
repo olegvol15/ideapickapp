@@ -16,7 +16,7 @@ interface ValidationScoreBlockProps {
 }
 
 export function ValidationScoreBlock({ result, ideaContext }: ValidationScoreBlockProps) {
-  const { score, painScore, competitionScore, opportunityScore, confidence, confidenceReason, nicheAnalysis, bestEntryStrategy } = result;
+  const { score, painScore, competitionScore, opportunityScore, confidence, confidenceReason, nicheAnalysis, bestEntryStrategy, opportunityInsights } = result;
 
   const marketReality      = getMarketReality(result);
   const { label: marketLabel, sublabel: marketSublabel, color: marketColor, Icon: MarketIcon, structureNote } = marketReality;
@@ -114,6 +114,18 @@ export function ValidationScoreBlock({ result, ideaContext }: ValidationScoreBlo
           </div>
         )}
       </div>
+
+      {/* Opportunity insights */}
+      {opportunityInsights && opportunityInsights.length > 0 && (
+        <ul className="mt-4 pt-4 border-t border-border/40 flex flex-col gap-1.5">
+          {opportunityInsights.map((insight, i) => (
+            <li key={i} className="flex items-start gap-2 text-xs text-foreground/70 leading-snug">
+              <span className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500/60" />
+              {insight}
+            </li>
+          ))}
+        </ul>
+      )}
 
       {/* Confidence + difficulty */}
       <div className="mt-4 pt-3.5 border-t border-border/40 flex flex-wrap items-center gap-x-5 gap-y-2">

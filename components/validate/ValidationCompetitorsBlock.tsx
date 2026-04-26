@@ -12,6 +12,11 @@ interface ValidationCompetitorsBlockProps {
   competitors: Competitor[];
 }
 
+function fmtRevenue(rev: { low: number; high: number }): string {
+  const fmt = (n: number) => n >= 1000 ? `$${Math.round(n / 1000)}K` : `$${n}`;
+  return `~${fmt(rev.low)}–${fmt(rev.high)}/mo est.`;
+}
+
 export function ValidationCompetitorsBlock({ result, competitors }: ValidationCompetitorsBlockProps) {
   const { competitorInsights, marketHardness } = result;
   const competitorItems = competitors.filter((c) => c.type !== 'signal').slice(0, 4);
@@ -32,6 +37,11 @@ export function ValidationCompetitorsBlock({ result, competitors }: ValidationCo
                 {c.rating != null && (
                   <span className="text-[11px] font-medium text-amber-400/80 shrink-0">
                     ★ {c.rating.toFixed(1)}{c.reviewCount ? ` · ${c.reviewCount.toLocaleString()} reviews` : ''}
+                  </span>
+                )}
+                {c.revenueEstimate && (c.revenueEstimate.low > 0 || c.revenueEstimate.high > 0) && (
+                  <span className="text-[11px] font-medium text-muted-foreground/50 shrink-0">
+                    {fmtRevenue(c.revenueEstimate)}
                   </span>
                 )}
                 <a

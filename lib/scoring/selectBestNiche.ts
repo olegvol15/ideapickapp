@@ -64,7 +64,7 @@ export function selectBestNiche(
     best = baseMarket ?? markets[0];
   }
 
-  const bestIsBase = best.keyword === baseKeyword;
+  let bestIsBase = best.keyword === baseKeyword;
   const baseDecision = baseMarket?.decision;
 
   // Determine entry strategy
@@ -74,10 +74,21 @@ export function selectBestNiche(
     (m) => m.decision === 'DO_NOT_BUILD' || (m.decision === 'RISKY' && m.scores.opportunityScore < 3)
   );
 
+  // Niche advantage threshold: niche entry score must beat base by ≥40% to override
+  const NICHE_ADVANTAGE_THRESHOLD = 0.4;
+
   if (allUnviable) {
     entryStrategy = 'NO_VIABLE_ENTRY';
   } else if (bestIsBase) {
-    entryStrategy = 'BROAD_MARKET';
+    const topNiche = scoredNonBase[0];
+    const nicheE   = topNiche?.entry ?? 0;
+    if (topNiche && nicheE > baseEntry * (1 + NICHE_ADVANTAGE_THRESHOLD)) {
+      best = topNiche;
+      bestIsBase = false;
+      entryStrategy = 'ENTER_VIA_NICHE';
+    } else {
+      entryStrategy = 'BROAD_MARKET';
+    }
   } else if (baseDecision === 'DO_NOT_BUILD' || baseDecision === 'RISKY') {
     entryStrategy = 'ENTER_VIA_NICHE';
   } else {

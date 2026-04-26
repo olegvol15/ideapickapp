@@ -113,6 +113,10 @@ export const MobileMetricsSchema = z.object({
   ratingDistributionAbove45: z.number().optional(),
   marketDominance: z.enum(['HIGH', 'MEDIUM', 'LOW']).optional(),
   marketLocked: z.boolean().optional(),
+  // ASO-proxy fields
+  keywordInTopTitles: z.boolean().optional(),
+  hasWeakIncumbents: z.boolean().optional(),
+  topAppRevEstimate: z.object({ low: z.number(), high: z.number() }).nullable().optional(),
   // Legacy fields kept optional so old saved validations still parse
   avgRating: z.number().optional(),
   avgReviews: z.number().optional(),
@@ -137,6 +141,9 @@ export const NicheResultSchema = z.object({
   top5ReviewShare: z.number(),
   reviewDistributionSkew: z.number(),
   marketDominance: z.enum(['HIGH', 'MEDIUM', 'LOW']),
+  keywordInTopTitles: z.boolean().optional(),
+  hasWeakIncumbents: z.boolean().optional(),
+  topAppRevEstimate: z.object({ low: z.number(), high: z.number() }).nullable().optional(),
 });
 
 // Fields the LLM returns on the mobile path — narrative only, no scores/decision
