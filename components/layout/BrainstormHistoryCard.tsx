@@ -5,6 +5,8 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { MoreHorizontal, Pencil, Trash2, Lightbulb } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 interface BrainstormHistoryCardProps {
   id: string;
@@ -98,14 +100,14 @@ export function BrainstormHistoryCard({
 
       {/* Prompt / editable title */}
       {editing ? (
-        <input
+        <Input
           ref={inputRef}
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
           onBlur={commitRename}
           onKeyDown={handleKeyDown}
           onClick={(e) => e.stopPropagation()}
-          className="w-full bg-transparent text-sm font-medium text-foreground outline-none"
+          className="h-auto w-full border-0 bg-transparent p-0 text-sm font-medium text-foreground shadow-none focus-visible:ring-0 rounded-none"
         />
       ) : (
         <p className="line-clamp-2 text-sm font-medium leading-snug text-foreground/90">
@@ -123,19 +125,21 @@ export function BrainstormHistoryCard({
 
       {/* Menu button */}
       {!editing && (
-        <button
+        <Button
           ref={buttonRef}
           type="button"
+          variant="ghost"
+          size="icon"
           onClick={(e) => { e.stopPropagation(); openMenu(e); }}
           className={cn(
-            'absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded transition-colors',
+            'absolute right-3 top-3 h-6 w-6',
             menuOpen
               ? 'text-foreground'
               : 'text-transparent group-hover:text-muted-foreground/50 hover:!text-foreground'
           )}
         >
           <MoreHorizontal className="h-3.5 w-3.5" />
-        </button>
+        </Button>
       )}
 
       {mounted && menuOpen && menuPos && createPortal(
@@ -144,22 +148,24 @@ export function BrainstormHistoryCard({
           style={{ position: 'fixed', top: menuPos.top, left: menuPos.left }}
           className="z-[200] min-w-[132px] overflow-hidden rounded-lg border border-white/10 bg-[#0d1e33] py-1 shadow-xl"
         >
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={(e) => { e.stopPropagation(); setMenuOpen(false); setEditing(true); }}
-            className="flex w-full items-center gap-2.5 px-3 py-1.5 text-xs text-foreground/70 transition-colors hover:bg-white/5 hover:text-foreground"
+            className="w-full justify-start gap-2.5 rounded-lg px-3 py-1.5 h-auto text-xs font-normal normal-case tracking-normal text-foreground/70 hover:bg-white/5 hover:text-foreground"
           >
             <Pencil className="h-3 w-3" />
             Rename
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="ghost"
             onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete(); }}
-            className="flex w-full items-center gap-2.5 px-3 py-1.5 text-xs text-red-400/80 transition-colors hover:bg-red-500/10 hover:text-red-400"
+            className="w-full justify-start gap-2.5 rounded-lg px-3 py-1.5 h-auto text-xs font-normal normal-case tracking-normal text-red-400/80 hover:bg-red-500/10 hover:text-red-400"
           >
             <Trash2 className="h-3 w-3" />
             Delete
-          </button>
+          </Button>
         </div>,
         document.body
       )}

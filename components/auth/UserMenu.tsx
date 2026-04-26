@@ -7,6 +7,7 @@ import { useTheme } from 'next-themes';
 import { ChevronsUpDown, LogOut, Moon, Sun } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '@/context/auth';
+import { Button } from '@/components/ui/button';
 import { useRoadmapStore } from '@/stores/roadmap.store';
 import { useResearchStore } from '@/stores/research.store';
 import { clearPlans } from '@/services/storage.service';
@@ -144,10 +145,11 @@ export function UserMenu({ variant = 'compact' }: UserMenuProps) {
             </div>
 
             <div className="p-1">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={handleToggleTheme}
-                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-muted"
+                className="w-full justify-start gap-3 rounded-lg px-3 py-2 h-auto font-normal normal-case tracking-normal hover:bg-muted"
               >
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                   {isDark ? (
@@ -156,7 +158,7 @@ export function UserMenu({ variant = 'compact' }: UserMenuProps) {
                     <Moon className="h-4 w-4" />
                   )}
                 </span>
-                <span className="min-w-0 flex-1">
+                <span className="min-w-0 flex-1 text-left">
                   <span className="block text-sm font-medium text-foreground">
                     Appearance
                   </span>
@@ -164,18 +166,19 @@ export function UserMenu({ variant = 'compact' }: UserMenuProps) {
                     {appearanceLabel}
                   </span>
                 </span>
-              </button>
+              </Button>
             </div>
 
             <div className="border-t border-border p-1">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={handleSignOut}
-                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-red-500 transition-colors hover:bg-red-500/5"
+                className="w-full justify-start gap-2.5 rounded-lg px-3 py-2 h-auto text-xs font-medium normal-case tracking-normal text-red-500 hover:bg-red-500/5 hover:text-red-500"
               >
                 <LogOut className="h-3.5 w-3.5" />
                 Sign out
-              </button>
+              </Button>
             </div>
           </motion.div>
         )}

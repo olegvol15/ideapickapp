@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { ValidationContextMenu } from './ValidationContextMenu';
 import { useEditableValidation } from '@/hooks/use-editable-validation';
 
@@ -30,13 +32,13 @@ export function ValidationItem({ id, description, onDelete, onRename, onNavigate
   return (
     <div className={cn('group relative flex items-center rounded-lg', isActive && 'bg-white/8')}>
       {editing ? (
-        <input
+        <Input
           ref={inputRef}
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
           onBlur={commitRename}
           onKeyDown={handleKeyDown}
-          className="w-full bg-transparent py-2 pl-3 pr-7 text-sm text-foreground/90 outline-none"
+          className="h-auto w-full border-0 bg-transparent py-2 pl-3 pr-7 text-sm text-foreground/90 shadow-none focus-visible:ring-0 rounded-none"
         />
       ) : (
         <Link
@@ -52,17 +54,19 @@ export function ValidationItem({ id, description, onDelete, onRename, onNavigate
       )}
 
       {!editing && (
-        <button
+        <Button
           ref={buttonRef}
           type="button"
+          variant="ghost"
+          size="icon"
           onClick={openMenu}
           className={cn(
-            'absolute right-1 flex h-6 w-6 items-center justify-center transition-colors',
+            'absolute right-1 h-6 w-6',
             menuOpen ? 'text-foreground' : 'text-transparent group-hover:text-muted-foreground/70 hover:!text-foreground'
           )}
         >
           <MoreHorizontal className="h-3.5 w-3.5" />
-        </button>
+        </Button>
       )}
 
       {mounted && menuPos && (

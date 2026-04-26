@@ -1,6 +1,7 @@
 'use client';
 
 import { AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ErrorFallbackProps {
   onReset: () => void;
@@ -17,18 +18,12 @@ export function ErrorFallback({ onReset }: ErrorFallbackProps) {
         </p>
       </div>
       <div className="flex gap-3">
-        <button
-          onClick={onReset}
-          className="rounded-md border border-border px-4 py-2 text-sm transition-colors hover:bg-accent"
-        >
+        <Button variant="outline" size="sm" onClick={onReset}>
           Try again
-        </button>
-        <button
-          onClick={() => window.location.reload()}
-          className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground transition-colors hover:bg-primary/90"
-        >
+        </Button>
+        <Button size="sm" onClick={() => window.location.reload()}>
           Reload App
-        </button>
+        </Button>
       </div>
     </div>
   );

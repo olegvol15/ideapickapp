@@ -134,12 +134,13 @@ export function ValidateForm() {
               <p className="text-sm font-semibold text-foreground">Validation failed</p>
               <p className="text-xs leading-relaxed text-muted-foreground">{error}</p>
             </div>
-            <button
+            <Button
+              variant="link"
+              size="sm"
               onClick={() => handleSubmit()}
-              className="mt-1 text-xs font-bold uppercase tracking-widest text-primary transition-all hover:opacity-75"
             >
               Try again →
-            </button>
+            </Button>
           </motion.div>
         )}
       </AnimatePresence>

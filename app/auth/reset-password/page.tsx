@@ -69,14 +69,16 @@ export default function ResetPasswordPage() {
                 className="pr-10"
                 {...form.register('password')}
               />
-              <button
+              <Button
                 type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
                 onClick={() => setShowPassword(v => !v)}
                 tabIndex={-1}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+              </Button>
             </div>
             {form.formState.errors.password && (
               <p className="text-xs text-red-500 mt-1">{form.formState.errors.password.message}</p>

@@ -140,26 +140,30 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
                 className="pr-10"
                 {...signinForm.register('password')}
               />
-              <button
+              <Button
                 type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
                 onClick={() => setShowPassword(v => !v)}
                 tabIndex={-1}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+              </Button>
             </div>
             {signinForm.formState.errors.password && (
               <p className="text-xs text-red-500 mt-1">{signinForm.formState.errors.password.message}</p>
             )}
             <div className="text-right mt-1">
-              <button
+              <Button
                 type="button"
-                className="text-xs text-muted-foreground hover:text-primary"
+                variant="link"
+                size="sm"
                 onClick={() => switchMode('forgot')}
+                className="h-auto p-0 text-xs text-muted-foreground hover:text-primary"
               >
                 Forgot password?
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -232,14 +236,16 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
                 className="pr-10"
                 {...signupForm.register('confirmPassword')}
               />
-              <button
+              <Button
                 type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
                 onClick={() => setShowConfirm(v => !v)}
                 tabIndex={-1}
               >
                 {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+              </Button>
             </div>
             {signupForm.formState.errors.confirmPassword && (
               <p className="text-xs text-red-500 mt-1">{signupForm.formState.errors.confirmPassword.message}</p>
@@ -290,13 +296,14 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
             Send reset link
           </Button>
 
-          <button
+          <Button
             type="button"
-            className="w-full text-xs text-muted-foreground hover:text-primary text-center"
+            variant="link"
+            className="w-full text-xs text-muted-foreground hover:text-primary"
             onClick={() => switchMode('signin')}
           >
             ← Back to sign in
-          </button>
+          </Button>
         </form>
       )}
 
@@ -304,13 +311,14 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
       {mode !== 'forgot' && (
         <p className="mt-6 text-center text-xs text-muted-foreground">
           {mode === 'signin' ? "Don't have an account?" : 'Already have an account?'}{' '}
-          <button
+          <Button
             type="button"
-            className="font-bold text-primary hover:underline"
+            variant="link"
+            className="h-auto p-0"
             onClick={() => switchMode(mode === 'signin' ? 'signup' : 'signin')}
           >
             {mode === 'signin' ? 'Sign up' : 'Sign in'}
-          </button>
+          </Button>
         </p>
       )}
     </div>

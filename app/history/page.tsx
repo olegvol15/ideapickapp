@@ -8,7 +8,7 @@ import { History, Loader2, Search, X } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { ValidationHistoryCard } from '@/components/validate/ValidationHistoryCard';
 import { BrainstormHistoryCard } from '@/components/layout/BrainstormHistoryCard';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/auth';
 import { useGetValidations, useDeleteValidation, useRenameValidation } from '@/hooks/use-validations';
@@ -137,9 +137,10 @@ export default function HistoryPage() {
               type="button"
               onClick={() => setActiveTab(tab)}
               className={cn(
-                'rounded-lg px-4 py-1.5 text-sm font-medium capitalize transition-colors',
+                buttonVariants({ variant: 'ghost', size: 'sm' }),
+                'rounded-lg capitalize font-medium normal-case tracking-normal',
                 activeTab === tab
-                  ? 'bg-white/8 text-foreground'
+                  ? 'bg-white/8 text-foreground hover:bg-white/8'
                   : 'text-muted-foreground/60 hover:text-foreground/80'
               )}
             >
@@ -158,13 +159,15 @@ export default function HistoryPage() {
               className="h-8 pl-8 pr-8 text-sm"
             />
             {query && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/40 hover:text-muted-foreground"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground/40 hover:text-muted-foreground"
               >
                 <X className="h-3.5 w-3.5" />
-              </button>
+              </Button>
             )}
           </div>
         </div>

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { buttonVariants } from '@/components/ui/button';
 import { OpportunityCard } from '@/components/opportunity/opportunity-card';
 import { OpportunityModal } from '@/components/opportunity/opportunity-modal';
 import { MarketDashboard } from '@/components/market/market-dashboard';
@@ -51,7 +52,8 @@ export function ResultsTabs({
               key={tab.id}
               onClick={() => setActive(tab.id)}
               className={cn(
-                'relative px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-colors duration-150',
+                buttonVariants({ variant: 'ghost', size: 'sm' }),
+                'relative px-4 py-2.5 rounded-none hover:bg-transparent',
                 active === tab.id
                   ? 'text-primary'
                   : 'text-muted-foreground/60 hover:text-foreground'

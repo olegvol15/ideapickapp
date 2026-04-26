@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { scoreColorBadge, decisionColorBadge } from '@/lib/validate/colors';
 import { ValidationContextMenu } from './ValidationContextMenu';
 import { useEditableValidation } from '@/hooks/use-editable-validation';
@@ -51,14 +53,14 @@ export function ValidationHistoryCard({
 
       {/* Description / editable title */}
       {editing ? (
-        <input
+        <Input
           ref={inputRef}
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
           onBlur={commitRename}
           onKeyDown={handleKeyDown}
           onClick={(e) => e.stopPropagation()}
-          className="w-full bg-transparent text-sm font-medium text-foreground outline-none"
+          className="h-auto w-full border-0 bg-transparent p-0 text-sm font-medium text-foreground shadow-none focus-visible:ring-0 rounded-none"
         />
       ) : (
         <p className="line-clamp-2 text-sm font-medium leading-snug text-foreground/90">{description}</p>
@@ -72,17 +74,19 @@ export function ValidationHistoryCard({
 
       {/* Menu button */}
       {!editing && (
-        <button
+        <Button
           ref={buttonRef}
           type="button"
+          variant="ghost"
+          size="icon"
           onClick={(e) => { e.stopPropagation(); openMenu(e); }}
           className={cn(
-            'absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded transition-colors',
+            'absolute right-3 top-3 h-6 w-6',
             menuOpen ? 'text-foreground' : 'text-transparent group-hover:text-muted-foreground/50 hover:!text-foreground'
           )}
         >
           <MoreHorizontal className="h-3.5 w-3.5" />
-        </button>
+        </Button>
       )}
 
       {mounted && menuPos && (

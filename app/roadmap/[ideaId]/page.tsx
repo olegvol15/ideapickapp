@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { RoadmapCanvas } from '@/components/roadmap/RoadmapCanvas';
+import { Button } from '@/components/ui/button';
 import { getPlan, setPlan, loadRoadmapState } from '@/services/storage.service';
 import { useAuth } from '@/context/auth';
 import { useGetRoadmap } from '@/hooks/use-roadmaps';
@@ -53,12 +54,9 @@ export default function RoadmapPage() {
     return (
       <div className="flex h-svh flex-col items-center justify-center gap-3 text-muted-foreground">
         <p className="text-sm">Roadmap not found.</p>
-        <button
-          onClick={() => router.push('/')}
-          className="text-xs text-primary hover:underline"
-        >
+        <Button variant="link" size="sm" onClick={() => router.push('/')}>
           ← Go home
-        </button>
+        </Button>
       </div>
     );
   }
@@ -75,13 +73,15 @@ export default function RoadmapPage() {
   return (
     <div className="flex h-svh flex-col">
       <div className="flex shrink-0 items-center gap-4 border-b border-border/60 px-5 py-3">
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => router.back()}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="gap-1.5 text-muted-foreground hover:text-foreground hover:bg-transparent"
         >
           <ArrowLeft className="h-4 w-4" />
           Back
-        </button>
+        </Button>
         <div className="h-4 w-px bg-border/60" />
         <div className="min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">

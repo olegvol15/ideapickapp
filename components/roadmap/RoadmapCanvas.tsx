@@ -18,6 +18,7 @@ import dagre from '@dagrejs/dagre';
 import { motion } from 'framer-motion';
 import { Loader2, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import '@xyflow/react/dist/style.css';
 
 import { cn } from '@/lib/utils';
@@ -471,12 +472,9 @@ export function RoadmapCanvas({
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3">
         <p className="text-sm text-muted-foreground">{error}</p>
-        <button
-          onClick={() => router.back()}
-          className="text-xs text-primary hover:underline"
-        >
+        <Button variant="link" size="sm" onClick={() => router.back()}>
           ← Go back
-        </button>
+        </Button>
       </div>
     );
 

@@ -2,6 +2,7 @@
 
 import { Search, BarChart2, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import { CompetitorLogo } from '@/components/market/competitors-list/CompetitorLogo';
 import { Pulse } from './Pulse';
 import { StepIcon } from './StepIcon';
@@ -100,12 +101,14 @@ export function ValidationProgress({
         </Step>
       </div>
 
-      <button
+      <Button
+        variant="ghost"
+        size="sm"
         onClick={onCancel}
-        className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors w-fit mx-auto"
+        className="mx-auto text-muted-foreground/40 hover:text-muted-foreground/70 hover:bg-transparent"
       >
         Cancel
-      </button>
+      </Button>
     </div>
   );
 }

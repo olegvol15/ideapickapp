@@ -20,12 +20,9 @@ export default function PlanPage() {
           <p className="text-sm text-muted-foreground">
             Plan not found — go back and try again.
           </p>
-          <button
-            onClick={() => router.push('/')}
-            className="text-[10px] font-bold uppercase tracking-widest text-primary hover:opacity-75 transition-opacity"
-          >
+          <Button variant="link" size="sm" onClick={() => router.push('/')}>
             ← Back to IdeaPick
-          </button>
+          </Button>
         </div>
       </div>
     );

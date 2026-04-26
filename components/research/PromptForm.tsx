@@ -119,12 +119,14 @@ export function PromptForm() {
             className="mt-10 flex flex-col items-center gap-4"
           >
             <ThinkingIndicator label="Analyzing your prompt…" />
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={handleCancel}
-              className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50 transition-colors hover:text-muted-foreground"
+              className="text-muted-foreground/50 hover:text-muted-foreground hover:bg-transparent"
             >
               Cancel
-            </button>
+            </Button>
           </motion.div>
         )}
 
@@ -138,12 +140,14 @@ export function PromptForm() {
             className="mt-10 flex flex-col items-center gap-4"
           >
             <ThinkingIndicator label={statusLabel} />
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={handleCancel}
-              className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50 transition-colors hover:text-muted-foreground"
+              className="text-muted-foreground/50 hover:text-muted-foreground hover:bg-transparent"
             >
               Cancel
-            </button>
+            </Button>
           </motion.div>
         )}
 
@@ -183,12 +187,13 @@ export function PromptForm() {
                 {errorMsg}
               </p>
             </div>
-            <button
+            <Button
+              variant="link"
+              size="sm"
               onClick={handleGenerate}
-              className="mt-1 text-xs font-bold uppercase tracking-widest text-primary transition-all hover:opacity-75"
             >
               Try again →
-            </button>
+            </Button>
           </motion.div>
         )}
       </AnimatePresence>

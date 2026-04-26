@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { ResultsTabs } from '@/components/ResultsTabs';
+import { Button } from '@/components/ui/button';
 import {
   useResearchStore,
   type PersistedResearch,
@@ -62,12 +63,9 @@ export default function BrainstormPage() {
     return (
       <div className="flex h-svh flex-col items-center justify-center gap-3 text-muted-foreground">
         <p className="text-sm">Brainstorm not found.</p>
-        <button
-          onClick={() => router.push('/')}
-          className="text-xs text-primary hover:underline"
-        >
+        <Button variant="link" size="sm" onClick={() => router.push('/')}>
           ← Go home
-        </button>
+        </Button>
       </div>
     );
   }

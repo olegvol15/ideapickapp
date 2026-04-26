@@ -48,10 +48,9 @@ export function RefinePanel({ description, result, version, isLoading, onRevalid
         <div className="flex items-center justify-between">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/60">Edit idea</p>
           {hasChanges && (
-            <button type="button" onClick={reset}
-              className="flex items-center gap-1 text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors">
+            <Button variant="ghost" size="sm" onClick={reset} className="gap-1 text-muted-foreground/50 hover:text-muted-foreground hover:bg-transparent">
               <RotateCcw className="h-3 w-3" /> Reset
-            </button>
+            </Button>
           )}
         </div>
 
