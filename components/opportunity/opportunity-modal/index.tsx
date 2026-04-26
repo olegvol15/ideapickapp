@@ -89,7 +89,7 @@ export function OpportunityModal({ open, onClose }: OpportunityModalProps) {
     if (!displayIdea) return;
     const ideaId = setPlan(displayIdea);
     onClose();
-    router.push(`/roadmap/${ideaId}`);
+    router.push(`/workspace/${ideaId}`);
   }
 
   const score = i ? computeOpportunityScore(i) : 0;
@@ -246,13 +246,13 @@ export function OpportunityModal({ open, onClose }: OpportunityModalProps) {
                       >
                         <div>
                           <p className="text-[10px] font-bold uppercase tracking-widest text-primary/70 mb-0.5">
-                            Open Workspace
+                            Workspace
                           </p>
                           <p className="text-sm font-bold text-foreground">
-                            Build Roadmap →
+                            Open Workspace →
                           </p>
                           <p className="text-[10px] text-muted-foreground mt-0.5">
-                            Visual mindmap · Stack · First users
+                            Todo · Content · Roadmap
                           </p>
                         </div>
                         <Map className="h-5 w-5 shrink-0 text-primary/40" />

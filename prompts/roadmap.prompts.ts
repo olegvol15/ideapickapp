@@ -51,9 +51,9 @@ Expand a high-level milestone into 3 simple, beginner-friendly action steps.
 Return ONLY valid JSON:
 {
   "nodes": [
-    { "id": "${nodeId}-1", "label": "<3–5 word action>", "type": "leaf", "parent": "${nodeId}", "description": "<one plain sentence>" },
-    { "id": "${nodeId}-2", "label": "<3–5 word action>", "type": "leaf", "parent": "${nodeId}", "description": "<one plain sentence>" },
-    { "id": "${nodeId}-3", "label": "<3–5 word action>", "type": "leaf", "parent": "${nodeId}", "description": "<one plain sentence>" }
+    { "id": "${nodeId}-1", "label": "<3–5 word action>", "type": "leaf", "parent": "${nodeId}", "description": "<1–2 specific, actionable sentences for a beginner>", "actionType": "tweet" | "reddit" | null },
+    { "id": "${nodeId}-2", "label": "<3–5 word action>", "type": "leaf", "parent": "${nodeId}", "description": "<1–2 specific, actionable sentences for a beginner>", "actionType": "tweet" | "reddit" | null },
+    { "id": "${nodeId}-3", "label": "<3–5 word action>", "type": "leaf", "parent": "${nodeId}", "description": "<1–2 specific, actionable sentences for a beginner>", "actionType": "tweet" | "reddit" | null }
   ]
 }
 
@@ -63,7 +63,8 @@ Rules:
 - Labels: short plain-English actions a non-technical solo founder can actually do
   Examples: "Talk to 10 people", "Post in Reddit communities", "Create a landing page",
   "Add a waitlist form", "Launch on Product Hunt", "Send 5 cold DMs", "Charge your first user"
-- Descriptions: one sentence, written for a complete beginner — no jargon
+- Descriptions: 1–2 specific, actionable sentences — include a concrete detail (e.g. which platform, what to say, how many people). No jargon. Written for a complete beginner
+- actionType: set "tweet" if the step involves sharing on Twitter/X; set "reddit" if it involves posting on Reddit; otherwise set null
 - AVOID anything technical or enterprise: no cloud setup, no system architecture, no compliance`,
     },
     {

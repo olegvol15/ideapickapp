@@ -6,6 +6,7 @@ export interface RoadmapNode {
   type: RoadmapNodeType;
   parent?: string;
   description?: string;
+  actionType?: 'tweet' | 'reddit' | null;
 }
 
 export interface RoadmapGraph {

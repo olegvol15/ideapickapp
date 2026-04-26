@@ -10,6 +10,7 @@ import {
   ChevronDown,
   Gauge,
   History,
+  LayoutDashboard,
   LogIn,
   PanelLeftClose,
   Plus,
@@ -21,6 +22,7 @@ import { ValidationItem } from '@/components/validate/ValidationItem';
 import { useAuth } from '@/context/auth';
 import { useResearchStore } from '@/stores/research.store';
 import { useValidateStore } from '@/stores/validate.store';
+import { useWorkspaceStore } from '@/stores/workspace.store';
 import {
   useGetGenerations,
   useDeleteGeneration,
@@ -48,11 +50,16 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { openDesktop, setOpenDesktop, setOpenMobile } = useSidebar();
   const [recentsOpen, setRecentsOpen] = useState(true);
   const [validationsOpen, setValidationsOpen] = useState(true);
+  const [workspacesOpen, setWorkspacesOpen] = useState(true);
 
   const deleteMutation = useDeleteGeneration(user?.id);
   const renameMutation = useRenameGeneration(user?.id);
   const deleteValidationMutation = useDeleteValidation(user?.id);
   const renameValidationMutation = useRenameValidation(user?.id);
+
+  // Workspace entries (locally persisted, keyed by ideaId)
+  const workspaceTitles = useWorkspaceStore((s) => s.workspaceTitles);
+  const recentWorkspaces = Object.entries(workspaceTitles).slice(0, 5);
 
   // Research recents — logged-in users use React Query, others use Zustand store
   const localHistory = useResearchStore((s) => s.localHistory);
@@ -197,6 +204,59 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                 </Link>
               );
             })}
+
+            {/* Workspaces */}
+            {recentWorkspaces.length > 0 && (
+              <>
+                <div className="mx-2 my-3 border-t border-white/8" />
+
+                <button
+                  type="button"
+                  onClick={() => setWorkspacesOpen((o) => !o)}
+                  className="flex w-full items-center gap-1.5 px-2.5 py-1 text-xs text-muted-foreground/60 transition-colors hover:text-muted-foreground"
+                >
+                  <ChevronDown
+                    className={cn(
+                      'h-3 w-3 transition-transform duration-200',
+                      workspacesOpen && 'rotate-180'
+                    )}
+                  />
+                  Workspaces
+                </button>
+
+                <AnimatePresence initial={false}>
+                  {workspacesOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                      className="overflow-hidden"
+                    >
+                      {recentWorkspaces.map(([id, title]) => (
+                        <Link
+                          key={id}
+                          href={`/workspace/${id}`}
+                          onClick={() => {
+                            onNavigate?.();
+                            setOpenMobile(false);
+                          }}
+                          className={cn(
+                            'flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs transition-colors',
+                            pathname === `/workspace/${id}`
+                              ? 'bg-white/8 text-foreground'
+                              : 'text-muted-foreground/70 hover:bg-white/5 hover:text-foreground/90'
+                          )}
+                        >
+                          <LayoutDashboard className="h-3 w-3 shrink-0 opacity-50" />
+                          <span className="truncate">{title}</span>
+                        </Link>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </>
+            )}
 
             {/* Validations */}
             {recentValidations.length > 0 && (

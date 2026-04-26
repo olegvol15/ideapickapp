@@ -16,7 +16,7 @@ import {
 } from '@xyflow/react';
 import dagre from '@dagrejs/dagre';
 import { motion } from 'framer-motion';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2, Plus, Twitter, MessageSquare } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import '@xyflow/react/dist/style.css';
@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { typedApi } from '@/lib/api/client';
 import type { Idea } from '@/types';
 import type { RoadmapNode, RoadmapNodeType } from '@/types/roadmap.types';
+import type { ContentType } from '@/types/workspace.types';
 import {
   saveRoadmapState,
   loadRoadmapState,
@@ -84,7 +85,9 @@ interface NodeData {
   expanded: boolean;
   expanding: boolean;
   canExpand: boolean;
+  actionType?: 'tweet' | 'reddit' | null;
   onExpand: () => void;
+  onGenerateContent?: () => void;
   [key: string]: unknown;
 }
 
@@ -155,6 +158,30 @@ function RoadmapNodeCmp({ data }: NodeProps) {
           )}
         </button>
       )}
+
+      {d.actionType && d.onGenerateContent && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            d.onGenerateContent!();
+          }}
+          title={d.actionType === 'tweet' ? 'Generate tweet' : 'Generate Reddit post'}
+          className={cn(
+            'absolute bottom-2 right-2 z-20',
+            'flex h-6 w-6 items-center justify-center rounded-full',
+            'border shadow-sm transition-all duration-150 hover:scale-110 active:scale-95',
+            d.actionType === 'tweet'
+              ? 'border-sky-400/30 bg-sky-400/10 text-sky-400 hover:bg-sky-400/20'
+              : 'border-orange-400/30 bg-orange-400/10 text-orange-400 hover:bg-orange-400/20'
+          )}
+        >
+          {d.actionType === 'tweet' ? (
+            <Twitter className="h-3 w-3" />
+          ) : (
+            <MessageSquare className="h-3 w-3" />
+          )}
+        </button>
+      )}
     </motion.div>
   );
 }
@@ -169,12 +196,14 @@ export function RoadmapCanvas({
   initialLoading = true,
   userId,
   authLoading = false,
+  onGenerateContent,
 }: {
   idea: Idea;
   ideaId: string;
   initialLoading?: boolean;
   userId: string | undefined;
   authLoading?: boolean;
+  onGenerateContent?: (label: string, description: string, actionType: ContentType) => void;
 }) {
   const router = useRouter();
   const store = useRoadmapStore();
@@ -220,7 +249,12 @@ export function RoadmapCanvas({
         expanded: expandedIds.includes(rn.id),
         expanding: false,
         canExpand: rn.type !== 'root',
+        actionType: rn.actionType,
         onExpand: () => expandNodeRef.current(rn.id, rn.label),
+        onGenerateContent:
+          rn.actionType && onGenerateContent
+            ? () => onGenerateContent(rn.label, rn.description ?? '', rn.actionType as ContentType)
+            : undefined,
       } satisfies NodeData,
     }));
   }
@@ -293,7 +327,12 @@ export function RoadmapCanvas({
             expanded: false,
             expanding: false,
             canExpand: rn.type !== 'root',
+            actionType: rn.actionType,
             onExpand: () => expandNodeRef.current(rn.id, rn.label),
+            onGenerateContent:
+              rn.actionType && onGenerateContent
+                ? () => onGenerateContent(rn.label, rn.description ?? '', rn.actionType as ContentType)
+                : undefined,
           } satisfies NodeData,
         }));
 
@@ -378,7 +417,12 @@ export function RoadmapCanvas({
             expanded: false,
             expanding: false,
             canExpand: rn.type !== 'root',
+            actionType: rn.actionType,
             onExpand: () => expandNodeRef.current(rn.id, rn.label),
+            onGenerateContent:
+              rn.actionType && onGenerateContent
+                ? () => onGenerateContent(rn.label, rn.description ?? '', rn.actionType as ContentType)
+                : undefined,
           } satisfies NodeData,
         }));
 
