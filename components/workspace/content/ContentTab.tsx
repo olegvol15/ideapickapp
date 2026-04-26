@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Twitter, MessageSquare, Loader2, Sparkles, FileText, Zap } from 'lucide-react';
+import { MessageSquare, Loader2, Sparkles, FileText, Zap, Search, Users, Rocket, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { typedApi } from '@/lib/api/client';
 import { useWorkspaceStore } from '@/stores/workspace.store';
@@ -9,11 +9,19 @@ import { ContentCard } from './ContentCard';
 import type { Idea } from '@/types';
 import type { ContentGoal, ContentType } from '@/types/workspace.types';
 
-const GOALS: { value: ContentGoal; label: string; description: string; icon: string }[] = [
-  { value: 'validate',  label: 'Validate',  description: 'Is this problem real?',  icon: '🔍' },
-  { value: 'community', label: 'Community', description: 'Find early adopters',     icon: '👥' },
-  { value: 'features',  label: 'Features',  description: 'What do people want?',   icon: '✨' },
-  { value: 'launch',    label: 'Launch',    description: 'Drive sign-ups',          icon: '🚀' },
+function XIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  );
+}
+
+const GOALS: { value: ContentGoal; label: string; description: string; Icon: LucideIcon }[] = [
+  { value: 'validate',  label: 'Validate',  description: 'Is this problem real?',  Icon: Search   },
+  { value: 'community', label: 'Community', description: 'Find early adopters',     Icon: Users    },
+  { value: 'features',  label: 'Features',  description: 'What do people want?',   Icon: Sparkles },
+  { value: 'launch',    label: 'Launch',    description: 'Drive sign-ups',          Icon: Rocket   },
 ];
 
 interface ContentTabProps {
@@ -73,9 +81,9 @@ export function ContentTab({ idea, ideaId }: ContentTabProps) {
           </p>
           <div className="grid grid-cols-2 gap-2">
             {([
-              { value: 'tweet'  as ContentType, Icon: Twitter,        label: 'Tweet',  active: 'border-sky-400/40 bg-sky-400/10 text-sky-400'    },
-              { value: 'reddit' as ContentType, Icon: MessageSquare,  label: 'Reddit', active: 'border-orange-400/40 bg-orange-400/10 text-orange-400' },
-            ]).map(({ value, Icon, label, active }) => (
+              { value: 'tweet'  as ContentType, icon: <XIcon className="h-4 w-4" />,               label: 'X',      active: 'border-sky-400/40 bg-sky-400/10 text-sky-400'        },
+              { value: 'reddit' as ContentType, icon: <MessageSquare className="h-4 w-4" />,        label: 'Reddit', active: 'border-orange-400/40 bg-orange-400/10 text-orange-400' },
+            ]).map(({ value, icon, label, active }) => (
               <button
                 key={value}
                 onClick={() => setType(value)}
@@ -86,7 +94,7 @@ export function ContentTab({ idea, ideaId }: ContentTabProps) {
                     : 'border-border/40 text-muted-foreground/50 hover:border-border hover:text-foreground/80'
                 )}
               >
-                <Icon className="h-4 w-4" />
+                {icon}
                 {label}
               </button>
             ))}
@@ -110,7 +118,7 @@ export function ContentTab({ idea, ideaId }: ContentTabProps) {
                     : 'border-transparent text-muted-foreground/60 hover:border-border/50 hover:text-foreground'
                 )}
               >
-                <span className="text-base leading-none">{g.icon}</span>
+                <g.Icon className="h-3.5 w-3.5 shrink-0" />
                 <div className="min-w-0">
                   <p className="text-[11px] font-semibold">{g.label}</p>
                   <p className="text-[10px] opacity-50">{g.description}</p>
@@ -163,7 +171,7 @@ export function ContentTab({ idea, ideaId }: ContentTabProps) {
           <Zap className="mt-0.5 h-3 w-3 shrink-0 text-primary/50" />
           <p className="text-[10px] leading-relaxed text-muted-foreground/40">
             Click the{' '}
-            <Twitter className="inline h-2.5 w-2.5 text-sky-400" />{' '}
+            <XIcon className="inline h-2.5 w-2.5 text-sky-400" />{' '}
             or{' '}
             <MessageSquare className="inline h-2.5 w-2.5 text-orange-400" />{' '}
             buttons on roadmap nodes to auto-generate content from your steps.
