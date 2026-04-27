@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
+import { DM_Sans } from 'next/font/google';
 import { headers } from 'next/headers';
 import { Providers } from './providers';
 import './globals.css';
+
+const dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-dm-sans', display: 'swap' });
 
 export const metadata: Metadata = {
   title: 'IdeaPick',
@@ -19,20 +22,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&display=swap"
-          rel="stylesheet"
-          // Stylesheets don't need a nonce — covered by style-src in the CSP.
-        />
-      </head>
-      <body className="antialiased">
+      <body className={`${dmSans.variable} antialiased`}>
         <Providers nonce={nonce}>{children}</Providers>
       </body>
     </html>

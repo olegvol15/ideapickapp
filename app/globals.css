@@ -6,10 +6,10 @@
    ─────────────────────────────────────────────────────────────────────────── */
 @theme inline {
   /* Fonts */
-  --font-sans: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-sans: var(--font-dm-sans), sans-serif;
   --font-mono:
     'SFMono-Regular', 'SF Mono', Consolas, 'Liberation Mono', monospace;
-  --font-display: 'Bodoni Moda', Georgia, serif;
+  --font-display: var(--font-dm-sans), sans-serif;
 
   /* ── shadcn/ui standard tokens ────────────────────────────────────────────
      These map to shadcn's CSS variable names so every shadcn component works

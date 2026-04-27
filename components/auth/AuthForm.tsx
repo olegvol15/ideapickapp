@@ -124,91 +124,17 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
   const { title, sub } = headings[mode];
 
   return (
-    <div className="w-full max-w-sm">
-      <div className="mb-8 text-center">
-        <span className="font-display text-sm uppercase tracking-[0.25em] text-foreground">
-          IDEA<span className="text-primary">PICK</span>
-        </span>
-        <p className="mt-4 text-xl font-bold text-foreground">{title}</p>
-        <p className="mt-1 text-sm text-muted-foreground">{sub}</p>
+    <div className="mx-auto w-full max-w-md">
+      {/* Heading */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-foreground">{title}</h1>
+        <p className="mt-1.5 text-sm text-muted-foreground">{sub}</p>
       </div>
 
       {/* ── SIGN IN ── */}
       {mode === 'signin' && (
-        <form
-          onSubmit={signinForm.handleSubmit(handleSignIn)}
-          className="space-y-3"
-        >
-          <div>
-            <Input
-              type="email"
-              placeholder="Email"
-              autoComplete="email"
-              {...signinForm.register('email')}
-            />
-            {signinForm.formState.errors.email && (
-              <p className="text-xs text-red-500 mt-1">
-                {signinForm.formState.errors.email.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <div className="relative">
-              <Input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Password"
-                autoComplete="current-password"
-                className="pr-10"
-                {...signinForm.register('password')}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
-                onClick={() => setShowPassword((v) => !v)}
-                tabIndex={-1}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-            {signinForm.formState.errors.password && (
-              <p className="text-xs text-red-500 mt-1">
-                {signinForm.formState.errors.password.message}
-              </p>
-            )}
-            <div className="text-right mt-1">
-              <Button
-                type="button"
-                variant="link"
-                size="sm"
-                onClick={() => switchMode('forgot')}
-                className="h-auto p-0 text-xs text-muted-foreground hover:text-primary"
-              >
-                Forgot password?
-              </Button>
-            </div>
-          </div>
-
-          {error && <p className="text-xs text-red-500">{error}</p>}
-          {success && <p className="text-xs text-emerald-500">{success}</p>}
-
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            Sign in
-          </Button>
-
-          <div className="relative flex items-center gap-2 py-1">
-            <div className="flex-1 border-t border-border" />
-            <span className="text-xs text-muted-foreground">or</span>
-            <div className="flex-1 border-t border-border" />
-          </div>
-
+        <div className="space-y-5">
+          {/* Google first */}
           <Button
             type="button"
             variant="outline"
@@ -218,104 +144,89 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
             <FcGoogle className="h-4 w-4 mr-2" />
             Continue with Google
           </Button>
-        </form>
+
+          <div className="relative flex items-center gap-3">
+            <div className="flex-1 border-t border-border" />
+            <span className="text-xs text-muted-foreground">or</span>
+            <div className="flex-1 border-t border-border" />
+          </div>
+
+          <form onSubmit={signinForm.handleSubmit(handleSignIn)} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground/80">
+                Email
+              </label>
+              <Input
+                type="email"
+                placeholder="you@example.com"
+                autoComplete="email"
+                {...signinForm.register('email')}
+              />
+              {signinForm.formState.errors.email && (
+                <p className="text-xs text-destructive">
+                  {signinForm.formState.errors.email.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-foreground/80">
+                  Password
+                </label>
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  onClick={() => switchMode('forgot')}
+                  className="h-auto p-0 text-xs text-muted-foreground hover:text-primary"
+                >
+                  Forgot password?
+                </Button>
+              </div>
+              <div className="relative">
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
+                  className="pr-10"
+                  {...signinForm.register('password')}
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowPassword((v) => !v)}
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+              {signinForm.formState.errors.password && (
+                <p className="text-xs text-destructive">
+                  {signinForm.formState.errors.password.message}
+                </p>
+              )}
+            </div>
+
+            {error && <p className="text-xs text-destructive">{error}</p>}
+            {success && <p className="text-xs text-emerald-500">{success}</p>}
+
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Sign in
+            </Button>
+          </form>
+        </div>
       )}
 
       {/* ── SIGN UP ── */}
       {mode === 'signup' && (
-        <form
-          onSubmit={signupForm.handleSubmit(handleSignUp)}
-          className="space-y-3"
-        >
-          <div>
-            <Input
-              type="email"
-              placeholder="Email"
-              autoComplete="email"
-              {...signupForm.register('email')}
-            />
-            {signupForm.formState.errors.email && (
-              <p className="text-xs text-red-500 mt-1">
-                {signupForm.formState.errors.email.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <div className="relative">
-              <Input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Password"
-                autoComplete="new-password"
-                className="pr-10"
-                {...signupForm.register('password')}
-              />
-              <button
-                type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                onClick={() => setShowPassword((v) => !v)}
-                tabIndex={-1}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-            {signupForm.formState.errors.password && (
-              <p className="text-xs text-red-500 mt-1">
-                {signupForm.formState.errors.password.message}
-              </p>
-            )}
-            <PasswordStrength password={signupPassword} />
-          </div>
-
-          <div>
-            <div className="relative">
-              <Input
-                type={showConfirm ? 'text' : 'password'}
-                placeholder="Confirm password"
-                autoComplete="new-password"
-                className="pr-10"
-                {...signupForm.register('confirmPassword')}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
-                onClick={() => setShowConfirm((v) => !v)}
-                tabIndex={-1}
-              >
-                {showConfirm ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-            {signupForm.formState.errors.confirmPassword && (
-              <p className="text-xs text-red-500 mt-1">
-                {signupForm.formState.errors.confirmPassword.message}
-              </p>
-            )}
-          </div>
-
-          {error && <p className="text-xs text-red-500">{error}</p>}
-          {success && <p className="text-xs text-emerald-500">{success}</p>}
-
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            Create account
-          </Button>
-
-          <div className="relative flex items-center gap-2 py-1">
-            <div className="flex-1 border-t border-border" />
-            <span className="text-xs text-muted-foreground">or</span>
-            <div className="flex-1 border-t border-border" />
-          </div>
-
+        <div className="space-y-5">
+          {/* Google first */}
           <Button
             type="button"
             variant="outline"
@@ -325,34 +236,135 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
             <FcGoogle className="h-4 w-4 mr-2" />
             Continue with Google
           </Button>
-        </form>
+
+          <div className="relative flex items-center gap-3">
+            <div className="flex-1 border-t border-border" />
+            <span className="text-xs text-muted-foreground">or</span>
+            <div className="flex-1 border-t border-border" />
+          </div>
+
+          <form onSubmit={signupForm.handleSubmit(handleSignUp)} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground/80">
+                Email
+              </label>
+              <Input
+                type="email"
+                placeholder="you@example.com"
+                autoComplete="email"
+                {...signupForm.register('email')}
+              />
+              {signupForm.formState.errors.email && (
+                <p className="text-xs text-destructive">
+                  {signupForm.formState.errors.email.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground/80">
+                Password
+              </label>
+              <div className="relative">
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Min. 8 characters"
+                  autoComplete="new-password"
+                  className="pr-10"
+                  {...signupForm.register('password')}
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowPassword((v) => !v)}
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+              {signupForm.formState.errors.password && (
+                <p className="text-xs text-destructive">
+                  {signupForm.formState.errors.password.message}
+                </p>
+              )}
+              <PasswordStrength password={signupPassword} />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground/80">
+                Confirm password
+              </label>
+              <div className="relative">
+                <Input
+                  type={showConfirm ? 'text' : 'password'}
+                  placeholder="Repeat your password"
+                  autoComplete="new-password"
+                  className="pr-10"
+                  {...signupForm.register('confirmPassword')}
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowConfirm((v) => !v)}
+                  tabIndex={-1}
+                >
+                  {showConfirm ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+              {signupForm.formState.errors.confirmPassword && (
+                <p className="text-xs text-destructive">
+                  {signupForm.formState.errors.confirmPassword.message}
+                </p>
+              )}
+            </div>
+
+            {error && <p className="text-xs text-destructive">{error}</p>}
+            {success && <p className="text-xs text-emerald-500">{success}</p>}
+
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Create account
+            </Button>
+          </form>
+        </div>
       )}
 
       {/* ── FORGOT ── */}
       {mode === 'forgot' && (
         <form
           onSubmit={forgotForm.handleSubmit(handleForgot)}
-          className="space-y-3"
+          className="space-y-4"
         >
-          <div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-foreground/80">
+              Email
+            </label>
             <Input
               type="email"
-              placeholder="Email"
+              placeholder="you@example.com"
               autoComplete="email"
               {...forgotForm.register('email')}
             />
             {forgotForm.formState.errors.email && (
-              <p className="text-xs text-red-500 mt-1">
+              <p className="text-xs text-destructive">
                 {forgotForm.formState.errors.email.message}
               </p>
             )}
           </div>
 
-          {error && <p className="text-xs text-red-500">{error}</p>}
+          {error && <p className="text-xs text-destructive">{error}</p>}
           {success && <p className="text-xs text-emerald-500">{success}</p>}
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Send reset link
           </Button>
 
@@ -369,14 +381,14 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
 
       {/* ── MODE TOGGLE ── */}
       {mode !== 'forgot' && (
-        <p className="mt-6 text-center text-xs text-muted-foreground">
+        <p className="mt-8 text-center text-sm text-muted-foreground">
           {mode === 'signin'
             ? "Don't have an account?"
             : 'Already have an account?'}{' '}
           <Button
             type="button"
             variant="link"
-            className="h-auto p-0"
+            className="h-auto p-0 text-sm font-semibold"
             onClick={() => switchMode(mode === 'signin' ? 'signup' : 'signin')}
           >
             {mode === 'signin' ? 'Sign up' : 'Sign in'}
