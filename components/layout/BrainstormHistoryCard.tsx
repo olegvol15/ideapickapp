@@ -40,7 +40,9 @@ export function BrainstormHistoryCard({
 }: BrainstormHistoryCardProps) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(
+    null
+  );
   const [mounted, setMounted] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(prompt);
@@ -49,9 +51,15 @@ export function BrainstormHistoryCard({
   const menuRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { setMounted(true); }, []);
-  useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
-  useEffect(() => { setEditValue(prompt); }, [prompt]);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  useEffect(() => {
+    if (editing) inputRef.current?.select();
+  }, [editing]);
+  useEffect(() => {
+    setEditValue(prompt);
+  }, [prompt]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -59,7 +67,8 @@ export function BrainstormHistoryCard({
       if (
         !menuRef.current?.contains(e.target as Node) &&
         !buttonRef.current?.contains(e.target as Node)
-      ) setMenuOpen(false);
+      )
+        setMenuOpen(false);
     };
     document.addEventListener('mousedown', handle);
     return () => document.removeEventListener('mousedown', handle);
@@ -82,7 +91,10 @@ export function BrainstormHistoryCard({
 
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === 'Enter') commitRename();
-    if (e.key === 'Escape') { setEditValue(prompt); setEditing(false); }
+    if (e.key === 'Escape') {
+      setEditValue(prompt);
+      setEditing(false);
+    }
   }
 
   return (
@@ -118,7 +130,9 @@ export function BrainstormHistoryCard({
       {/* Footer */}
       <div className="flex items-center gap-2 text-[11px] text-muted-foreground/50">
         {productType && (
-          <span className="rounded bg-white/5 px-1.5 py-0.5">{productType}</span>
+          <span className="rounded bg-white/5 px-1.5 py-0.5">
+            {productType}
+          </span>
         )}
         <span className="ml-auto">{relativeDate(createdAt)}</span>
       </div>
@@ -130,7 +144,10 @@ export function BrainstormHistoryCard({
           type="button"
           variant="ghost"
           size="icon"
-          onClick={(e) => { e.stopPropagation(); openMenu(e); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            openMenu(e);
+          }}
           className={cn(
             'absolute right-3 top-3 h-6 w-6',
             menuOpen
@@ -142,33 +159,44 @@ export function BrainstormHistoryCard({
         </Button>
       )}
 
-      {mounted && menuOpen && menuPos && createPortal(
-        <div
-          ref={menuRef}
-          style={{ position: 'fixed', top: menuPos.top, left: menuPos.left }}
-          className="z-[200] min-w-[132px] overflow-hidden rounded-lg border border-white/10 bg-[#0d1e33] py-1 shadow-xl"
-        >
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={(e) => { e.stopPropagation(); setMenuOpen(false); setEditing(true); }}
-            className="w-full justify-start gap-2.5 rounded-lg px-3 py-1.5 h-auto text-xs font-normal normal-case tracking-normal text-foreground/70 hover:bg-white/5 hover:text-foreground"
+      {mounted &&
+        menuOpen &&
+        menuPos &&
+        createPortal(
+          <div
+            ref={menuRef}
+            style={{ position: 'fixed', top: menuPos.top, left: menuPos.left }}
+            className="z-[200] min-w-[132px] overflow-hidden rounded-lg border border-white/10 bg-[#0d1e33] py-1 shadow-xl"
           >
-            <Pencil className="h-3 w-3" />
-            Rename
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete(); }}
-            className="w-full justify-start gap-2.5 rounded-lg px-3 py-1.5 h-auto text-xs font-normal normal-case tracking-normal text-red-400/80 hover:bg-red-500/10 hover:text-red-400"
-          >
-            <Trash2 className="h-3 w-3" />
-            Delete
-          </Button>
-        </div>,
-        document.body
-      )}
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={(e) => {
+                e.stopPropagation();
+                setMenuOpen(false);
+                setEditing(true);
+              }}
+              className="w-full justify-start gap-2.5 rounded-lg px-3 py-1.5 h-auto text-xs font-normal normal-case tracking-normal text-foreground/70 hover:bg-white/5 hover:text-foreground"
+            >
+              <Pencil className="h-3 w-3" />
+              Rename
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={(e) => {
+                e.stopPropagation();
+                setMenuOpen(false);
+                onDelete();
+              }}
+              className="w-full justify-start gap-2.5 rounded-lg px-3 py-1.5 h-auto text-xs font-normal normal-case tracking-normal text-red-400/80 hover:bg-red-500/10 hover:text-red-400"
+            >
+              <Trash2 className="h-3 w-3" />
+              Delete
+            </Button>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

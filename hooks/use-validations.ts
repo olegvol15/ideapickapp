@@ -1,7 +1,12 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { saveValidation, deleteValidation, renameValidation, getValidations } from '@/services/db.service';
+import {
+  saveValidation,
+  deleteValidation,
+  renameValidation,
+  getValidations,
+} from '@/services/db.service';
 import { validationKeys } from '@/lib/api-keys';
 import type { EnhancedValidationResult } from '@/lib/schemas';
 import type { Competitor } from '@/types';
@@ -19,7 +24,8 @@ export function useSaveValidation(userId: string | undefined) {
       return saveValidation({ userId, ...params });
     },
     onSuccess: () => {
-      if (userId) queryClient.invalidateQueries({ queryKey: validationKeys.all(userId) });
+      if (userId)
+        queryClient.invalidateQueries({ queryKey: validationKeys.all(userId) });
     },
   });
 }
@@ -32,7 +38,8 @@ export function useRenameValidation(userId: string | undefined) {
       return renameValidation(userId, id, description);
     },
     onSuccess: () => {
-      if (userId) queryClient.invalidateQueries({ queryKey: validationKeys.all(userId) });
+      if (userId)
+        queryClient.invalidateQueries({ queryKey: validationKeys.all(userId) });
     },
   });
 }
@@ -45,7 +52,8 @@ export function useDeleteValidation(userId: string | undefined) {
       return deleteValidation(userId, id);
     },
     onSuccess: () => {
-      if (userId) queryClient.invalidateQueries({ queryKey: validationKeys.all(userId) });
+      if (userId)
+        queryClient.invalidateQueries({ queryKey: validationKeys.all(userId) });
     },
   });
 }

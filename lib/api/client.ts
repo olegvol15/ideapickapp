@@ -51,7 +51,10 @@ api.interceptors.response.use(
       case 401: {
         const supabase = createClient();
         await supabase.auth.signOut();
-        toast.error('Session expired. Please sign in again.', { duration: Infinity, dismissible: true });
+        toast.error('Session expired. Please sign in again.', {
+          duration: Infinity,
+          dismissible: true,
+        });
         setTimeout(() => {
           if (typeof window !== 'undefined') window.location.href = '/auth';
         }, 1_500);
@@ -81,7 +84,9 @@ api.interceptors.response.use(
         toast.error('Something went wrong', {
           action: {
             label: 'Retry',
-            onClick: () => { if (error.config) api.request(error.config); },
+            onClick: () => {
+              if (error.config) api.request(error.config);
+            },
           },
         });
         reportError(error);

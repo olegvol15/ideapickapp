@@ -12,7 +12,8 @@ import { toast } from 'sonner';
 import type { EnhancedValidationResult } from '@/lib/schemas';
 import type { Competitor } from '@/types';
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -31,22 +32,35 @@ export default function ValidationDetailPage({ params }: PageProps) {
   const [isRevalidating, setIsRevalidating] = useState(false);
   const [notFound, setNotFound] = useState(false);
 
-  const updateLocalValidation = useValidateStore((s) => s.updateLocalValidation);
+  const updateLocalValidation = useValidateStore(
+    (s) => s.updateLocalValidation
+  );
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     async function load() {
       if (UUID_RE.test(id)) {
-        if (!user) { router.replace('/auth'); return; }
+        if (!user) {
+          router.replace('/auth');
+          return;
+        }
         const row = await getValidation(user.id, id);
-        if (!row) { setNotFound(true); return; }
+        if (!row) {
+          setNotFound(true);
+          return;
+        }
         setResult(row.result_json);
         setCompetitors(row.competitors_json);
         setDescription(row.description);
         setProductType(row.product_type ?? '');
       } else {
-        const entry = useValidateStore.getState().localValidations.find((v) => v.id === id);
-        if (!entry) { setNotFound(true); return; }
+        const entry = useValidateStore
+          .getState()
+          .localValidations.find((v) => v.id === id);
+        if (!entry) {
+          setNotFound(true);
+          return;
+        }
         setResult(entry.result);
         setCompetitors(entry.competitors);
         setDescription(entry.description);
@@ -54,7 +68,9 @@ export default function ValidationDetailPage({ params }: PageProps) {
       }
     }
     load();
-    return () => { abortRef.current?.abort(); };
+    return () => {
+      abortRef.current?.abort();
+    };
   }, [id, user, router]);
 
   async function handleRevalidate(newDescription: string) {
@@ -83,12 +99,21 @@ export default function ValidationDetailPage({ params }: PageProps) {
       });
 
       if (user && UUID_RE.test(id)) {
-        updateValidation(user.id, id, newDescription, data.result, data.competitors)
-          .catch(() => { toast.error('Failed to update validation.'); });
+        updateValidation(
+          user.id,
+          id,
+          newDescription,
+          data.result,
+          data.competitors
+        ).catch(() => {
+          toast.error('Failed to update validation.');
+        });
       }
     } catch (err: unknown) {
       if ((err as { name?: string }).name === 'AbortError') return;
-      toast.error((err as { message?: string }).message ?? 'Re-validation failed.');
+      toast.error(
+        (err as { message?: string }).message ?? 'Re-validation failed.'
+      );
     } finally {
       setIsRevalidating(false);
     }

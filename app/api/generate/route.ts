@@ -35,13 +35,23 @@ export const POST = async (req: NextRequest): Promise<Response> => {
   } catch (err) {
     if (err instanceof AppError) {
       return NextResponse.json(
-        { status: 'error', code: err.errorCode, message: err.message, data: err.payload },
+        {
+          status: 'error',
+          code: err.errorCode,
+          message: err.message,
+          data: err.payload,
+        },
         { status: err.statusCode, headers: err.headers }
       );
     }
     logger.error({ err, url: req.url }, 'Unhandled pre-stream error');
     return NextResponse.json(
-      { status: 'error', code: 'INTERNAL_ERROR', message: 'Something went wrong', data: {} },
+      {
+        status: 'error',
+        code: 'INTERNAL_ERROR',
+        message: 'Something went wrong',
+        data: {},
+      },
       { status: 500 }
     );
   }
@@ -78,10 +88,14 @@ export const POST = async (req: NextRequest): Promise<Response> => {
           throw AppError.ai('LLM returned invalid JSON');
         }
         const { queries = [] } = parsedQueries;
-        if (queries.length === 0) throw AppError.ai('LLM returned no search queries');
+        if (queries.length === 0)
+          throw AppError.ai('LLM returned no search queries');
 
         // Step 2: Discover competitors via product-type-aware strategy
-        const competitors = await discoverCompetitors(queries.slice(0, 3), productType);
+        const competitors = await discoverCompetitors(
+          queries.slice(0, 3),
+          productType
+        );
 
         // Emit early — client shows progress while step 3 runs (~15–30 s)
         emit({ type: 'competitors', data: competitors });
@@ -89,7 +103,12 @@ export const POST = async (req: NextRequest): Promise<Response> => {
         // Step 3: Analyze landscape and generate 3 grounded ideas
         const analysisCompletion = await openai.chat.completions.create({
           model: 'gpt-4o-mini',
-          messages: buildAnalysisMessages(prompt, competitors, productType, difficulty),
+          messages: buildAnalysisMessages(
+            prompt,
+            competitors,
+            productType,
+            difficulty
+          ),
           temperature: 0.7,
           max_tokens: 4500,
           response_format: { type: 'json_object' },
@@ -106,7 +125,9 @@ export const POST = async (req: NextRequest): Promise<Response> => {
 
         const parsed = GenerateLLMOutputSchema.safeParse(analysisJson);
         if (!parsed.success) {
-          throw AppError.invalidAiResponse('Failed to generate ideas. Please try again.');
+          throw AppError.invalidAiResponse(
+            'Failed to generate ideas. Please try again.'
+          );
         }
 
         const result: GenerateResponse = {

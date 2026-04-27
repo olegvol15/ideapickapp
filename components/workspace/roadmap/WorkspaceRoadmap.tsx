@@ -15,23 +15,31 @@ interface WorkspaceRoadmapProps {
   authLoading: boolean;
 }
 
-export function WorkspaceRoadmap({ idea, ideaId, userId, authLoading }: WorkspaceRoadmapProps) {
+export function WorkspaceRoadmap({
+  idea,
+  ideaId,
+  userId,
+  authLoading,
+}: WorkspaceRoadmapProps) {
   const { setActiveTab, setPendingContent } = useWorkspaceStore();
 
   const handleGenerateContent = useCallback(
     async (label: string, description: string, actionType: ContentType) => {
       try {
-        const { content } = await typedApi.post<{ content: string }>('/api/content', {
-          type: actionType,
-          goal: 'validate',
-          idea: {
-            title: idea.title,
-            pitch: idea.pitch,
-            audience: idea.audience,
-            problem: idea.problem,
-          },
-          stepContext: `${label}${description ? `: ${description}` : ''}`,
-        });
+        const { content } = await typedApi.post<{ content: string }>(
+          '/api/content',
+          {
+            type: actionType,
+            goal: 'validate',
+            idea: {
+              title: idea.title,
+              pitch: idea.pitch,
+              audience: idea.audience,
+              problem: idea.problem,
+            },
+            stepContext: `${label}${description ? `: ${description}` : ''}`,
+          }
+        );
         setPendingContent({ text: content, type: actionType });
         setActiveTab('content');
       } catch {

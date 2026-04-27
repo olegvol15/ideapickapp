@@ -22,6 +22,6 @@ export async function generateIdeasStream(
       if (event.type === 'competitors') options.onCompetitors?.(event.data);
       if (event.type === 'done') return event.data;
     },
-    options.signal,
+    options.signal
   );
 }

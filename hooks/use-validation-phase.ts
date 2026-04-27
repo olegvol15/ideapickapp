@@ -1,6 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 
-export type ValidationPhase = 'idle' | 'thinking' | 'researching' | 'analyzing' | 'done' | 'error';
+export type ValidationPhase =
+  | 'idle'
+  | 'thinking'
+  | 'researching'
+  | 'analyzing'
+  | 'done'
+  | 'error';
 
 interface UseValidationPhaseReturn {
   phase: ValidationPhase;
@@ -18,7 +24,9 @@ export function useValidationPhase(): UseValidationPhaseReturn {
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    return () => { abortRef.current?.abort(); };
+    return () => {
+      abortRef.current?.abort();
+    };
   }, []);
 
   function cancel() {
@@ -30,7 +38,8 @@ export function useValidationPhase(): UseValidationPhaseReturn {
     phase,
     error,
     abortRef,
-    isActive: phase === 'thinking' || phase === 'researching' || phase === 'analyzing',
+    isActive:
+      phase === 'thinking' || phase === 'researching' || phase === 'analyzing',
     setPhase,
     setError,
     cancel,

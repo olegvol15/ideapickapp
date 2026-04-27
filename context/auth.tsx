@@ -54,7 +54,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function signUp(email: string, password: string): Promise<AuthResult> {
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error?.message === 'User already registered') {
-      return { error: 'An account with this email already exists. Try signing in.' };
+      return {
+        error: 'An account with this email already exists. Try signing in.',
+      };
     }
     return {
       error: error?.message ?? null,
@@ -76,7 +78,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function resetPasswordForEmail(email: string): Promise<AuthResult> {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + '/auth/callback?next=/auth/reset-password',
+      redirectTo:
+        window.location.origin + '/auth/callback?next=/auth/reset-password',
     });
     return { error: error?.message ?? null };
   }
@@ -87,7 +90,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut, signInWithGoogle, resetPasswordForEmail, updatePassword }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        signIn,
+        signUp,
+        signOut,
+        signInWithGoogle,
+        resetPasswordForEmail,
+        updatePassword,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

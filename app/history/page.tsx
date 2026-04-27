@@ -11,8 +11,16 @@ import { BrainstormHistoryCard } from '@/components/layout/BrainstormHistoryCard
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/auth';
-import { useGetValidations, useDeleteValidation, useRenameValidation } from '@/hooks/use-validations';
-import { useGetGenerations, useDeleteGeneration, useRenameGeneration } from '@/hooks/use-generations';
+import {
+  useGetValidations,
+  useDeleteValidation,
+  useRenameValidation,
+} from '@/hooks/use-validations';
+import {
+  useGetGenerations,
+  useDeleteGeneration,
+  useRenameGeneration,
+} from '@/hooks/use-generations';
 import { useValidateStore } from '@/stores/validate.store';
 import { useResearchStore } from '@/stores/research.store';
 import { cn } from '@/lib/utils';
@@ -30,20 +38,27 @@ export default function HistoryPage() {
   }, [searchParams]);
 
   // Validations data
-  const { data: dbValidations, isLoading: validationsLoading } = useGetValidations(user?.id);
+  const { data: dbValidations, isLoading: validationsLoading } =
+    useGetValidations(user?.id);
   const localValidations = useValidateStore((s) => s.localValidations);
-  const removeLocalValidation = useValidateStore((s) => s.removeLocalValidation);
-  const renameLocalValidation = useValidateStore((s) => s.renameLocalValidation);
+  const removeLocalValidation = useValidateStore(
+    (s) => s.removeLocalValidation
+  );
+  const renameLocalValidation = useValidateStore(
+    (s) => s.renameLocalValidation
+  );
   const deleteValidationMutation = useDeleteValidation(user?.id);
   const renameValidationMutation = useRenameValidation(user?.id);
 
   // Brainstorms data
-  const { data: dbGenerations, isLoading: generationsLoading } = useGetGenerations(user?.id);
+  const { data: dbGenerations, isLoading: generationsLoading } =
+    useGetGenerations(user?.id);
   const localHistory = useResearchStore((s) => s.localHistory);
   const deleteGenerationMutation = useDeleteGeneration(user?.id);
   const renameGenerationMutation = useRenameGeneration(user?.id);
 
-  const workspaceLoading = loading || (Boolean(user) && (validationsLoading || generationsLoading));
+  const workspaceLoading =
+    loading || (Boolean(user) && (validationsLoading || generationsLoading));
 
   const validations = user
     ? (dbValidations ?? []).map((v) => ({
@@ -131,22 +146,22 @@ export default function HistoryPage() {
         {/* Search + Tabs row */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex gap-1 rounded-xl border border-border bg-card/50 p-1 w-fit">
-          {(['validations', 'brainstorms'] as Tab[]).map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setActiveTab(tab)}
-              className={cn(
-                buttonVariants({ variant: 'ghost', size: 'sm' }),
-                'rounded-lg capitalize font-medium normal-case tracking-normal',
-                activeTab === tab
-                  ? 'bg-white/8 text-foreground hover:bg-white/8'
-                  : 'text-muted-foreground/60 hover:text-foreground/80'
-              )}
-            >
-              {tab}
-            </button>
-          ))}
+            {(['validations', 'brainstorms'] as Tab[]).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveTab(tab)}
+                className={cn(
+                  buttonVariants({ variant: 'ghost', size: 'sm' }),
+                  'rounded-lg capitalize font-medium normal-case tracking-normal',
+                  activeTab === tab
+                    ? 'bg-white/8 text-foreground hover:bg-white/8'
+                    : 'text-muted-foreground/60 hover:text-foreground/80'
+                )}
+              >
+                {tab}
+              </button>
+            ))}
           </div>
 
           {/* Search input */}
@@ -192,7 +207,9 @@ export default function HistoryPage() {
                 className="space-y-4"
               >
                 <div className="flex items-center gap-2">
-                  <h2 className="text-sm font-bold text-foreground">Validations</h2>
+                  <h2 className="text-sm font-bold text-foreground">
+                    Validations
+                  </h2>
                   <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
                     {filteredValidations.length}
                   </span>
@@ -204,7 +221,9 @@ export default function HistoryPage() {
                       <History className="h-5 w-5" />
                     </div>
                     <div className="space-y-1.5">
-                      <p className="text-sm font-semibold text-foreground">No validations yet</p>
+                      <p className="text-sm font-semibold text-foreground">
+                        No validations yet
+                      </p>
                       <p className="text-sm text-muted-foreground">
                         Run your first validation to see it here.
                       </p>
@@ -232,7 +251,9 @@ export default function HistoryPage() {
                           <ValidationHistoryCard
                             {...v}
                             onDelete={() => handleDeleteValidation(v.id)}
-                            onRename={(desc) => handleRenameValidation(v.id, desc)}
+                            onRename={(desc) =>
+                              handleRenameValidation(v.id, desc)
+                            }
                           />
                         </motion.div>
                       ))}
@@ -252,7 +273,9 @@ export default function HistoryPage() {
                 className="space-y-4"
               >
                 <div className="flex items-center gap-2">
-                  <h2 className="text-sm font-bold text-foreground">Brainstorms</h2>
+                  <h2 className="text-sm font-bold text-foreground">
+                    Brainstorms
+                  </h2>
                   <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
                     {filteredBrainstorms.length}
                   </span>
@@ -264,7 +287,9 @@ export default function HistoryPage() {
                       <History className="h-5 w-5" />
                     </div>
                     <div className="space-y-1.5">
-                      <p className="text-sm font-semibold text-foreground">No brainstorms yet</p>
+                      <p className="text-sm font-semibold text-foreground">
+                        No brainstorms yet
+                      </p>
                       <p className="text-sm text-muted-foreground">
                         Run your first brainstorm to see it here.
                       </p>

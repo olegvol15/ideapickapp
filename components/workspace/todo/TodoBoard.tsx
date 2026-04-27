@@ -9,7 +9,6 @@ import {
   useSensor,
   useSensors,
   type DragStartEvent,
-  type DragEndEvent,
   type DragOverEvent,
 } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
@@ -38,14 +37,18 @@ export function TodoBoard({ ideaId }: TodoBoardProps) {
   // Sync from store only when not dragging; rawStoreTasks is undefined (stable) when
   // there are no tasks, so this effect only fires when the store array actually changes.
   useEffect(() => {
-    if (!activeId) setTasks(rawStoreTasks ?? []);
+    if (activeId) return;
+    const timer = window.setTimeout(() => setTasks(rawStoreTasks ?? []), 0);
+    return () => window.clearTimeout(timer);
   }, [rawStoreTasks, activeId]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
-  const activeTask = activeId ? (tasks.find((t) => t.id === activeId) ?? null) : null;
+  const activeTask = activeId
+    ? (tasks.find((t) => t.id === activeId) ?? null)
+    : null;
 
   function byStatus(status: TaskStatus) {
     return tasks.filter((t) => t.status === status);
@@ -71,7 +74,9 @@ export function TodoBoard({ ideaId }: TodoBoardProps) {
     if (dragged.status !== targetStatus) {
       // Cross-column: update status locally
       setTasks((prev) =>
-        prev.map((t) => (t.id === dragged.id ? { ...t, status: targetStatus } : t))
+        prev.map((t) =>
+          t.id === dragged.id ? { ...t, status: targetStatus } : t
+        )
       );
     } else if (overTask && overTask.id !== dragged.id) {
       // Same column reorder
@@ -88,7 +93,7 @@ export function TodoBoard({ ideaId }: TodoBoardProps) {
     }
   }
 
-  function onDragEnd(_: DragEndEvent) {
+  function onDragEnd() {
     setActiveId(null);
     reorderTasks(ideaId, tasks);
   }

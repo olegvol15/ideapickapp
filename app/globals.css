@@ -110,7 +110,7 @@
   --brand-color: #5ba3f5;
   --brand-2: #3d88e8;
   --brand-hi: rgba(91, 163, 245, 0.22);
-  --brand-lo: rgba(91, 163, 245, 0.10);
+  --brand-lo: rgba(91, 163, 245, 0.1);
   --grid-line: rgba(255, 255, 255, 0.05);
 
   --background: var(--bg);
@@ -131,41 +131,41 @@
   --destructive-foreground: #ffffff;
   --border: rgba(255, 255, 255, 0.12);
   --border-soft: rgba(255, 255, 255, 0.07);
-  --input: rgba(255, 255, 255, 0.10);
+  --input: rgba(255, 255, 255, 0.1);
   --ring: var(--brand-color);
 }
 
 /* ── react-tweet / XPostPreview theming ─────────────────────────────────────── */
 /* Light */
 :root {
-  --tweet-font-color:                 var(--text-1);
-  --tweet-font-color-secondary:       var(--text-3);
-  --tweet-bg-color:                   var(--bg-card);
-  --tweet-bg-color-hover:             var(--bg-subtle);
-  --tweet-border:                     1px solid var(--border);
-  --tweet-border-color:               var(--border);
-  --tweet-twitter-icon-color:         var(--text-1);
-  --tweet-color-blue-primary:         rgb(29, 155, 240);
-  --tweet-color-blue-primary-hover:   rgb(26, 140, 216);
-  --tweet-color-blue-secondary:       var(--brand-color);
+  --tweet-font-color: var(--text-1);
+  --tweet-font-color-secondary: var(--text-3);
+  --tweet-bg-color: var(--bg-card);
+  --tweet-bg-color-hover: var(--bg-subtle);
+  --tweet-border: 1px solid var(--border);
+  --tweet-border-color: var(--border);
+  --tweet-twitter-icon-color: var(--text-1);
+  --tweet-color-blue-primary: rgb(29, 155, 240);
+  --tweet-color-blue-primary-hover: rgb(26, 140, 216);
+  --tweet-color-blue-secondary: var(--brand-color);
   --tweet-color-blue-secondary-hover: var(--brand-lo);
-  --tweet-color-red-primary:          rgb(249, 24, 128);
-  --tweet-color-red-primary-hover:    rgba(249, 24, 128, 0.1);
-  --tweet-color-green-primary:        rgb(0, 186, 124);
-  --tweet-color-green-primary-hover:  rgba(0, 186, 124, 0.1);
-  --tweet-font-family:                inherit;
-  --tweet-container-margin:           0;
+  --tweet-color-red-primary: rgb(249, 24, 128);
+  --tweet-color-red-primary-hover: rgba(249, 24, 128, 0.1);
+  --tweet-color-green-primary: rgb(0, 186, 124);
+  --tweet-color-green-primary-hover: rgba(0, 186, 124, 0.1);
+  --tweet-font-family: inherit;
+  --tweet-container-margin: 0;
 }
 /* Dark overrides */
 .dark {
-  --tweet-font-color:                 var(--text-1);
-  --tweet-font-color-secondary:       var(--text-3);
-  --tweet-bg-color:                   var(--bg-card);
-  --tweet-bg-color-hover:             var(--bg-subtle);
-  --tweet-border:                     1px solid rgba(255,255,255,0.10);
-  --tweet-border-color:               rgba(255,255,255,0.10);
-  --tweet-twitter-icon-color:         var(--text-1);
-  --tweet-color-blue-secondary:       var(--brand-color);
+  --tweet-font-color: var(--text-1);
+  --tweet-font-color-secondary: var(--text-3);
+  --tweet-bg-color: var(--bg-card);
+  --tweet-bg-color-hover: var(--bg-subtle);
+  --tweet-border: 1px solid rgba(255, 255, 255, 0.1);
+  --tweet-border-color: rgba(255, 255, 255, 0.1);
+  --tweet-twitter-icon-color: var(--text-1);
+  --tweet-color-blue-secondary: var(--brand-color);
   --tweet-color-blue-secondary-hover: var(--brand-lo);
 }
 

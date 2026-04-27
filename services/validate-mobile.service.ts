@@ -36,7 +36,12 @@ interface MobileValidationParams {
   audience: string | undefined;
   problem: string | undefined;
   signalQuery: string | undefined;
-  llmCompetitors: Array<{ name: string; url: string; source: string; snippet: string }>;
+  llmCompetitors: Array<{
+    name: string;
+    url: string;
+    source: string;
+    snippet: string;
+  }>;
   expansion: KeywordExpansion;
   onResearch: (competitors: Competitor[]) => void;
 }
@@ -44,10 +49,23 @@ interface MobileValidationParams {
 export async function runMobileValidation(
   params: MobileValidationParams
 ): Promise<{ result: EnhancedValidationResult; competitors: Competitor[] }> {
-  const { description, productType, audience, problem, signalQuery, llmCompetitors, expansion, onResearch } = params;
+  const {
+    description,
+    productType,
+    audience,
+    problem,
+    signalQuery,
+    llmCompetitors,
+    expansion,
+    onResearch,
+  } = params;
 
   // Build keyword list — base + up to 5 variation/niche terms (max 6 total)
-  const allKeywords = [expansion.base, ...expansion.variations, ...expansion.niches].slice(0, 6);
+  const allKeywords = [
+    expansion.base,
+    ...expansion.variations,
+    ...expansion.niches,
+  ].slice(0, 6);
   const [broadKeyword, ...extraKeywords] = allKeywords;
 
   // Fetch signals + App Store results in parallel
@@ -62,7 +80,9 @@ export async function runMobileValidation(
   // Build keyword→apps map (eliminates positional indexing)
   const keywordAppMap = new Map<string, AppStoreApp[]>([
     [broadKeyword, broadApps],
-    ...extraKeywords.map((kw, i) => [kw, extraAppBatches[i] ?? []] as [string, AppStoreApp[]]),
+    ...extraKeywords.map(
+      (kw, i) => [kw, extraAppBatches[i] ?? []] as [string, AppStoreApp[]]
+    ),
   ]);
 
   // Deduplicated competitor list for UI
@@ -71,19 +91,23 @@ export async function runMobileValidation(
 
   // Build name→App Store data lookup to enrich LLM competitors
   const normName = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
-  const appStoreByName = new Map(appStoreCompetitors.map((a) => [normName(a.name), a]));
+  const appStoreByName = new Map(
+    appStoreCompetitors.map((a) => [normName(a.name), a])
+  );
 
   const enrichedLlm = llmCompetitors.map((c) => {
     const appData = appStoreByName.get(normName(c.name));
     return {
       ...c,
       type: 'competitor' as const,
-      ...(appData ? {
-        rating: appData.rating,
-        reviewCount: appData.reviewCount,
-        revenueEstimate: appData.revenueEstimate,
-        platform: appData.platform,
-      } : {}),
+      ...(appData
+        ? {
+            rating: appData.rating,
+            reviewCount: appData.reviewCount,
+            revenueEstimate: appData.revenueEstimate,
+            platform: appData.platform,
+          }
+        : {}),
     };
   });
 
@@ -97,25 +121,31 @@ export async function runMobileValidation(
 
   // Deterministic scoring — base market
   const onlySignals = signalResults.filter((r) => r.type === 'signal');
-  const pain        = computePainAnalysis(onlySignals);
-  const metrics     = computeAppStoreMetrics(broadApps);
+  const pain = computePainAnalysis(onlySignals);
+  const metrics = computeAppStoreMetrics(broadApps);
 
   // Niche metrics for bestNiche bonus — look up by keyword name
-  const nicheKeywords    = expansion.niches.filter((kw) => keywordAppMap.has(kw));
-  const niche0Apps       = nicheKeywords[0] ? (keywordAppMap.get(nicheKeywords[0]) ?? []) : [];
-  const legacyNicheResults = niche0Apps.length > 0
-    ? [computeNicheMetrics(niche0Apps, nicheKeywords[0])]
+  const nicheKeywords = expansion.niches.filter((kw) => keywordAppMap.has(kw));
+  const niche0Apps = nicheKeywords[0]
+    ? (keywordAppMap.get(nicheKeywords[0]) ?? [])
     : [];
+  const legacyNicheResults =
+    niche0Apps.length > 0
+      ? [computeNicheMetrics(niche0Apps, nicheKeywords[0])]
+      : [];
   const bestNicheLegacy = legacyNicheResults
     .filter((n) => n.totalApps >= 5)
     .sort((a, b) => a.top5ReviewShare - b.top5ReviewShare)[0];
 
-  const scores          = computeMobileScores(metrics, pain, bestNicheLegacy);
-  const { verdict: rawDecision, reason: rawReason } = computeDecision(scores, metrics);
-  const uiScores        = mapToUIScores(scores, pain.weightedScore);
-  const decision        = mapDecisionToUI(rawDecision);
+  const scores = computeMobileScores(metrics, pain, bestNicheLegacy);
+  const { verdict: rawDecision, reason: rawReason } = computeDecision(
+    scores,
+    metrics
+  );
+  const uiScores = mapToUIScores(scores, pain.weightedScore);
+  const decision = mapDecisionToUI(rawDecision);
   const confidenceScore = computeConfidenceScore(metrics, onlySignals.length);
-  const marketInsights  = computeMarketInsights(metrics);
+  const marketInsights = computeMarketInsights(metrics);
 
   // Multi-keyword market analysis — score every keyword independently
   const keywordAnalyses: KeywordMarketAnalysis[] = [
@@ -130,24 +160,42 @@ export async function runMobileValidation(
         return { keyword, metrics: km, scores: ks, decision: kd };
       }),
   ];
-  const nicheSelection    = selectBestNiche(keywordAnalyses, broadKeyword);
+  const nicheSelection = selectBestNiche(keywordAnalyses, broadKeyword);
   const bestEntryStrategy = nicheSelection.entryStrategy;
 
-  const bestNicheForInsights = nicheSelection.entryStrategy === 'ENTER_VIA_NICHE'
-    ? (legacyNicheResults.find((n) => n.query === nicheSelection.bestKeyword) ?? bestNicheLegacy)
-    : bestNicheLegacy;
+  const bestNicheForInsights =
+    nicheSelection.entryStrategy === 'ENTER_VIA_NICHE'
+      ? (legacyNicheResults.find(
+          (n) => n.query === nicheSelection.bestKeyword
+        ) ?? bestNicheLegacy)
+      : bestNicheLegacy;
 
-  const opportunityInsights = computeOpportunityInsights(pain, bestNicheForInsights, metrics);
-  const winAngles           = computeWinAngles(pain, bestNicheForInsights, metrics);
+  const opportunityInsights = computeOpportunityInsights(
+    pain,
+    bestNicheForInsights,
+    metrics
+  );
+  const winAngles = computeWinAngles(pain, bestNicheForInsights, metrics);
 
   // LLM narrates the pre-computed result
   const analysisCompletion = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
     messages: buildMobileAnalysisMessages(
-      description, productType, audience, problem,
-      competitors, metrics, scores, uiScores,
-      rawDecision, rawReason, pain,
-      marketInsights, opportunityInsights, winAngles, confidenceScore
+      description,
+      productType,
+      audience,
+      problem,
+      competitors,
+      metrics,
+      scores,
+      uiScores,
+      rawDecision,
+      rawReason,
+      pain,
+      marketInsights,
+      opportunityInsights,
+      winAngles,
+      confidenceScore
     ),
     temperature: 0.4,
     max_tokens: 1800,
@@ -156,8 +204,12 @@ export async function runMobileValidation(
 
   let explanationJson: unknown = {};
   try {
-    explanationJson = JSON.parse(analysisCompletion.choices[0]?.message?.content ?? '{}');
-  } catch { /* use empty fallback */ }
+    explanationJson = JSON.parse(
+      analysisCompletion.choices[0]?.message?.content ?? '{}'
+    );
+  } catch {
+    /* use empty fallback */
+  }
 
   const explanationParsed = MobileExplanationSchema.safeParse(explanationJson);
   if (!explanationParsed.success) {

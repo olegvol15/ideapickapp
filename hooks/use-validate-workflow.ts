@@ -20,41 +20,49 @@ interface SubmitOverrides {
 }
 
 export function useValidateWorkflow() {
-  const { user }  = useAuth();
-  const router    = useRouter();
+  const { user } = useAuth();
+  const router = useRouter();
   const searchParams = useSearchParams();
 
-  const saveValidation         = useSaveValidation(user?.id);
-  const pushLocalValidation    = useValidateStore((s) => s.pushLocalValidation);
-  const updateLocalValidationId = useValidateStore((s) => s.updateLocalValidationId);
-  const updateLocalValidation  = useValidateStore((s) => s.updateLocalValidation);
+  const saveValidation = useSaveValidation(user?.id);
+  const pushLocalValidation = useValidateStore((s) => s.pushLocalValidation);
+  const updateLocalValidationId = useValidateStore(
+    (s) => s.updateLocalValidationId
+  );
+  const updateLocalValidation = useValidateStore(
+    (s) => s.updateLocalValidation
+  );
 
   const [description, setDescription] = useState('');
   const [productType, setProductType] = useState('');
-  const [audience, setAudience]       = useState('');
-  const [problem, setProblem]         = useState('');
+  const [audience, setAudience] = useState('');
+  const [problem, setProblem] = useState('');
 
-  const [result, setResult]           = useState<EnhancedValidationResult | null>(null);
-  const [prevResult, setPrevResult]   = useState<EnhancedValidationResult | null>(null);
+  const [result, setResult] = useState<EnhancedValidationResult | null>(null);
+  const [prevResult, setPrevResult] = useState<EnhancedValidationResult | null>(
+    null
+  );
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [competitorCount, setCompetitorCount] = useState(0);
-  const [version, setVersion]         = useState(1);
-  const [currentId, setCurrentId]     = useState<string | null>(null);
+  const [version, setVersion] = useState(1);
+  const [currentId, setCurrentId] = useState<string | null>(null);
 
-  const { phase, error, abortRef, isActive, setPhase, setError, cancel } = useValidationPhase();
+  const { phase, error, abortRef, isActive, setPhase, setError, cancel } =
+    useValidationPhase();
 
-  const canSubmit = description.trim().length > 0 && productType.length > 0 && !isActive;
+  const canSubmit =
+    description.trim().length > 0 && productType.length > 0 && !isActive;
 
   async function handleSubmit(overrides?: SubmitOverrides) {
     const desc = overrides?.description ?? description;
-    const pt   = overrides?.productType ?? productType;
-    const aud  = overrides?.audience    ?? audience;
-    const prob = overrides?.problem     ?? problem;
+    const pt = overrides?.productType ?? productType;
+    const aud = overrides?.audience ?? audience;
+    const prob = overrides?.problem ?? problem;
 
     if (overrides?.description) setDescription(overrides.description);
     if (overrides?.productType) setProductType(overrides.productType);
-    if (overrides?.audience)    setAudience(overrides.audience);
-    if (overrides?.problem)     setProblem(overrides.problem);
+    if (overrides?.audience) setAudience(overrides.audience);
+    if (overrides?.problem) setProblem(overrides.problem);
 
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -78,7 +86,7 @@ export function useValidateWorkflow() {
           description: desc,
           productType: pt,
           audience: aud.trim() || undefined,
-          problem:  prob.trim() || undefined,
+          problem: prob.trim() || undefined,
         },
         {
           signal: controller.signal,
@@ -97,10 +105,21 @@ export function useValidateWorkflow() {
       if (currentId && !overrides?.productType) {
         setVersion((v) => v + 1);
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        updateLocalValidation(currentId, { description: desc, result: data.result, competitors: data.competitors });
+        updateLocalValidation(currentId, {
+          description: desc,
+          result: data.result,
+          competitors: data.competitors,
+        });
         if (user) {
-          updateValidation(user.id, currentId, desc, data.result, data.competitors)
-            .catch(() => { toast.error('Failed to update validation.'); });
+          updateValidation(
+            user.id,
+            currentId,
+            desc,
+            data.result,
+            data.competitors
+          ).catch(() => {
+            toast.error('Failed to update validation.');
+          });
         }
       } else {
         const localId = String(Date.now());
@@ -115,16 +134,29 @@ export function useValidateWorkflow() {
         });
         if (user) {
           saveValidation
-            .mutateAsync({ description: desc, productType: pt, result: data.result, competitors: data.competitors })
-            .then((uuid) => {
-              if (uuid) { updateLocalValidationId(localId, uuid); setCurrentId(uuid); }
+            .mutateAsync({
+              description: desc,
+              productType: pt,
+              result: data.result,
+              competitors: data.competitors,
             })
-            .catch(() => { toast.error('Failed to save validation to your account.'); });
+            .then((uuid) => {
+              if (uuid) {
+                updateLocalValidationId(localId, uuid);
+                setCurrentId(uuid);
+              }
+            })
+            .catch(() => {
+              toast.error('Failed to save validation to your account.');
+            });
         }
       }
     } catch (err: unknown) {
       if ((err as { name?: string }).name === 'AbortError') return;
-      setError((err as { message?: string }).message ?? 'Something went wrong. Please try again.');
+      setError(
+        (err as { message?: string }).message ??
+          'Something went wrong. Please try again.'
+      );
       setPhase('error');
     }
   }
@@ -133,22 +165,39 @@ export function useValidateWorkflow() {
   // Immediately strips params from URL so a page refresh doesn't re-trigger.
   useEffect(() => {
     const desc = searchParams.get('description');
-    const pt   = searchParams.get('productType');
+    const pt = searchParams.get('productType');
     if (!desc || !pt) return;
-    const aud  = searchParams.get('audience') ?? undefined;
-    const prob = searchParams.get('problem')  ?? undefined;
+    const aud = searchParams.get('audience') ?? undefined;
+    const prob = searchParams.get('problem') ?? undefined;
     router.replace('/validate');
-    handleSubmit({ description: desc, productType: pt, audience: aud, problem: prob });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    handleSubmit({
+      description: desc,
+      productType: pt,
+      audience: aud,
+      problem: prob,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return {
-    description, setDescription,
-    productType, setProductType,
-    audience, setAudience,
-    problem, setProblem,
-    phase, error, isActive, cancel, canSubmit,
-    result, prevResult, competitors, competitorCount, version,
+    description,
+    setDescription,
+    productType,
+    setProductType,
+    audience,
+    setAudience,
+    problem,
+    setProblem,
+    phase,
+    error,
+    isActive,
+    cancel,
+    canSubmit,
+    result,
+    prevResult,
+    competitors,
+    competitorCount,
+    version,
     handleSubmit,
   };
 }

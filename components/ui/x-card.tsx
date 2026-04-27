@@ -1,41 +1,41 @@
-"use client"
+'use client';
 
-import { type ReactNode } from "react"
-import { Tweet } from "react-tweet"
+import { type ReactNode } from 'react';
+import { Tweet } from 'react-tweet';
 
-import { cn } from "@/lib/utils"
+import { cn } from '@/lib/utils';
 
-type XCardSize = "sm" | "small" | "default" | "lg" | "large"
+type XCardSize = 'sm' | 'small' | 'default' | 'lg' | 'large';
 
 interface XCardProps {
-  id: string
-  caption?: ReactNode
-  className?: string
-  size?: XCardSize
+  id: string;
+  caption?: ReactNode;
+  className?: string;
+  size?: XCardSize;
 }
 
-function normalizeSize(size: XCardSize): "small" | "default" | "large" {
-  if (size === "sm") return "small"
-  if (size === "lg") return "large"
-  return size as "small" | "default" | "large"
+function normalizeSize(size: XCardSize): 'small' | 'default' | 'large' {
+  if (size === 'sm') return 'small';
+  if (size === 'lg') return 'large';
+  return size as 'small' | 'default' | 'large';
 }
 
 export function XCard({
   id,
   caption,
   className,
-  size = "default",
+  size = 'default',
 }: XCardProps) {
-  const normalizedSize = normalizeSize(size)
+  const normalizedSize = normalizeSize(size);
 
   const sizeClasses = {
-    small: "max-w-sm scale-90",
-    default: "max-w-xl",
-    large: "max-w-2xl scale-110",
-  }
+    small: 'max-w-sm scale-90',
+    default: 'max-w-xl',
+    large: 'max-w-2xl scale-110',
+  };
 
   return (
-    <div className={cn("x-card my-6", sizeClasses[normalizedSize], className)}>
+    <div className={cn('x-card my-6', sizeClasses[normalizedSize], className)}>
       <div className="flex justify-center">
         <Tweet id={id} />
       </div>
@@ -86,5 +86,5 @@ export function XCard({
         }
       `}</style>
     </div>
-  )
+  );
 }

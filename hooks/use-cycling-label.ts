@@ -13,8 +13,14 @@ const SCORING_LABELS = [
 export function useCyclingLabel(active: boolean): string {
   const [idx, setIdx] = useState(0);
   useEffect(() => {
-    if (!active) { setIdx(0); return; }
-    const id = setInterval(() => setIdx((i) => (i + 1) % SCORING_LABELS.length), 2800);
+    if (!active) {
+      setIdx(0);
+      return;
+    }
+    const id = setInterval(
+      () => setIdx((i) => (i + 1) % SCORING_LABELS.length),
+      2800
+    );
     return () => clearInterval(id);
   }, [active]);
   return SCORING_LABELS[idx];

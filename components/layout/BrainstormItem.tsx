@@ -28,7 +28,9 @@ export function BrainstormItem({
   const isActive = pathname === `/brainstorms/${id}`;
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(
+    null
+  );
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(prompt);
   const [mounted, setMounted] = useState(false);
@@ -37,8 +39,12 @@ export function BrainstormItem({
   const menuRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { setMounted(true); }, []);
-  useEffect(() => { setEditValue(prompt); }, [prompt]);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  useEffect(() => {
+    setEditValue(prompt);
+  }, [prompt]);
 
   // Close menu on outside click
   useEffect(() => {
@@ -84,7 +90,12 @@ export function BrainstormItem({
   }
 
   return (
-    <div className={cn('group relative flex items-center rounded-lg', isActive && 'bg-white/8')}>
+    <div
+      className={cn(
+        'group relative flex items-center rounded-lg',
+        isActive && 'bg-white/8'
+      )}
+    >
       {editing ? (
         <Input
           ref={inputRef}
@@ -127,7 +138,9 @@ export function BrainstormItem({
         </Button>
       )}
 
-      {mounted && menuOpen && menuPos &&
+      {mounted &&
+        menuOpen &&
+        menuPos &&
         createPortal(
           <div
             ref={menuRef}
@@ -137,7 +150,10 @@ export function BrainstormItem({
             <Button
               type="button"
               variant="ghost"
-              onClick={() => { setMenuOpen(false); setEditing(true); }}
+              onClick={() => {
+                setMenuOpen(false);
+                setEditing(true);
+              }}
               className="w-full justify-start gap-2.5 rounded-lg px-3 py-1.5 h-auto text-xs font-normal normal-case tracking-normal text-foreground/70 hover:bg-white/8 hover:text-foreground"
             >
               <Pencil className="h-3 w-3" />
@@ -146,7 +162,10 @@ export function BrainstormItem({
             <Button
               type="button"
               variant="ghost"
-              onClick={() => { setMenuOpen(false); onDelete(); }}
+              onClick={() => {
+                setMenuOpen(false);
+                onDelete();
+              }}
               className="w-full justify-start gap-2.5 rounded-lg px-3 py-1.5 h-auto text-xs font-normal normal-case tracking-normal text-red-400/80 hover:bg-red-500/10 hover:text-red-400"
             >
               <Trash2 className="h-3 w-3" />

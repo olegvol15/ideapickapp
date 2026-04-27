@@ -1,5 +1,9 @@
 import type { AppStoreApp } from '@/lib/discovery/mobile';
-import { estimateMonthlyRevenue, keywordInTopTitles, hasWeakIncumbents } from '@/lib/discovery/mobile';
+import {
+  estimateMonthlyRevenue,
+  keywordInTopTitles,
+  hasWeakIncumbents,
+} from '@/lib/discovery/mobile';
 import type { Competitor } from '@/types';
 
 // ─── Thresholds ───────────────────────────────────────────────────────────────
@@ -20,7 +24,12 @@ const PAIN_SCORE_CEILING = 6; // practical weighted-hit ceiling per snippet
 
 // ─── Pain patterns ────────────────────────────────────────────────────────────
 
-type PainCluster = 'bugs' | 'performance' | 'pricing' | 'missing_features' | 'ux';
+type PainCluster =
+  | 'bugs'
+  | 'performance'
+  | 'pricing'
+  | 'missing_features'
+  | 'ux';
 
 interface PainPattern {
   keywords: string[];
@@ -29,11 +38,49 @@ interface PainPattern {
 }
 
 const PAIN_PATTERNS: PainPattern[] = [
-  { keywords: ['bug', 'crash', 'broken', 'freeze', 'error', 'glitch'],                                          weight: 1, cluster: 'bugs' },
-  { keywords: ['slow', 'lag', 'battery', 'performance', 'drain', 'memory'],                                     weight: 2, cluster: 'performance' },
-  { keywords: ['price', 'expensive', 'subscription', 'cost', 'paid', 'charge', 'money'],                        weight: 2, cluster: 'pricing' },
-  { keywords: ['missing', 'feature', 'wish', 'need', 'want', 'add', 'lack'],                                    weight: 3, cluster: 'missing_features' },
-  { keywords: ['confus', 'hard', 'difficult', 'frustrat', 'annoying', 'clunky', 'complicated', 'hate', 'ux'],   weight: 3, cluster: 'ux' },
+  {
+    keywords: ['bug', 'crash', 'broken', 'freeze', 'error', 'glitch'],
+    weight: 1,
+    cluster: 'bugs',
+  },
+  {
+    keywords: ['slow', 'lag', 'battery', 'performance', 'drain', 'memory'],
+    weight: 2,
+    cluster: 'performance',
+  },
+  {
+    keywords: [
+      'price',
+      'expensive',
+      'subscription',
+      'cost',
+      'paid',
+      'charge',
+      'money',
+    ],
+    weight: 2,
+    cluster: 'pricing',
+  },
+  {
+    keywords: ['missing', 'feature', 'wish', 'need', 'want', 'add', 'lack'],
+    weight: 3,
+    cluster: 'missing_features',
+  },
+  {
+    keywords: [
+      'confus',
+      'hard',
+      'difficult',
+      'frustrat',
+      'annoying',
+      'clunky',
+      'complicated',
+      'hate',
+      'ux',
+    ],
+    weight: 3,
+    cluster: 'ux',
+  },
 ];
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
@@ -90,7 +137,12 @@ export type MobileDecision = 'BUILD' | 'RISKY' | 'DO_NOT_BUILD';
 
 // ─── Distribution helpers ─────────────────────────────────────────────────────
 
-function reviewShare(byReviews: AppStoreApp[], fromIdx: number, toIdx: number, total: number): number {
+function reviewShare(
+  byReviews: AppStoreApp[],
+  fromIdx: number,
+  toIdx: number,
+  total: number
+): number {
   if (total === 0) return 0;
   const slice = byReviews.slice(fromIdx, toIdx);
   return slice.reduce((s, a) => s + (a.userRatingCount ?? 0), 0) / total;
@@ -117,8 +169,12 @@ function avgRatingOf(apps: AppStoreApp[]): number {
   return rated.reduce((s, a) => s + a.averageUserRating!, 0) / rated.length;
 }
 
-function dominanceLabel(top5Share: number, top1Share: number): 'HIGH' | 'MEDIUM' | 'LOW' {
-  if (top5Share > TOP5_SHARE_VERY_DOMINANT || top1Share > TOP1_DOMINANT) return 'HIGH';
+function dominanceLabel(
+  top5Share: number,
+  top1Share: number
+): 'HIGH' | 'MEDIUM' | 'LOW' {
+  if (top5Share > TOP5_SHARE_VERY_DOMINANT || top1Share > TOP1_DOMINANT)
+    return 'HIGH';
   if (top5Share > 0.5) return 'MEDIUM';
   return 'LOW';
 }
@@ -127,89 +183,148 @@ function dominanceLabel(top5Share: number, top1Share: number): 'HIGH' | 'MEDIUM'
 
 export function computeAppStoreMetrics(apps: AppStoreApp[]): MobileMetrics {
   const empty: MobileMetrics = {
-    totalApps: 0, totalReviews: 0,
-    top10AvgRating: 0, bottom40AvgRating: 0, medianRating: 0, ratingVariance: 0,
-    top1ReviewShare: 0, top5ReviewShare: 0, top10ReviewShare: 0,
-    reviewDistributionSkew: 0, ratingDistributionAbove45: 0,
-    marketDominance: 'LOW', marketLocked: false,
+    totalApps: 0,
+    totalReviews: 0,
+    top10AvgRating: 0,
+    bottom40AvgRating: 0,
+    medianRating: 0,
+    ratingVariance: 0,
+    top1ReviewShare: 0,
+    top5ReviewShare: 0,
+    top10ReviewShare: 0,
+    reviewDistributionSkew: 0,
+    ratingDistributionAbove45: 0,
+    marketDominance: 'LOW',
+    marketLocked: false,
   };
   if (apps.length === 0) return empty;
 
   const totalApps = apps.length;
-  const byReviews = [...apps].sort((a, b) => (b.userRatingCount ?? 0) - (a.userRatingCount ?? 0));
-  const totalReviews = byReviews.reduce((s, a) => s + (a.userRatingCount ?? 0), 0);
+  const byReviews = [...apps].sort(
+    (a, b) => (b.userRatingCount ?? 0) - (a.userRatingCount ?? 0)
+  );
+  const totalReviews = byReviews.reduce(
+    (s, a) => s + (a.userRatingCount ?? 0),
+    0
+  );
 
-  const top1ReviewShare  = reviewShare(byReviews, 0, 1, totalReviews);
-  const top5ReviewShare  = reviewShare(byReviews, 0, 5, totalReviews);
+  const top1ReviewShare = reviewShare(byReviews, 0, 1, totalReviews);
+  const top5ReviewShare = reviewShare(byReviews, 0, 5, totalReviews);
   const top10ReviewShare = reviewShare(byReviews, 0, 10, totalReviews);
 
   const reviewDistributionSkew = giniApproximation(
     byReviews.map((a) => a.userRatingCount ?? 0)
   );
 
-  const top10AvgRating    = avgRatingOf(byReviews.slice(0, 10));
-  const bottom40Start     = Math.floor(totalApps * 0.6);
+  const top10AvgRating = avgRatingOf(byReviews.slice(0, 10));
+  const bottom40Start = Math.floor(totalApps * 0.6);
   const bottom40AvgRating = avgRatingOf(byReviews.slice(bottom40Start));
 
   const ratedApps = apps.filter((a) => a.averageUserRating != null);
-  const ratedSorted = [...ratedApps].sort((a, b) => a.averageUserRating! - b.averageUserRating!);
-  const medianRating = ratedSorted.length > 0
-    ? ratedSorted[Math.floor(ratedSorted.length / 2)].averageUserRating!
-    : 0;
+  const ratedSorted = [...ratedApps].sort(
+    (a, b) => a.averageUserRating! - b.averageUserRating!
+  );
+  const medianRating =
+    ratedSorted.length > 0
+      ? ratedSorted[Math.floor(ratedSorted.length / 2)].averageUserRating!
+      : 0;
 
   const ratings = ratedApps.map((a) => a.averageUserRating!);
-  const meanR = ratings.length > 0 ? ratings.reduce((s, r) => s + r, 0) / ratings.length : 0;
-  const meanR2 = ratings.length > 0 ? ratings.reduce((s, r) => s + r * r, 0) / ratings.length : 0;
+  const meanR =
+    ratings.length > 0
+      ? ratings.reduce((s, r) => s + r, 0) / ratings.length
+      : 0;
+  const meanR2 =
+    ratings.length > 0
+      ? ratings.reduce((s, r) => s + r * r, 0) / ratings.length
+      : 0;
   const ratingVariance = Math.max(0, meanR2 - meanR * meanR);
 
-  const ratingDistributionAbove45 = ratedApps.length > 0
-    ? ratedApps.filter((a) => a.averageUserRating! >= RATING_ABOVE_45).length / ratedApps.length
-    : 0;
+  const ratingDistributionAbove45 =
+    ratedApps.length > 0
+      ? ratedApps.filter((a) => a.averageUserRating! >= RATING_ABOVE_45)
+          .length / ratedApps.length
+      : 0;
 
   const marketDominance = dominanceLabel(top5ReviewShare, top1ReviewShare);
-  const marketLocked = top10AvgRating > MARKET_LOCKED_RATING && reviewDistributionSkew > MARKET_LOCKED_SKEW;
+  const marketLocked =
+    top10AvgRating > MARKET_LOCKED_RATING &&
+    reviewDistributionSkew > MARKET_LOCKED_SKEW;
 
   return {
-    totalApps, totalReviews,
-    top10AvgRating, bottom40AvgRating, medianRating, ratingVariance,
-    top1ReviewShare, top5ReviewShare, top10ReviewShare,
-    reviewDistributionSkew, ratingDistributionAbove45,
-    marketDominance, marketLocked,
+    totalApps,
+    totalReviews,
+    top10AvgRating,
+    bottom40AvgRating,
+    medianRating,
+    ratingVariance,
+    top1ReviewShare,
+    top5ReviewShare,
+    top10ReviewShare,
+    reviewDistributionSkew,
+    ratingDistributionAbove45,
+    marketDominance,
+    marketLocked,
   };
 }
 
 // ─── Niche metrics ────────────────────────────────────────────────────────────
 
-export function computeNicheMetrics(apps: AppStoreApp[], query: string): NicheResult {
+export function computeNicheMetrics(
+  apps: AppStoreApp[],
+  query: string
+): NicheResult {
   if (apps.length === 0) {
-    return { query, totalApps: 0, top5ReviewShare: 0, reviewDistributionSkew: 0, marketDominance: 'LOW' };
+    return {
+      query,
+      totalApps: 0,
+      top5ReviewShare: 0,
+      reviewDistributionSkew: 0,
+      marketDominance: 'LOW',
+    };
   }
-  const byReviews = [...apps].sort((a, b) => (b.userRatingCount ?? 0) - (a.userRatingCount ?? 0));
-  const totalReviews = byReviews.reduce((s, a) => s + (a.userRatingCount ?? 0), 0);
+  const byReviews = [...apps].sort(
+    (a, b) => (b.userRatingCount ?? 0) - (a.userRatingCount ?? 0)
+  );
+  const totalReviews = byReviews.reduce(
+    (s, a) => s + (a.userRatingCount ?? 0),
+    0
+  );
   const top5ReviewShare = reviewShare(byReviews, 0, 5, totalReviews);
   const top1ReviewShare = reviewShare(byReviews, 0, 1, totalReviews);
-  const reviewDistributionSkew = giniApproximation(byReviews.map((a) => a.userRatingCount ?? 0));
-  const marketDominance  = dominanceLabel(top5ReviewShare, top1ReviewShare);
-  const kwInTitles       = keywordInTopTitles(apps, query);
-  const weakIncumbents   = hasWeakIncumbents(apps);
-  const topRev           = apps[0] ? estimateMonthlyRevenue(apps[0]) : null;
+  const reviewDistributionSkew = giniApproximation(
+    byReviews.map((a) => a.userRatingCount ?? 0)
+  );
+  const marketDominance = dominanceLabel(top5ReviewShare, top1ReviewShare);
+  const kwInTitles = keywordInTopTitles(apps, query);
+  const weakIncumbents = hasWeakIncumbents(apps);
+  const topRev = apps[0] ? estimateMonthlyRevenue(apps[0]) : null;
   return {
-    query, totalApps: apps.length,
-    top5ReviewShare, reviewDistributionSkew, marketDominance,
+    query,
+    totalApps: apps.length,
+    top5ReviewShare,
+    reviewDistributionSkew,
+    marketDominance,
     keywordInTopTitles: kwInTitles,
     hasWeakIncumbents: weakIncumbents,
-    topAppRevEstimate: (topRev && (topRev.low > 0 || topRev.high > 0)) ? topRev : null,
+    topAppRevEstimate:
+      topRev && (topRev.low > 0 || topRev.high > 0) ? topRev : null,
   };
 }
 
 // ─── Pain analysis ────────────────────────────────────────────────────────────
 
 export function computePainAnalysis(signalResults: Competitor[]): PainAnalysis {
-  if (signalResults.length === 0) return { weightedScore: 5, topPainClusters: [] };
+  if (signalResults.length === 0)
+    return { weightedScore: 5, topPainClusters: [] };
 
   let totalWeighted = 0;
   const clusterHits: Record<PainCluster, number> = {
-    bugs: 0, performance: 0, pricing: 0, missing_features: 0, ux: 0,
+    bugs: 0,
+    performance: 0,
+    pricing: 0,
+    missing_features: 0,
+    ux: 0,
   };
 
   for (const result of signalResults) {
@@ -224,16 +339,25 @@ export function computePainAnalysis(signalResults: Competitor[]): PainAnalysis {
   }
 
   const rawScore = totalWeighted / signalResults.length;
-  const weightedScore = Math.min(10, Math.round((rawScore / PAIN_SCORE_CEILING) * 10));
+  const weightedScore = Math.min(
+    10,
+    Math.round((rawScore / PAIN_SCORE_CEILING) * 10)
+  );
 
-  const totalClusterHits = Object.values(clusterHits).reduce((s, n) => s + n, 0);
-  const topPainClusters = (Object.entries(clusterHits) as [PainCluster, number][])
+  const totalClusterHits = Object.values(clusterHits).reduce(
+    (s, n) => s + n,
+    0
+  );
+  const topPainClusters = (
+    Object.entries(clusterHits) as [PainCluster, number][]
+  )
     .filter(([, n]) => n > 0)
     .sort(([, a], [, b]) => b - a)
     .slice(0, 3)
     .map(([cluster, hits]) => ({
       cluster,
-      share: totalClusterHits > 0 ? Math.round((hits / totalClusterHits) * 100) : 0,
+      share:
+        totalClusterHits > 0 ? Math.round((hits / totalClusterHits) * 100) : 0,
     }));
 
   return { weightedScore, topPainClusters };
@@ -252,8 +376,10 @@ export function computeMobileScores(
   else if (metrics.totalApps >= SATURATION_HIGH) competitionScore += 2;
   if (metrics.top10AvgRating >= TOP10_RATING_STRONG) competitionScore += 2;
   else if (metrics.top10AvgRating >= TOP10_RATING_HIGH) competitionScore += 1;
-  if (metrics.top5ReviewShare >= TOP5_SHARE_VERY_DOMINANT) competitionScore += 3;
-  else if (metrics.top5ReviewShare >= TOP5_SHARE_DOMINANT) competitionScore += 2;
+  if (metrics.top5ReviewShare >= TOP5_SHARE_VERY_DOMINANT)
+    competitionScore += 3;
+  else if (metrics.top5ReviewShare >= TOP5_SHARE_DOMINANT)
+    competitionScore += 2;
   competitionScore = Math.min(10, competitionScore);
 
   // saturationScore (0–10)
@@ -265,9 +391,11 @@ export function computeMobileScores(
   // qualityBarrierScore — now uses top10AvgRating and top10ReviewShare
   let qualityBarrierScore = 0;
   if (metrics.top10AvgRating >= TOP10_RATING_STRONG) qualityBarrierScore += 4;
-  else if (metrics.top10AvgRating >= TOP10_RATING_HIGH) qualityBarrierScore += 2;
+  else if (metrics.top10AvgRating >= TOP10_RATING_HIGH)
+    qualityBarrierScore += 2;
   if (metrics.top10ReviewShare >= TOP10_SHARE_STRONG) qualityBarrierScore += 3;
-  else if (metrics.top10ReviewShare >= TOP10_SHARE_HIGH) qualityBarrierScore += 2;
+  else if (metrics.top10ReviewShare >= TOP10_SHARE_HIGH)
+    qualityBarrierScore += 2;
   if (metrics.ratingDistributionAbove45 >= 0.7) qualityBarrierScore += 3;
   qualityBarrierScore = Math.min(10, qualityBarrierScore);
 
@@ -278,8 +406,8 @@ export function computeMobileScores(
   else if (metrics.top5ReviewShare >= 0.4) marketPowerScore = 4;
 
   // opportunityScore — weighted formula replacing naive inverse
-  const inverseCompetition  = 10 - competitionScore;
-  const inverseMarketPower  = 10 - marketPowerScore;
+  const inverseCompetition = 10 - competitionScore;
+  const inverseMarketPower = 10 - marketPowerScore;
   let opportunityScore =
     pain.weightedScore * 0.5 +
     inverseCompetition * 0.2 +
@@ -291,18 +419,27 @@ export function computeMobileScores(
   }
 
   // Niche bonus: if best niche shows materially lower dominance
-  if (bestNiche && bestNiche.totalApps >= 5 &&
-      bestNiche.top5ReviewShare < metrics.top5ReviewShare * 0.7) {
+  if (
+    bestNiche &&
+    bestNiche.totalApps >= 5 &&
+    bestNiche.top5ReviewShare < metrics.top5ReviewShare * 0.7
+  ) {
     opportunityScore += 1;
   }
 
   // ASO-proxy bonuses — cheap entry-ease signals
   if (bestNiche?.keywordInTopTitles === false) opportunityScore += 1.0;
-  if (bestNiche?.hasWeakIncumbents === true)   opportunityScore += 1.5;
+  if (bestNiche?.hasWeakIncumbents === true) opportunityScore += 1.5;
 
   opportunityScore = Math.min(10, Math.max(0, opportunityScore));
 
-  return { competitionScore, saturationScore, qualityBarrierScore, marketPowerScore, opportunityScore };
+  return {
+    competitionScore,
+    saturationScore,
+    qualityBarrierScore,
+    marketPowerScore,
+    opportunityScore,
+  };
 }
 
 // ─── Decision ─────────────────────────────────────────────────────────────────
@@ -320,13 +457,15 @@ export function computeDecision(
   if (scores.competitionScore >= 8 && scores.opportunityScore < 4) {
     return {
       verdict: 'DO_NOT_BUILD',
-      reason: 'Market is extremely saturated with no viable pain signal to exploit.',
+      reason:
+        'Market is extremely saturated with no viable pain signal to exploit.',
     };
   }
   if (scores.competitionScore >= 7 && scores.opportunityScore >= 6) {
     return {
       verdict: 'RISKY',
-      reason: 'High competition but pain signals suggest a viable niche opening.',
+      reason:
+        'High competition but pain signals suggest a viable niche opening.',
     };
   }
   if (scores.competitionScore < 6 && scores.opportunityScore >= 5) {
@@ -343,10 +482,13 @@ export function computeDecision(
 
 // ─── Confidence score ─────────────────────────────────────────────────────────
 
-export function computeConfidenceScore(metrics: MobileMetrics, signalCount: number): number {
-  const dataCoverage   = (Math.min(metrics.totalApps, 50) / 50) * 40;
+export function computeConfidenceScore(
+  metrics: MobileMetrics,
+  signalCount: number
+): number {
+  const dataCoverage = (Math.min(metrics.totalApps, 50) / 50) * 40;
   const signalCoverage = (Math.min(signalCount, 10) / 10) * 30;
-  const reviewVolume   = Math.min(metrics.totalReviews / 10_000, 1) * 30;
+  const reviewVolume = Math.min(metrics.totalReviews / 10_000, 1) * 30;
   return Math.round(dataCoverage + signalCoverage + reviewVolume);
 }
 
@@ -363,26 +505,45 @@ export function computeMarketInsights(metrics: MobileMetrics): string[] {
   const pct = (n: number) => `${Math.round(n * 100)}%`;
 
   if (metrics.top5ReviewShare > 0.75) {
-    insights.push(`Top 5 apps control ${pct(metrics.top5ReviewShare)} of all reviews`);
+    insights.push(
+      `Top 5 apps control ${pct(metrics.top5ReviewShare)} of all reviews`
+    );
   } else if (metrics.top5ReviewShare > 0.5) {
-    insights.push(`Top 5 apps hold ${pct(metrics.top5ReviewShare)} of all reviews`);
+    insights.push(
+      `Top 5 apps hold ${pct(metrics.top5ReviewShare)} of all reviews`
+    );
   }
   if (metrics.top1ReviewShare > TOP1_DOMINANT) {
-    insights.push(`The #1 app alone accounts for ${pct(metrics.top1ReviewShare)} of all reviews`);
+    insights.push(
+      `The #1 app alone accounts for ${pct(metrics.top1ReviewShare)} of all reviews`
+    );
   }
   if (metrics.top10AvgRating > 4.6) {
-    insights.push(`Top 10 apps average ${metrics.top10AvgRating.toFixed(2)} stars — the quality bar is very high`);
+    insights.push(
+      `Top 10 apps average ${metrics.top10AvgRating.toFixed(2)} stars — the quality bar is very high`
+    );
   } else if (metrics.top10AvgRating > 4.2) {
-    insights.push(`Top 10 apps average ${metrics.top10AvgRating.toFixed(2)} stars`);
+    insights.push(
+      `Top 10 apps average ${metrics.top10AvgRating.toFixed(2)} stars`
+    );
   }
-  if (metrics.bottom40AvgRating > 0 && metrics.top10AvgRating - metrics.bottom40AvgRating > 0.8) {
-    insights.push(`Weaker apps average ${metrics.bottom40AvgRating.toFixed(2)} stars — incumbents are significantly ahead`);
+  if (
+    metrics.bottom40AvgRating > 0 &&
+    metrics.top10AvgRating - metrics.bottom40AvgRating > 0.8
+  ) {
+    insights.push(
+      `Weaker apps average ${metrics.bottom40AvgRating.toFixed(2)} stars — incumbents are significantly ahead`
+    );
   }
   if (metrics.marketLocked) {
-    insights.push('Market is structurally locked: high ratings combined with concentrated reviews');
+    insights.push(
+      'Market is structurally locked: high ratings combined with concentrated reviews'
+    );
   }
   if (metrics.ratingVariance < 0.1 && metrics.top10AvgRating > 4.0) {
-    insights.push('Ratings are tightly clustered — the market has matured and standardized');
+    insights.push(
+      'Ratings are tightly clustered — the market has matured and standardized'
+    );
   }
 
   return insights.slice(0, 5);
@@ -396,28 +557,47 @@ export function computeOpportunityInsights(
   const insights: string[] = [];
 
   for (const { cluster, share } of pain.topPainClusters.slice(0, 2)) {
-    if (cluster === 'pricing')          insights.push(`${share}% of user signals mention pricing complaints`);
-    else if (cluster === 'ux')          insights.push(`UX/usability dissatisfaction detected in ${share}% of signals`);
-    else if (cluster === 'missing_features') insights.push(`Users frequently request features incumbents don't provide (${share}% of signals)`);
-    else if (cluster === 'performance') insights.push(`Performance complaints found in ${share}% of signals`);
-    else if (cluster === 'bugs')        insights.push(`Bug and stability complaints in ${share}% of signals`);
+    if (cluster === 'pricing')
+      insights.push(`${share}% of user signals mention pricing complaints`);
+    else if (cluster === 'ux')
+      insights.push(
+        `UX/usability dissatisfaction detected in ${share}% of signals`
+      );
+    else if (cluster === 'missing_features')
+      insights.push(
+        `Users frequently request features incumbents don't provide (${share}% of signals)`
+      );
+    else if (cluster === 'performance')
+      insights.push(`Performance complaints found in ${share}% of signals`);
+    else if (cluster === 'bugs')
+      insights.push(`Bug and stability complaints in ${share}% of signals`);
   }
 
   if (bestNiche && bestNiche.top5ReviewShare < metrics.top5ReviewShare * 0.7) {
-    insights.push(`Niche angle "${bestNiche.query}" shows lower market concentration (${Math.round(bestNiche.top5ReviewShare * 100)}% vs ${Math.round(metrics.top5ReviewShare * 100)}% broad)`);
+    insights.push(
+      `Niche angle "${bestNiche.query}" shows lower market concentration (${Math.round(bestNiche.top5ReviewShare * 100)}% vs ${Math.round(metrics.top5ReviewShare * 100)}% broad)`
+    );
   }
 
   if (bestNiche?.keywordInTopTitles === false) {
-    insights.push(`Keyword "${bestNiche.query}" isn't in any top-5 app title — organic ranking gap exists`);
+    insights.push(
+      `Keyword "${bestNiche.query}" isn't in any top-5 app title — organic ranking gap exists`
+    );
   }
   if (bestNiche?.hasWeakIncumbents === true) {
-    insights.push(`At least 2 of the top-5 apps in "${bestNiche.query}" are new with < 500 reviews — real entry window`);
+    insights.push(
+      `At least 2 of the top-5 apps in "${bestNiche.query}" are new with < 500 reviews — real entry window`
+    );
   }
 
   if (pain.weightedScore >= 7) {
-    insights.push('Strong pain signals — real user frustration exists in this space');
+    insights.push(
+      'Strong pain signals — real user frustration exists in this space'
+    );
   } else if (pain.weightedScore <= 3) {
-    insights.push('Weak pain signals — users appear satisfied with existing solutions');
+    insights.push(
+      'Weak pain signals — users appear satisfied with existing solutions'
+    );
   }
 
   return insights.slice(0, 5);
@@ -430,24 +610,28 @@ export function computeWinAngles(
 ): WinAngle[] {
   const angles: WinAngle[] = [];
 
-  const clusterMap = new Map(pain.topPainClusters.map((c) => [c.cluster, c.share]));
+  const clusterMap = new Map(
+    pain.topPainClusters.map((c) => [c.cluster, c.share])
+  );
 
   const pricingShare = clusterMap.get('pricing') ?? 0;
-  const uxShare      = clusterMap.get('ux') ?? 0;
-  const featShare    = clusterMap.get('missing_features') ?? 0;
+  const uxShare = clusterMap.get('ux') ?? 0;
+  const featShare = clusterMap.get('missing_features') ?? 0;
 
   if (pricingShare > 20) {
     angles.push({
       title: 'Pricing gap',
       signal: `${pricingShare}% of signals mention pricing frustration`,
-      angle: 'Offer transparent or lower pricing to the price-sensitive segment',
+      angle:
+        'Offer transparent or lower pricing to the price-sensitive segment',
     });
   }
   if (uxShare > 20) {
     angles.push({
       title: 'Complexity gap',
       signal: `UX complaints in ${uxShare}% of signals`,
-      angle: 'Simplified onboarding targeting users frustrated with current apps',
+      angle:
+        'Simplified onboarding targeting users frustrated with current apps',
     });
   }
   if (featShare > 20) {
@@ -457,17 +641,25 @@ export function computeWinAngles(
       angle: 'Ship the missing workflow incumbents consistently ignore',
     });
   }
-  if (bestNiche && bestNiche.marketDominance !== 'HIGH' && bestNiche.totalApps >= 5) {
+  if (
+    bestNiche &&
+    bestNiche.marketDominance !== 'HIGH' &&
+    bestNiche.totalApps >= 5
+  ) {
     angles.push({
       title: 'Niche gap',
       signal: `"${bestNiche.query}" shows ${bestNiche.marketDominance.toLowerCase()} market concentration`,
       angle: `Target the "${bestNiche.query}" audience specifically — lower incumbent dominance`,
     });
   }
-  if (angles.length < 2 && metrics.top10AvgRating - metrics.bottom40AvgRating > 0.8) {
+  if (
+    angles.length < 2 &&
+    metrics.top10AvgRating - metrics.bottom40AvgRating > 0.8
+  ) {
     angles.push({
       title: 'Segment gap',
-      signal: 'Top apps skew heavily toward one segment, leaving weaker coverage elsewhere',
+      signal:
+        'Top apps skew heavily toward one segment, leaving weaker coverage elsewhere',
       angle: 'Target the underserved segment that incumbents overlook',
     });
   }
@@ -480,15 +672,24 @@ export function computeWinAngles(
 export function mapToUIScores(
   scores: MobileScores,
   painWeightedScore: number
-): { score: number; painScore: number; competitionScore: number; opportunityScore: number } {
-  const painScore        = Math.round(painWeightedScore * 10);
+): {
+  score: number;
+  painScore: number;
+  competitionScore: number;
+  opportunityScore: number;
+} {
+  const painScore = Math.round(painWeightedScore * 10);
   const competitionScore = Math.round(scores.competitionScore * 10);
   const opportunityScore = Math.round(scores.opportunityScore * 10);
-  const score            = Math.round(opportunityScore * 0.6 + painScore * 0.25 + (100 - competitionScore) * 0.15);
+  const score = Math.round(
+    opportunityScore * 0.6 + painScore * 0.25 + (100 - competitionScore) * 0.15
+  );
   return { score, painScore, competitionScore, opportunityScore };
 }
 
-export function mapDecisionToUI(verdict: MobileDecision): 'proceed' | 'test-first' | 'drop' {
+export function mapDecisionToUI(
+  verdict: MobileDecision
+): 'proceed' | 'test-first' | 'drop' {
   if (verdict === 'BUILD') return 'proceed';
   if (verdict === 'RISKY') return 'test-first';
   return 'drop';

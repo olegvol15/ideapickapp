@@ -23,7 +23,10 @@ export interface AppStoreApp {
   trackSubtitle?: string;
 }
 
-export async function fetchAppStoreApps(query: string, limit: number): Promise<AppStoreApp[]> {
+export async function fetchAppStoreApps(
+  query: string,
+  limit: number
+): Promise<AppStoreApp[]> {
   const term = encodeURIComponent(coreSearchTerm(query));
   try {
     const res = await fetch(
@@ -39,39 +42,48 @@ export async function fetchAppStoreApps(query: string, limit: number): Promise<A
 
 // Estimate monthly revenue range from App Store data.
 // Uses the industry heuristic: 1 review ≈ 100–300 downloads.
-export function estimateMonthlyRevenue(app: AppStoreApp): { low: number; high: number } {
+export function estimateMonthlyRevenue(app: AppStoreApp): {
+  low: number;
+  high: number;
+} {
   const reviews = app.userRatingCount ?? 0;
   if (reviews === 0) return { low: 0, high: 0 };
 
   const price = app.price ?? 0;
   const ageDays = app.releaseDate
-    ? Math.max(30, (Date.now() - new Date(app.releaseDate).getTime()) / 86400000)
+    ? Math.max(
+        30,
+        (Date.now() - new Date(app.releaseDate).getTime()) / 86400000
+      )
     : 730; // default 2 years if unknown
   const ageMonths = ageDays / 30;
 
-  const monthlyDlLow  = (reviews * 100) / ageMonths;
+  const monthlyDlLow = (reviews * 100) / ageMonths;
   const monthlyDlHigh = (reviews * 300) / ageMonths;
 
   if (price > 0) {
     return {
-      low:  Math.round(monthlyDlLow  * price),
+      low: Math.round(monthlyDlLow * price),
       high: Math.round(monthlyDlHigh * price),
     };
   }
 
   // Free + IAP: 1–3% conversion at $4–8 avg
   return {
-    low:  Math.round(monthlyDlLow  * 0.01 * 4),
+    low: Math.round(monthlyDlLow * 0.01 * 4),
     high: Math.round(monthlyDlHigh * 0.03 * 8),
   };
 }
 
 // Returns true if the keyword appears at the start of any top-5 app title or subtitle.
 // When false, there's a keyword gap — easier to rank organically.
-export function keywordInTopTitles(apps: AppStoreApp[], keyword: string): boolean {
+export function keywordInTopTitles(
+  apps: AppStoreApp[],
+  keyword: string
+): boolean {
   const kw = coreSearchTerm(keyword).toLowerCase();
   return apps.slice(0, 5).some((app) => {
-    const title    = app.trackName.toLowerCase();
+    const title = app.trackName.toLowerCase();
     const subtitle = (app.trackSubtitle ?? '').toLowerCase();
     return title.startsWith(kw) || subtitle.startsWith(kw);
   });
@@ -98,9 +110,10 @@ export function appToCompetitor(r: AppStoreApp): Competitor {
     snippet: (r.description ?? '').slice(0, 280),
     source: 'appstore',
     platform: 'iOS',
-    rating: r.averageUserRating != null
-      ? Math.round(r.averageUserRating * 10) / 10
-      : undefined,
+    rating:
+      r.averageUserRating != null
+        ? Math.round(r.averageUserRating * 10) / 10
+        : undefined,
     reviewCount: r.userRatingCount,
     category: r.primaryGenreName,
     revenueEstimate: rev.low > 0 || rev.high > 0 ? rev : undefined,
@@ -160,7 +173,9 @@ async function searchGooglePlay(query: string): Promise<Competitor[]> {
   }
 }
 
-export async function discoverMobileApps(queries: string[]): Promise<Competitor[]> {
+export async function discoverMobileApps(
+  queries: string[]
+): Promise<Competitor[]> {
   const searches = queries.flatMap((q) => [
     searchAppStore(q),
     searchGooglePlay(q),

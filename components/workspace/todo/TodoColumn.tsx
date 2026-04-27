@@ -1,7 +1,10 @@
 'use client';
 
 import { useDroppable } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TodoCard } from './TodoCard';
@@ -13,33 +16,38 @@ const COLUMN_META: Record<
   { label: string; accent: string; glow: string; emptyText: string }
 > = {
   todo: {
-    label:     'To Do',
-    accent:    'bg-muted-foreground/25',
-    glow:      'border-border/60 bg-card/40',
+    label: 'To Do',
+    accent: 'bg-muted-foreground/25',
+    glow: 'border-border/60 bg-card/40',
     emptyText: 'Drop tasks here or add one below',
   },
   in_progress: {
-    label:     'In Progress',
-    accent:    'bg-amber-400',
-    glow:      'border-amber-400/20 bg-amber-400/[0.03]',
+    label: 'In Progress',
+    accent: 'bg-amber-400',
+    glow: 'border-amber-400/20 bg-amber-400/[0.03]',
     emptyText: 'Move tasks here when you start them',
   },
   done: {
-    label:     'Done',
-    accent:    'bg-emerald-400',
-    glow:      'border-emerald-400/20 bg-emerald-400/[0.03]',
+    label: 'Done',
+    accent: 'bg-emerald-400',
+    glow: 'border-emerald-400/20 bg-emerald-400/[0.03]',
     emptyText: 'Completed tasks will appear here',
   },
 };
 
 interface TodoColumnProps {
-  status:   TaskStatus;
-  tasks:    WorkspaceTask[];
-  onAdd:    (title: string) => void;
+  status: TaskStatus;
+  tasks: WorkspaceTask[];
+  onAdd: (title: string) => void;
   onDelete: (id: string) => void;
 }
 
-export function TodoColumn({ status, tasks, onAdd, onDelete }: TodoColumnProps) {
+export function TodoColumn({
+  status,
+  tasks,
+  onAdd,
+  onDelete,
+}: TodoColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
   const meta = COLUMN_META[status];
 
@@ -53,7 +61,9 @@ export function TodoColumn({ status, tasks, onAdd, onDelete }: TodoColumnProps) 
     >
       {/* Column header */}
       <div className="flex shrink-0 items-center gap-3 px-4 pt-4 pb-3">
-        <span className={cn('h-2.5 w-2.5 shrink-0 rounded-full', meta.accent)} />
+        <span
+          className={cn('h-2.5 w-2.5 shrink-0 rounded-full', meta.accent)}
+        />
         <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">
           {meta.label}
         </span>
@@ -78,11 +88,19 @@ export function TodoColumn({ status, tasks, onAdd, onDelete }: TodoColumnProps) 
       </div>
 
       {/* Cards list — independently scrollable */}
-      <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+      <SortableContext
+        items={tasks.map((t) => t.id)}
+        strategy={verticalListSortingStrategy}
+      >
         <div className="min-h-0 flex-1 overflow-y-auto px-2.5">
           <div className="flex flex-col gap-2 py-1 pb-2">
-            {tasks.map(task => (
-              <TodoCard key={task.id} task={task} onDelete={onDelete} status={status} />
+            {tasks.map((task) => (
+              <TodoCard
+                key={task.id}
+                task={task}
+                onDelete={onDelete}
+                status={status}
+              />
             ))}
 
             {tasks.length === 0 && (
@@ -94,7 +112,9 @@ export function TodoColumn({ status, tasks, onAdd, onDelete }: TodoColumnProps) 
                     : 'border-border/30 bg-transparent'
                 )}
               >
-                <p className="text-[11px] text-muted-foreground/30">{meta.emptyText}</p>
+                <p className="text-[11px] text-muted-foreground/30">
+                  {meta.emptyText}
+                </p>
               </div>
             )}
           </div>

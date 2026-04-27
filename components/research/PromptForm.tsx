@@ -35,9 +35,8 @@ export function PromptForm() {
     statusLabel,
   } = useResearchStore();
 
-  const { handleGenerate, handleCancel, handleClear, isGenerating, errorMsg } = useResearch(
-    user?.id
-  );
+  const { handleGenerate, handleCancel, handleClear, isGenerating, errorMsg } =
+    useResearch(user?.id);
 
   return (
     <div className="flex flex-col gap-5">
@@ -187,11 +186,7 @@ export function PromptForm() {
                 {errorMsg}
               </p>
             </div>
-            <Button
-              variant="link"
-              size="sm"
-              onClick={handleGenerate}
-            >
+            <Button variant="link" size="sm" onClick={handleGenerate}>
               Try again →
             </Button>
           </motion.div>

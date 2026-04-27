@@ -51,11 +51,7 @@ export function OpportunityModal({ open, onClose }: OpportunityModalProps) {
   // Draft store is the single source of truth for what idea is being viewed
   const { draft: i, generationId } = useIdeaDraftStore();
 
-  const {
-    displayIdea,
-    refining,
-    refine,
-  } = useIdeaActions();
+  const { displayIdea, refining, refine } = useIdeaActions();
 
   function handleValidate() {
     if (!i) return;

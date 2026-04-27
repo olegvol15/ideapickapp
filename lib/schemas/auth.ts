@@ -1,6 +1,11 @@
 import { z } from 'zod';
 
-const email = z.string().trim().toLowerCase().email('Invalid email').max(254, 'Email too long');
+const email = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .email('Invalid email')
+  .max(254, 'Email too long');
 
 const strongPassword = z
   .string()
@@ -14,21 +19,25 @@ export const SignInSchema = z.object({
   password: z.string().min(1, 'Required'),
 });
 
-export const SignUpSchema = z.object({
-  email,
-  password: strongPassword,
-  confirmPassword: z.string().min(1, 'Required'),
-}).refine(d => d.password === d.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-});
+export const SignUpSchema = z
+  .object({
+    email,
+    password: strongPassword,
+    confirmPassword: z.string().min(1, 'Required'),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 
 export const ForgotSchema = z.object({ email });
 
-export const ResetSchema = z.object({
-  password: strongPassword,
-  confirmPassword: z.string().min(1, 'Required'),
-}).refine(d => d.password === d.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-});
+export const ResetSchema = z
+  .object({
+    password: strongPassword,
+    confirmPassword: z.string().min(1, 'Required'),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });

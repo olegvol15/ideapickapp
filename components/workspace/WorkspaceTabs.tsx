@@ -11,11 +11,12 @@ import { useWorkspaceStore } from '@/stores/workspace.store';
 import type { Idea } from '@/types';
 import type { WorkspaceTab } from '@/types/workspace.types';
 
-const TABS: { value: WorkspaceTab; label: string; Icon: React.ElementType }[] = [
-  { value: 'todo',     label: 'Tasks',   Icon: CheckSquare },
-  { value: 'content',  label: 'Content', Icon: FileText },
-  { value: 'roadmap',  label: 'Roadmap', Icon: GitBranch },
-];
+const TABS: { value: WorkspaceTab; label: string; Icon: React.ElementType }[] =
+  [
+    { value: 'todo', label: 'Tasks', Icon: CheckSquare },
+    { value: 'content', label: 'Content', Icon: FileText },
+    { value: 'roadmap', label: 'Roadmap', Icon: GitBranch },
+  ];
 
 interface WorkspaceTabsProps {
   idea: Idea;
@@ -24,14 +25,20 @@ interface WorkspaceTabsProps {
   authLoading: boolean;
 }
 
-export function WorkspaceTabs({ idea, ideaId, userId, authLoading }: WorkspaceTabsProps) {
-  const router      = useRouter();
+export function WorkspaceTabs({
+  idea,
+  ideaId,
+  userId,
+  authLoading,
+}: WorkspaceTabsProps) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { activeTab, setActiveTab, todos, contentItems } = useWorkspaceStore();
 
   useEffect(() => {
     const param = searchParams.get('tab') as WorkspaceTab | null;
-    if (param && ['todo', 'content', 'roadmap'].includes(param)) setActiveTab(param);
+    if (param && ['todo', 'content', 'roadmap'].includes(param))
+      setActiveTab(param);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -41,16 +48,14 @@ export function WorkspaceTabs({ idea, ideaId, userId, authLoading }: WorkspaceTa
   }
 
   // Task summary for header badge
-  const tasks         = todos[ideaId] ?? [];
-  const doneCount     = tasks.filter(t => t.status === 'done').length;
-  const contentCount  = (contentItems[ideaId] ?? []).length;
+  const tasks = todos[ideaId] ?? [];
+  const doneCount = tasks.filter((t) => t.status === 'done').length;
+  const contentCount = (contentItems[ideaId] ?? []).length;
 
   return (
     <div className="flex h-svh flex-col overflow-hidden">
-
       {/* ── Top bar ─────────────────────────────────────────────────────── */}
       <header className="relative z-10 flex shrink-0 items-stretch border-b border-border/50 bg-card/80 backdrop-blur-md">
-
         {/* Idea identity */}
         <div className="flex min-w-0 flex-col justify-center border-r border-border/40 px-5 py-3 pr-6">
           <span className="mb-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-muted-foreground/40">
@@ -81,18 +86,26 @@ export function WorkspaceTabs({ idea, ideaId, userId, authLoading }: WorkspaceTa
 
                 {/* Count badge */}
                 {value === 'todo' && tasks.length > 0 && (
-                  <span className={cn(
-                    'rounded-full px-1.5 py-px text-[9px] font-bold tabular-nums',
-                    active ? 'bg-primary/15 text-primary' : 'bg-muted-foreground/10 text-muted-foreground/50'
-                  )}>
+                  <span
+                    className={cn(
+                      'rounded-full px-1.5 py-px text-[9px] font-bold tabular-nums',
+                      active
+                        ? 'bg-primary/15 text-primary'
+                        : 'bg-muted-foreground/10 text-muted-foreground/50'
+                    )}
+                  >
                     {tasks.length}
                   </span>
                 )}
                 {value === 'content' && contentCount > 0 && (
-                  <span className={cn(
-                    'rounded-full px-1.5 py-px text-[9px] font-bold tabular-nums',
-                    active ? 'bg-primary/15 text-primary' : 'bg-muted-foreground/10 text-muted-foreground/50'
-                  )}>
+                  <span
+                    className={cn(
+                      'rounded-full px-1.5 py-px text-[9px] font-bold tabular-nums',
+                      active
+                        ? 'bg-primary/15 text-primary'
+                        : 'bg-muted-foreground/10 text-muted-foreground/50'
+                    )}
+                  >
                     {contentCount}
                   </span>
                 )}
@@ -113,7 +126,9 @@ export function WorkspaceTabs({ idea, ideaId, userId, authLoading }: WorkspaceTa
               <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
                 <div
                   className="h-full rounded-full bg-emerald-500 transition-all duration-500"
-                  style={{ width: `${Math.round((doneCount / tasks.length) * 100)}%` }}
+                  style={{
+                    width: `${Math.round((doneCount / tasks.length) * 100)}%`,
+                  }}
                 />
               </div>
               <span className="text-[10px] font-semibold tabular-nums text-muted-foreground/50">
@@ -140,7 +155,12 @@ export function WorkspaceTabs({ idea, ideaId, userId, authLoading }: WorkspaceTa
 
         {activeTab === 'roadmap' && (
           <div className="h-full">
-            <WorkspaceRoadmap idea={idea} ideaId={ideaId} userId={userId} authLoading={authLoading} />
+            <WorkspaceRoadmap
+              idea={idea}
+              ideaId={ideaId}
+              userId={userId}
+              authLoading={authLoading}
+            />
           </div>
         )}
       </div>

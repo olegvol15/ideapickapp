@@ -165,7 +165,9 @@ function RoadmapNodeCmp({ data }: NodeProps) {
             e.stopPropagation();
             d.onGenerateContent!();
           }}
-          title={d.actionType === 'tweet' ? 'Generate tweet' : 'Generate Reddit post'}
+          title={
+            d.actionType === 'tweet' ? 'Generate tweet' : 'Generate Reddit post'
+          }
           className={cn(
             'absolute bottom-2 right-2 z-20',
             'flex h-6 w-6 items-center justify-center rounded-full',
@@ -203,7 +205,11 @@ export function RoadmapCanvas({
   initialLoading?: boolean;
   userId: string | undefined;
   authLoading?: boolean;
-  onGenerateContent?: (label: string, description: string, actionType: ContentType) => void;
+  onGenerateContent?: (
+    label: string,
+    description: string,
+    actionType: ContentType
+  ) => void;
 }) {
   const router = useRouter();
   const store = useRoadmapStore();
@@ -253,7 +259,12 @@ export function RoadmapCanvas({
         onExpand: () => expandNodeRef.current(rn.id, rn.label),
         onGenerateContent:
           rn.actionType && onGenerateContent
-            ? () => onGenerateContent(rn.label, rn.description ?? '', rn.actionType as ContentType)
+            ? () =>
+                onGenerateContent(
+                  rn.label,
+                  rn.description ?? '',
+                  rn.actionType as ContentType
+                )
             : undefined,
       } satisfies NodeData,
     }));
@@ -297,13 +308,16 @@ export function RoadmapCanvas({
       }
 
       try {
-        const { nodes: newRm } = await typedApi.post<{ nodes: RoadmapNode[] }>('/api/roadmap/expand', {
-          ideaTitle: idea.title,
-          ideaPitch: idea.pitch,
-          nodeId,
-          nodeLabel,
-          parentPath: path,
-        });
+        const { nodes: newRm } = await typedApi.post<{ nodes: RoadmapNode[] }>(
+          '/api/roadmap/expand',
+          {
+            ideaTitle: idea.title,
+            ideaPitch: idea.pitch,
+            nodeId,
+            nodeLabel,
+            parentPath: path,
+          }
+        );
 
         const parent = rfNodes.find((n) => n.id === nodeId);
         if (!parent) {
@@ -331,7 +345,12 @@ export function RoadmapCanvas({
             onExpand: () => expandNodeRef.current(rn.id, rn.label),
             onGenerateContent:
               rn.actionType && onGenerateContent
-                ? () => onGenerateContent(rn.label, rn.description ?? '', rn.actionType as ContentType)
+                ? () =>
+                    onGenerateContent(
+                      rn.label,
+                      rn.description ?? '',
+                      rn.actionType as ContentType
+                    )
                 : undefined,
           } satisfies NodeData,
         }));
@@ -405,7 +424,10 @@ export function RoadmapCanvas({
     freshGenerationRef.current = true;
     (async () => {
       try {
-        const { nodes } = await typedApi.post<{ nodes: RoadmapNode[] }>('/api/roadmap', { idea });
+        const { nodes } = await typedApi.post<{ nodes: RoadmapNode[] }>(
+          '/api/roadmap',
+          { idea }
+        );
 
         const flowNodes: Node[] = nodes.map((rn) => ({
           id: rn.id,
@@ -421,7 +443,12 @@ export function RoadmapCanvas({
             onExpand: () => expandNodeRef.current(rn.id, rn.label),
             onGenerateContent:
               rn.actionType && onGenerateContent
-                ? () => onGenerateContent(rn.label, rn.description ?? '', rn.actionType as ContentType)
+                ? () =>
+                    onGenerateContent(
+                      rn.label,
+                      rn.description ?? '',
+                      rn.actionType as ContentType
+                    )
                 : undefined,
           } satisfies NodeData,
         }));

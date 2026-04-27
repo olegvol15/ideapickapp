@@ -1,4 +1,8 @@
-import type { MobileMetrics, MobileScores, MobileDecision } from '@/lib/scoring/mobile';
+import type {
+  MobileMetrics,
+  MobileScores,
+  MobileDecision,
+} from '@/lib/scoring/mobile';
 
 export interface KeywordMarketAnalysis {
   keyword: string;
@@ -71,7 +75,9 @@ export function selectBestNiche(
   let entryStrategy: 'ENTER_VIA_NICHE' | 'BROAD_MARKET' | 'NO_VIABLE_ENTRY';
 
   const allUnviable = markets.every(
-    (m) => m.decision === 'DO_NOT_BUILD' || (m.decision === 'RISKY' && m.scores.opportunityScore < 3)
+    (m) =>
+      m.decision === 'DO_NOT_BUILD' ||
+      (m.decision === 'RISKY' && m.scores.opportunityScore < 3)
   );
 
   // Niche advantage threshold: niche entry score must beat base by ≥40% to override
@@ -81,7 +87,7 @@ export function selectBestNiche(
     entryStrategy = 'NO_VIABLE_ENTRY';
   } else if (bestIsBase) {
     const topNiche = scoredNonBase[0];
-    const nicheE   = topNiche?.entry ?? 0;
+    const nicheE = topNiche?.entry ?? 0;
     if (topNiche && nicheE > baseEntry * (1 + NICHE_ADVANTAGE_THRESHOLD)) {
       best = topNiche;
       bestIsBase = false;
@@ -128,15 +134,29 @@ export function selectBestNiche(
 }
 
 function emptyScores(): MobileScores {
-  return { competitionScore: 5, saturationScore: 5, qualityBarrierScore: 5, marketPowerScore: 5, opportunityScore: 5 };
+  return {
+    competitionScore: 5,
+    saturationScore: 5,
+    qualityBarrierScore: 5,
+    marketPowerScore: 5,
+    opportunityScore: 5,
+  };
 }
 
 function emptyMetrics(): MobileMetrics {
   return {
-    totalApps: 0, totalReviews: 0,
-    top10AvgRating: 0, bottom40AvgRating: 0, medianRating: 0, ratingVariance: 0,
-    top1ReviewShare: 0, top5ReviewShare: 0, top10ReviewShare: 0,
-    reviewDistributionSkew: 0, ratingDistributionAbove45: 0,
-    marketDominance: 'LOW', marketLocked: false,
+    totalApps: 0,
+    totalReviews: 0,
+    top10AvgRating: 0,
+    bottom40AvgRating: 0,
+    medianRating: 0,
+    ratingVariance: 0,
+    top1ReviewShare: 0,
+    top5ReviewShare: 0,
+    top10ReviewShare: 0,
+    reviewDistributionSkew: 0,
+    ratingDistributionAbove45: 0,
+    marketDominance: 'LOW',
+    marketLocked: false,
   };
 }

@@ -1,15 +1,26 @@
 import type { Competitor } from '@/types';
-import type { MobileMetrics, MobileScores, MobileDecision, PainAnalysis, NicheResult, WinAngle } from '@/lib/scoring/mobile';
+import type {
+  MobileMetrics,
+  MobileScores,
+  MobileDecision,
+  PainAnalysis,
+  NicheResult,
+  WinAngle,
+} from '@/lib/scoring/mobile';
 import { formatCompetitorBlock } from './formatters';
 
 type ChatMessage = { role: 'system' | 'user'; content: string };
 
 const PRODUCT_SEARCH_CONSTRAINT: Record<string, string> = {
-  'Mobile App': 'Queries MUST target mobile apps only. Include terms like "app", "iOS app", "Android app", or "App Store". Never return websites, articles, resource lists, or SaaS tools.',
-  'SaaS': 'Queries MUST target SaaS products or web platforms only. Include terms like "software", "platform", "SaaS", or "web app". Never return mobile apps or article lists.',
-  'AI Tool': 'Queries MUST target AI-powered tools or products. Include terms like "AI tool", "GPT", "AI software", or "AI platform". Never return general articles or non-AI products.',
-  'Chrome Extension': 'Queries MUST target browser extensions only. Include terms like "chrome extension", "browser extension", or "add-on". Never return mobile apps or general web tools.',
-  'Dev Tool': 'Queries MUST target developer tools only. Include terms like "developer tool", "CLI", "SDK", "library", "API tool", or "open source". Never return non-technical products.',
+  'Mobile App':
+    'Queries MUST target mobile apps only. Include terms like "app", "iOS app", "Android app", or "App Store". Never return websites, articles, resource lists, or SaaS tools.',
+  SaaS: 'Queries MUST target SaaS products or web platforms only. Include terms like "software", "platform", "SaaS", or "web app". Never return mobile apps or article lists.',
+  'AI Tool':
+    'Queries MUST target AI-powered tools or products. Include terms like "AI tool", "GPT", "AI software", or "AI platform". Never return general articles or non-AI products.',
+  'Chrome Extension':
+    'Queries MUST target browser extensions only. Include terms like "chrome extension", "browser extension", or "add-on". Never return mobile apps or general web tools.',
+  'Dev Tool':
+    'Queries MUST target developer tools only. Include terms like "developer tool", "CLI", "SDK", "library", "API tool", or "open source". Never return non-technical products.',
 };
 
 export function buildValidationQueryMessages(
@@ -226,7 +237,12 @@ export function buildMobileAnalysisMessages(
   competitors: Competitor[],
   metrics: MobileMetrics,
   scores: MobileScores,
-  uiScores: { score: number; painScore: number; competitionScore: number; opportunityScore: number },
+  uiScores: {
+    score: number;
+    painScore: number;
+    competitionScore: number;
+    opportunityScore: number;
+  },
   rawDecision: MobileDecision,
   decisionReason: string,
   pain: PainAnalysis,
@@ -258,9 +274,13 @@ export function buildMobileAnalysisMessages(
 - marketLocked: ${metrics.marketLocked ?? false}
 
 Pain analysis (weighted score ${pain.weightedScore}/10):
-${pain.topPainClusters.length > 0
-  ? pain.topPainClusters.map((c) => `- ${c.cluster}: ${c.share}% of signals`).join('\n')
-  : '- No strong pain clusters detected'}
+${
+  pain.topPainClusters.length > 0
+    ? pain.topPainClusters
+        .map((c) => `- ${c.cluster}: ${c.share}% of signals`)
+        .join('\n')
+    : '- No strong pain clusters detected'
+}
 
 Engine scores (0–10):
 - competitionScore: ${scores.competitionScore}
@@ -373,7 +393,9 @@ ${competitorBlock}`,
   ];
 }
 
-export function buildKeywordExpansionMessages(description: string): ChatMessage[] {
+export function buildKeywordExpansionMessages(
+  description: string
+): ChatMessage[] {
   return [
     {
       role: 'system',

@@ -14,6 +14,8 @@ export async function discoverCompetitors(
       return discoverSaas(queries);
     default:
       // Chrome Extension, Dev Tool, AI Tool, or unset — generic Tavily
-      return searchAll(queries.map((q) => ({ query: q, type: 'competitor' as const })));
+      return searchAll(
+        queries.map((q) => ({ query: q, type: 'competitor' as const }))
+      );
   }
 }

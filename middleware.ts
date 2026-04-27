@@ -58,14 +58,21 @@ export async function middleware(request: NextRequest) {
   });
 
   // Refresh the session — required for Server Component auth to work.
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const isApiRoute = request.nextUrl.pathname.startsWith('/api/') && !request.nextUrl.pathname.startsWith('/api/auth/');
+  const isApiRoute =
+    request.nextUrl.pathname.startsWith('/api/') &&
+    !request.nextUrl.pathname.startsWith('/api/auth/');
 
   if (isApiRoute) {
     const contentLength = Number(request.headers.get('content-length') ?? 0);
     if (contentLength > 100 * 1024) {
-      return NextResponse.json({ error: 'Request body too large' }, { status: 413 });
+      return NextResponse.json(
+        { error: 'Request body too large' },
+        { status: 413 }
+      );
     }
   }
 
@@ -74,7 +81,10 @@ export async function middleware(request: NextRequest) {
   }
 
   const PROTECTED_PAGES = ['/ideas'];
-  if (!user && PROTECTED_PAGES.some(p => request.nextUrl.pathname.startsWith(p))) {
+  if (
+    !user &&
+    PROTECTED_PAGES.some((p) => request.nextUrl.pathname.startsWith(p))
+  ) {
     return NextResponse.redirect(new URL('/auth', request.url));
   }
 

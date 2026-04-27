@@ -13,15 +13,25 @@ interface ValidationCompetitorsBlockProps {
 }
 
 function fmtRevenue(rev: { low: number; high: number }): string {
-  const fmt = (n: number) => n >= 1000 ? `$${Math.round(n / 1000)}K` : `$${n}`;
+  const fmt = (n: number) =>
+    n >= 1000 ? `$${Math.round(n / 1000)}K` : `$${n}`;
   return `~${fmt(rev.low)}–${fmt(rev.high)}/mo est.`;
 }
 
-export function ValidationCompetitorsBlock({ result, competitors }: ValidationCompetitorsBlockProps) {
+export function ValidationCompetitorsBlock({
+  result,
+  competitors,
+}: ValidationCompetitorsBlockProps) {
   const { competitorInsights, marketHardness } = result;
-  const competitorItems = competitors.filter((c) => c.type !== 'signal').slice(0, 4);
+  const competitorItems = competitors
+    .filter((c) => c.type !== 'signal')
+    .slice(0, 4);
 
-  if (competitorItems.length === 0 && (!competitorInsights || competitorInsights.length === 0)) return null;
+  if (
+    competitorItems.length === 0 &&
+    (!competitorInsights || competitorInsights.length === 0)
+  )
+    return null;
 
   return (
     <div className="rounded-xl border border-border bg-card px-5 py-5 flex flex-col gap-4">
@@ -33,17 +43,23 @@ export function ValidationCompetitorsBlock({ result, competitors }: ValidationCo
             <div key={c.url} className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
                 <CompetitorLogo domain={c.source} name={c.name} />
-                <span className="text-sm font-semibold text-foreground/90 truncate flex-1">{c.name}</span>
+                <span className="text-sm font-semibold text-foreground/90 truncate flex-1">
+                  {c.name}
+                </span>
                 {c.rating != null && (
                   <span className="text-[11px] font-medium text-amber-400/80 shrink-0">
-                    ★ {c.rating.toFixed(1)}{c.reviewCount ? ` · ${c.reviewCount.toLocaleString()} reviews` : ''}
+                    ★ {c.rating.toFixed(1)}
+                    {c.reviewCount
+                      ? ` · ${c.reviewCount.toLocaleString()} reviews`
+                      : ''}
                   </span>
                 )}
-                {c.revenueEstimate && (c.revenueEstimate.low > 0 || c.revenueEstimate.high > 0) && (
-                  <span className="text-[11px] font-medium text-muted-foreground/50 shrink-0">
-                    {fmtRevenue(c.revenueEstimate)}
-                  </span>
-                )}
+                {c.revenueEstimate &&
+                  (c.revenueEstimate.low > 0 || c.revenueEstimate.high > 0) && (
+                    <span className="text-[11px] font-medium text-muted-foreground/50 shrink-0">
+                      {fmtRevenue(c.revenueEstimate)}
+                    </span>
+                  )}
                 <a
                   href={c.url}
                   target="_blank"
@@ -57,18 +73,24 @@ export function ValidationCompetitorsBlock({ result, competitors }: ValidationCo
                 {ins ? (
                   <>
                     <p className="text-xs text-foreground/75 leading-snug">
-                      <span className="font-semibold text-muted-foreground/60">Users pick them: </span>
+                      <span className="font-semibold text-muted-foreground/60">
+                        Users pick them:{' '}
+                      </span>
                       {ins.whyChosen}
                     </p>
                     {ins.weakness && (
                       <p className="text-xs text-foreground/75 leading-snug">
-                        <span className="font-semibold text-emerald-500/70">Your opening: </span>
+                        <span className="font-semibold text-emerald-500/70">
+                          Your opening:{' '}
+                        </span>
                         {ins.weakness}
                       </p>
                     )}
                   </>
                 ) : c.snippet ? (
-                  <p className="text-xs text-muted-foreground/65 leading-snug line-clamp-2">{c.snippet}</p>
+                  <p className="text-xs text-muted-foreground/65 leading-snug line-clamp-2">
+                    {c.snippet}
+                  </p>
                 ) : null}
               </div>
             </div>

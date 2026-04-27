@@ -6,7 +6,7 @@ import { PRODUCT_TYPE_OPTIONS, DIFFICULTY_OPTIONS } from '@/constants/products';
 const LIMITS = {
   prompt: 500,
   instruction: 300,
-  ideaJson: 8_192,   // bytes — a normal AI-generated idea is ~1-2 KB
+  ideaJson: 8_192, // bytes — a normal AI-generated idea is ~1-2 KB
   ideaTitle: 200,
   ideaPitch: 600,
   nodeId: 100,
@@ -35,7 +35,9 @@ export function validateGenerateInput(
   difficulty: string
 ): void {
   if (tooLong(prompt, LIMITS.prompt)) {
-    throw AppError.validation(`Prompt must be ${LIMITS.prompt} characters or fewer`);
+    throw AppError.validation(
+      `Prompt must be ${LIMITS.prompt} characters or fewer`
+    );
   }
   if (productType && !VALID_PRODUCT_TYPES.has(productType as never)) {
     throw AppError.validation('Invalid product type');
@@ -47,7 +49,9 @@ export function validateGenerateInput(
 
 export function validateInstruction(instruction: string): void {
   if (tooLong(instruction, LIMITS.instruction)) {
-    throw AppError.validation(`Instruction must be ${LIMITS.instruction} characters or fewer`);
+    throw AppError.validation(
+      `Instruction must be ${LIMITS.instruction} characters or fewer`
+    );
   }
 }
 
@@ -68,16 +72,22 @@ export function validateValidateInput(
     throw AppError.validation('Description is required');
   }
   if (tooLong(description, LIMITS.validateDescription)) {
-    throw AppError.validation(`Description must be ${LIMITS.validateDescription} characters or fewer`);
+    throw AppError.validation(
+      `Description must be ${LIMITS.validateDescription} characters or fewer`
+    );
   }
   if (!productType || !VALID_PRODUCT_TYPES.has(productType as never)) {
     throw AppError.validation('Invalid product type');
   }
   if (audience && tooLong(audience, LIMITS.validateAudience)) {
-    throw AppError.validation(`Audience must be ${LIMITS.validateAudience} characters or fewer`);
+    throw AppError.validation(
+      `Audience must be ${LIMITS.validateAudience} characters or fewer`
+    );
   }
   if (problem && tooLong(problem, LIMITS.validateProblem)) {
-    throw AppError.validation(`Problem must be ${LIMITS.validateProblem} characters or fewer`);
+    throw AppError.validation(
+      `Problem must be ${LIMITS.validateProblem} characters or fewer`
+    );
   }
 }
 
@@ -89,24 +99,36 @@ export function validateExpandInput(
   parentPath: unknown
 ): void {
   if (typeof ideaTitle === 'string' && tooLong(ideaTitle, LIMITS.ideaTitle)) {
-    throw AppError.validation(`Idea title must be ${LIMITS.ideaTitle} characters or fewer`);
+    throw AppError.validation(
+      `Idea title must be ${LIMITS.ideaTitle} characters or fewer`
+    );
   }
   if (typeof ideaPitch === 'string' && tooLong(ideaPitch, LIMITS.ideaPitch)) {
-    throw AppError.validation(`Idea pitch must be ${LIMITS.ideaPitch} characters or fewer`);
+    throw AppError.validation(
+      `Idea pitch must be ${LIMITS.ideaPitch} characters or fewer`
+    );
   }
   if (tooLong(nodeId, LIMITS.nodeId)) {
-    throw AppError.validation(`nodeId must be ${LIMITS.nodeId} characters or fewer`);
+    throw AppError.validation(
+      `nodeId must be ${LIMITS.nodeId} characters or fewer`
+    );
   }
   if (tooLong(nodeLabel, LIMITS.nodeLabel)) {
-    throw AppError.validation(`nodeLabel must be ${LIMITS.nodeLabel} characters or fewer`);
+    throw AppError.validation(
+      `nodeLabel must be ${LIMITS.nodeLabel} characters or fewer`
+    );
   }
   if (Array.isArray(parentPath)) {
     if (parentPath.length > LIMITS.parentPathItems) {
-      throw AppError.validation(`parentPath must have ${LIMITS.parentPathItems} items or fewer`);
+      throw AppError.validation(
+        `parentPath must have ${LIMITS.parentPathItems} items or fewer`
+      );
     }
     for (const item of parentPath) {
       if (typeof item === 'string' && tooLong(item, LIMITS.parentPathItem)) {
-        throw AppError.validation(`Each parentPath item must be ${LIMITS.parentPathItem} characters or fewer`);
+        throw AppError.validation(
+          `Each parentPath item must be ${LIMITS.parentPathItem} characters or fewer`
+        );
       }
     }
   }

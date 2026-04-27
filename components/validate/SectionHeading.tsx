@@ -7,7 +7,12 @@ interface SectionHeadingProps {
 
 export function SectionHeading({ children, color }: SectionHeadingProps) {
   return (
-    <p className={cn('text-[10px] font-bold uppercase tracking-widest', color ?? 'text-muted-foreground/70')}>
+    <p
+      className={cn(
+        'text-[10px] font-bold uppercase tracking-widest',
+        color ?? 'text-muted-foreground/70'
+      )}
+    >
       {children}
     </p>
   );

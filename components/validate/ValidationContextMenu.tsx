@@ -48,6 +48,6 @@ export function ValidationContextMenu({
         Delete
       </Button>
     </div>,
-    document.body,
+    document.body
   );
 }

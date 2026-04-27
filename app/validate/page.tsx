@@ -10,7 +10,8 @@ export default function ValidatePage() {
           Validate Your Idea
         </h1>
         <p className="mt-3 text-[1.0625rem] leading-[1.7] text-foreground/70">
-          Describe your idea and get a research-backed validation report with real market signals.
+          Describe your idea and get a research-backed validation report with
+          real market signals.
         </p>
       </div>
 

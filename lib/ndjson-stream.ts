@@ -4,7 +4,7 @@ export async function fetchNdjsonStream<TDone>(
   url: string,
   body: unknown,
   onEvent: (event: RawEvent) => TDone | undefined,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ): Promise<TDone> {
   const res = await fetch(url, {
     method: 'POST',
@@ -19,7 +19,9 @@ export async function fetchNdjsonStream<TDone>(
     try {
       const b = await res.json();
       if (b?.message) message = b.message;
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     throw Object.assign(new Error(message), { status: res.status });
   }
 
@@ -38,12 +40,16 @@ export async function fetchNdjsonStream<TDone>(
     for (const line of lines) {
       if (!line.trim()) continue;
       let event: RawEvent;
-      try { event = JSON.parse(line); } catch { continue; }
+      try {
+        event = JSON.parse(line);
+      } catch {
+        continue;
+      }
 
       if (event.type === 'error') {
         throw Object.assign(
           new Error(String(event['message'] ?? 'Stream error')),
-          { status: Number(event['status'] ?? 500) },
+          { status: Number(event['status'] ?? 500) }
         );
       }
 

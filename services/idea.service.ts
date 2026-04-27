@@ -14,4 +14,3 @@ export async function refineIdea(
 ): Promise<Idea> {
   return typedApi.post<Idea>('/api/refine', { idea, instruction });
 }
-

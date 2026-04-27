@@ -20,12 +20,23 @@ import { PRODUCT_TYPE_OPTIONS } from '@/constants/products';
 
 export function ValidateForm() {
   const {
-    description, setDescription,
-    productType, setProductType,
-    audience, setAudience,
-    problem, setProblem,
-    phase, error, isActive, cancel, canSubmit,
-    result, prevResult, competitors, version,
+    description,
+    setDescription,
+    productType,
+    setProductType,
+    audience,
+    setAudience,
+    problem,
+    setProblem,
+    phase,
+    error,
+    isActive,
+    cancel,
+    canSubmit,
+    result,
+    prevResult,
+    competitors,
+    version,
     handleSubmit,
   } = useValidateWorkflow();
 
@@ -43,13 +54,18 @@ export function ValidateForm() {
           />
           <div className="flex flex-col gap-3 sm:flex-row">
             <div className="flex-1">
-              <Select value={productType || undefined} onValueChange={setProductType}>
+              <Select
+                value={productType || undefined}
+                onValueChange={setProductType}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Product type (required)" />
                 </SelectTrigger>
                 <SelectContent>
                   {PRODUCT_TYPE_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -76,7 +92,9 @@ export function ValidateForm() {
       )}
 
       <AnimatePresence mode="wait">
-        {(phase === 'thinking' || phase === 'researching' || phase === 'analyzing') && (
+        {(phase === 'thinking' ||
+          phase === 'researching' ||
+          phase === 'analyzing') && (
           <motion.div
             key="thinking"
             initial={{ opacity: 0, y: 8 }}
@@ -106,7 +124,11 @@ export function ValidateForm() {
               result={result}
               competitors={competitors}
               previousResult={prevResult ?? undefined}
-              ideaContext={{ description, audience: audience || undefined, problem: problem || undefined }}
+              ideaContext={{
+                description,
+                audience: audience || undefined,
+                problem: problem || undefined,
+              }}
             />
             <RefinePanel
               description={description}
@@ -131,14 +153,14 @@ export function ValidateForm() {
               <AlertTriangle className="h-4 w-4 text-red-500" />
             </div>
             <div className="space-y-1.5">
-              <p className="text-sm font-semibold text-foreground">Validation failed</p>
-              <p className="text-xs leading-relaxed text-muted-foreground">{error}</p>
+              <p className="text-sm font-semibold text-foreground">
+                Validation failed
+              </p>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                {error}
+              </p>
             </div>
-            <Button
-              variant="link"
-              size="sm"
-              onClick={() => handleSubmit()}
-            >
+            <Button variant="link" size="sm" onClick={() => handleSubmit()}>
               Try again →
             </Button>
           </motion.div>

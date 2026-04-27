@@ -26,8 +26,14 @@ type ForgotData = z.infer<typeof ForgotSchema>;
 
 const headings: Record<Mode, { title: string; sub: string }> = {
   signin: { title: 'Welcome back', sub: 'Sign in to access your saved ideas' },
-  signup: { title: 'Create your account', sub: 'Start building your idea workspace' },
-  forgot: { title: 'Reset your password', sub: 'Enter your email to receive a reset link' },
+  signup: {
+    title: 'Create your account',
+    sub: 'Start building your idea workspace',
+  },
+  forgot: {
+    title: 'Reset your password',
+    sub: 'Enter your email to receive a reset link',
+  },
 };
 
 export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
@@ -71,8 +77,12 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
     setLoading(true);
     const result = await signIn(data.email, data.password);
     setLoading(false);
-    if (result.error) { setError(result.error); return; }
-    if (onSuccess) onSuccess(); else router.push('/ideas');
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+    if (onSuccess) onSuccess();
+    else router.push('/ideas');
   }
 
   async function handleSignUp(data: SignUpData) {
@@ -80,13 +90,17 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
     setLoading(true);
     const result = await signUp(data.email, data.password);
     setLoading(false);
-    if (result.error) { setError(result.error); return; }
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
     if (result.requiresEmailConfirmation) {
       setSuccess('Check your email to confirm your account, then sign in.');
       switchMode('signin');
       return;
     }
-    if (onSuccess) onSuccess(); else router.push('/ideas');
+    if (onSuccess) onSuccess();
+    else router.push('/ideas');
   }
 
   async function handleForgot(data: ForgotData) {
@@ -94,7 +108,10 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
     setLoading(true);
     const result = await resetPasswordForEmail(data.email);
     setLoading(false);
-    if (result.error) { setError(result.error); return; }
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
     setSuccess('Reset link sent — check your email.');
   }
 
@@ -118,7 +135,10 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
 
       {/* ── SIGN IN ── */}
       {mode === 'signin' && (
-        <form onSubmit={signinForm.handleSubmit(handleSignIn)} className="space-y-3">
+        <form
+          onSubmit={signinForm.handleSubmit(handleSignIn)}
+          className="space-y-3"
+        >
           <div>
             <Input
               type="email"
@@ -127,7 +147,9 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
               {...signinForm.register('email')}
             />
             {signinForm.formState.errors.email && (
-              <p className="text-xs text-red-500 mt-1">{signinForm.formState.errors.email.message}</p>
+              <p className="text-xs text-red-500 mt-1">
+                {signinForm.formState.errors.email.message}
+              </p>
             )}
           </div>
 
@@ -145,14 +167,20 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
                 variant="ghost"
                 size="icon"
                 className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
-                onClick={() => setShowPassword(v => !v)}
+                onClick={() => setShowPassword((v) => !v)}
                 tabIndex={-1}
               >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </Button>
             </div>
             {signinForm.formState.errors.password && (
-              <p className="text-xs text-red-500 mt-1">{signinForm.formState.errors.password.message}</p>
+              <p className="text-xs text-red-500 mt-1">
+                {signinForm.formState.errors.password.message}
+              </p>
             )}
             <div className="text-right mt-1">
               <Button
@@ -181,7 +209,12 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
             <div className="flex-1 border-t border-border" />
           </div>
 
-          <Button type="button" variant="outline" className="w-full" onClick={handleGoogle}>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={handleGoogle}
+          >
             <FcGoogle className="h-4 w-4 mr-2" />
             Continue with Google
           </Button>
@@ -190,7 +223,10 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
 
       {/* ── SIGN UP ── */}
       {mode === 'signup' && (
-        <form onSubmit={signupForm.handleSubmit(handleSignUp)} className="space-y-3">
+        <form
+          onSubmit={signupForm.handleSubmit(handleSignUp)}
+          className="space-y-3"
+        >
           <div>
             <Input
               type="email"
@@ -199,7 +235,9 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
               {...signupForm.register('email')}
             />
             {signupForm.formState.errors.email && (
-              <p className="text-xs text-red-500 mt-1">{signupForm.formState.errors.email.message}</p>
+              <p className="text-xs text-red-500 mt-1">
+                {signupForm.formState.errors.email.message}
+              </p>
             )}
           </div>
 
@@ -215,14 +253,20 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
               <button
                 type="button"
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                onClick={() => setShowPassword(v => !v)}
+                onClick={() => setShowPassword((v) => !v)}
                 tabIndex={-1}
               >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </button>
             </div>
             {signupForm.formState.errors.password && (
-              <p className="text-xs text-red-500 mt-1">{signupForm.formState.errors.password.message}</p>
+              <p className="text-xs text-red-500 mt-1">
+                {signupForm.formState.errors.password.message}
+              </p>
             )}
             <PasswordStrength password={signupPassword} />
           </div>
@@ -241,14 +285,20 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
                 variant="ghost"
                 size="icon"
                 className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
-                onClick={() => setShowConfirm(v => !v)}
+                onClick={() => setShowConfirm((v) => !v)}
                 tabIndex={-1}
               >
-                {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showConfirm ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </Button>
             </div>
             {signupForm.formState.errors.confirmPassword && (
-              <p className="text-xs text-red-500 mt-1">{signupForm.formState.errors.confirmPassword.message}</p>
+              <p className="text-xs text-red-500 mt-1">
+                {signupForm.formState.errors.confirmPassword.message}
+              </p>
             )}
           </div>
 
@@ -266,7 +316,12 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
             <div className="flex-1 border-t border-border" />
           </div>
 
-          <Button type="button" variant="outline" className="w-full" onClick={handleGoogle}>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={handleGoogle}
+          >
             <FcGoogle className="h-4 w-4 mr-2" />
             Continue with Google
           </Button>
@@ -275,7 +330,10 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
 
       {/* ── FORGOT ── */}
       {mode === 'forgot' && (
-        <form onSubmit={forgotForm.handleSubmit(handleForgot)} className="space-y-3">
+        <form
+          onSubmit={forgotForm.handleSubmit(handleForgot)}
+          className="space-y-3"
+        >
           <div>
             <Input
               type="email"
@@ -284,7 +342,9 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
               {...forgotForm.register('email')}
             />
             {forgotForm.formState.errors.email && (
-              <p className="text-xs text-red-500 mt-1">{forgotForm.formState.errors.email.message}</p>
+              <p className="text-xs text-red-500 mt-1">
+                {forgotForm.formState.errors.email.message}
+              </p>
             )}
           </div>
 
@@ -310,7 +370,9 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
       {/* ── MODE TOGGLE ── */}
       {mode !== 'forgot' && (
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          {mode === 'signin' ? "Don't have an account?" : 'Already have an account?'}{' '}
+          {mode === 'signin'
+            ? "Don't have an account?"
+            : 'Already have an account?'}{' '}
           <Button
             type="button"
             variant="link"
@@ -324,4 +386,3 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
     </div>
   );
 }
-

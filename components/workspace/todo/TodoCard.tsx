@@ -7,24 +7,33 @@ import { cn } from '@/lib/utils';
 import type { WorkspaceTask, TaskStatus } from '@/types/workspace.types';
 
 const STATUS_LINE: Record<TaskStatus, string> = {
-  todo:        'bg-muted-foreground/20',
+  todo: 'bg-muted-foreground/20',
   in_progress: 'bg-amber-400',
-  done:        'bg-emerald-400',
+  done: 'bg-emerald-400',
 };
 
 interface TodoCardProps {
-  task:      WorkspaceTask;
-  status?:   TaskStatus;
-  onDelete:  (id: string) => void;
+  task: WorkspaceTask;
+  status?: TaskStatus;
+  onDelete: (id: string) => void;
   isOverlay?: boolean;
 }
 
 export function TodoCard({ task, status, onDelete, isOverlay }: TodoCardProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: task.id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id });
 
   const createdAt = new Date(task.createdAt);
-  const dateLabel = createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const dateLabel = createdAt.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  });
 
   return (
     <div
@@ -34,12 +43,20 @@ export function TodoCard({ task, status, onDelete, isOverlay }: TodoCardProps) {
         'group relative flex select-none items-start gap-0 overflow-hidden rounded-xl border bg-card shadow-sm',
         'transition-all duration-150',
         isDragging && !isOverlay && 'opacity-20 shadow-none',
-        isOverlay  && 'rotate-[1deg] scale-[1.02] shadow-2xl ring-2 ring-primary/20 ring-offset-2 ring-offset-background',
-        !isDragging && !isOverlay && 'border-border/50 hover:border-border hover:shadow-md'
+        isOverlay &&
+          'rotate-[1deg] scale-[1.02] shadow-2xl ring-2 ring-primary/20 ring-offset-2 ring-offset-background',
+        !isDragging &&
+          !isOverlay &&
+          'border-border/50 hover:border-border hover:shadow-md'
       )}
     >
       {/* Status accent line */}
-      <span className={cn('absolute left-0 inset-y-0 w-[3px] rounded-l-xl', status ? STATUS_LINE[status] : 'bg-muted-foreground/20')} />
+      <span
+        className={cn(
+          'absolute left-0 inset-y-0 w-[3px] rounded-l-xl',
+          status ? STATUS_LINE[status] : 'bg-muted-foreground/20'
+        )}
+      />
 
       {/* Drag handle */}
       <button

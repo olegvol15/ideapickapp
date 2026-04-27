@@ -8,11 +8,7 @@ import {
   getGenerations,
 } from '@/services/db.service';
 import { generationKeys } from '@/lib/api-keys';
-import type {
-  GenerateResponse,
-  ProductType,
-  Difficulty,
-} from '@/types';
+import type { GenerateResponse, ProductType, Difficulty } from '@/types';
 
 export function useSaveGeneration(userId: string | undefined) {
   const queryClient = useQueryClient();

@@ -17,20 +17,40 @@ interface ValidationItemProps {
   onNavigate?: () => void;
 }
 
-export function ValidationItem({ id, description, onDelete, onRename, onNavigate }: ValidationItemProps) {
+export function ValidationItem({
+  id,
+  description,
+  onDelete,
+  onRename,
+  onNavigate,
+}: ValidationItemProps) {
   const pathname = usePathname();
   const isActive = pathname === `/validate/${id}`;
 
   const {
-    menuOpen, menuPos, mounted,
-    editing, editValue, setEditValue,
-    buttonRef, menuRef, inputRef,
-    openMenu, startEdit, cancelMenu,
-    commitRename, handleKeyDown,
+    menuOpen,
+    menuPos,
+    mounted,
+    editing,
+    editValue,
+    setEditValue,
+    buttonRef,
+    menuRef,
+    inputRef,
+    openMenu,
+    startEdit,
+    cancelMenu,
+    commitRename,
+    handleKeyDown,
   } = useEditableValidation(description, onRename);
 
   return (
-    <div className={cn('group relative flex items-center rounded-lg', isActive && 'bg-white/8')}>
+    <div
+      className={cn(
+        'group relative flex items-center rounded-lg',
+        isActive && 'bg-white/8'
+      )}
+    >
       {editing ? (
         <Input
           ref={inputRef}
@@ -46,10 +66,14 @@ export function ValidationItem({ id, description, onDelete, onRename, onNavigate
           onClick={onNavigate}
           className={cn(
             'flex min-w-0 flex-1 items-center rounded-lg py-2 pl-3 pr-7 text-sm transition-colors',
-            isActive ? 'text-foreground/90' : 'text-foreground/45 hover:text-foreground/80'
+            isActive
+              ? 'text-foreground/90'
+              : 'text-foreground/45 hover:text-foreground/80'
           )}
         >
-          <span className="overflow-hidden whitespace-nowrap">{description}</span>
+          <span className="overflow-hidden whitespace-nowrap">
+            {description}
+          </span>
         </Link>
       )}
 
@@ -62,7 +86,9 @@ export function ValidationItem({ id, description, onDelete, onRename, onNavigate
           onClick={openMenu}
           className={cn(
             'absolute right-1 h-6 w-6',
-            menuOpen ? 'text-foreground' : 'text-transparent group-hover:text-muted-foreground/70 hover:!text-foreground'
+            menuOpen
+              ? 'text-foreground'
+              : 'text-transparent group-hover:text-muted-foreground/70 hover:!text-foreground'
           )}
         >
           <MoreHorizontal className="h-3.5 w-3.5" />
@@ -76,7 +102,10 @@ export function ValidationItem({ id, description, onDelete, onRename, onNavigate
           menuRef={menuRef}
           isEditing={editing}
           onRenameStart={startEdit}
-          onDelete={() => { cancelMenu(); onDelete(); }}
+          onDelete={() => {
+            cancelMenu();
+            onDelete();
+          }}
         />
       )}
     </div>

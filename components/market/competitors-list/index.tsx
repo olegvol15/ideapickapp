@@ -36,7 +36,10 @@ function RawCompetitorRow({ name, url, snippet, source }: Competitor) {
   );
 }
 
-export function CompetitorsList({ competitors, analyzed }: CompetitorsListProps) {
+export function CompetitorsList({
+  competitors,
+  analyzed,
+}: CompetitorsListProps) {
   if (!competitors?.length && !analyzed?.length) {
     return (
       <p className="text-xs py-6 text-center text-muted-foreground">

@@ -25,7 +25,9 @@ export function useResearch(userId: string | undefined) {
   const store = useResearchStore();
   const saveGenerationMutation = useSaveGeneration(userId);
   const abortRef = useRef<AbortController | null>(null);
-  const analysisIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const analysisIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
+    null
+  );
 
   const isGenerating =
     store.phase === 'thinking' ||

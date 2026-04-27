@@ -22,16 +22,31 @@ interface ValidationHistoryCardProps {
 }
 
 export function ValidationHistoryCard({
-  id, description, productType, result, createdAt, onDelete, onRename,
+  id,
+  description,
+  productType,
+  result,
+  createdAt,
+  onDelete,
+  onRename,
 }: ValidationHistoryCardProps) {
   const router = useRouter();
 
   const {
-    menuOpen, menuPos, mounted,
-    editing, editValue, setEditValue,
-    buttonRef, menuRef, inputRef,
-    openMenu, startEdit, cancelMenu,
-    commitRename, handleKeyDown,
+    menuOpen,
+    menuPos,
+    mounted,
+    editing,
+    editValue,
+    setEditValue,
+    buttonRef,
+    menuRef,
+    inputRef,
+    openMenu,
+    startEdit,
+    cancelMenu,
+    commitRename,
+    handleKeyDown,
   } = useEditableValidation(description, onRename);
 
   return (
@@ -41,11 +56,21 @@ export function ValidationHistoryCard({
     >
       {/* Score + decision badges */}
       <div className="flex items-center gap-2">
-        <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums', scoreColorBadge(result.score))}>
+        <span
+          className={cn(
+            'rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums',
+            scoreColorBadge(result.score)
+          )}
+        >
           {result.score}/100
         </span>
         {result.decision && (
-          <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize', decisionColorBadge(result.decision))}>
+          <span
+            className={cn(
+              'rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize',
+              decisionColorBadge(result.decision)
+            )}
+          >
             {result.decision.replace('-', ' ')}
           </span>
         )}
@@ -63,12 +88,18 @@ export function ValidationHistoryCard({
           className="h-auto w-full border-0 bg-transparent p-0 text-sm font-medium text-foreground shadow-none focus-visible:ring-0 rounded-none"
         />
       ) : (
-        <p className="line-clamp-2 text-sm font-medium leading-snug text-foreground/90">{description}</p>
+        <p className="line-clamp-2 text-sm font-medium leading-snug text-foreground/90">
+          {description}
+        </p>
       )}
 
       {/* Footer */}
       <div className="flex items-center gap-2 text-[11px] text-muted-foreground/50">
-        {productType && <span className="rounded bg-white/5 px-1.5 py-0.5">{productType}</span>}
+        {productType && (
+          <span className="rounded bg-white/5 px-1.5 py-0.5">
+            {productType}
+          </span>
+        )}
         <span className="ml-auto">{relativeDate(createdAt)}</span>
       </div>
 
@@ -79,10 +110,15 @@ export function ValidationHistoryCard({
           type="button"
           variant="ghost"
           size="icon"
-          onClick={(e) => { e.stopPropagation(); openMenu(e); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            openMenu(e);
+          }}
           className={cn(
             'absolute right-3 top-3 h-6 w-6',
-            menuOpen ? 'text-foreground' : 'text-transparent group-hover:text-muted-foreground/50 hover:!text-foreground'
+            menuOpen
+              ? 'text-foreground'
+              : 'text-transparent group-hover:text-muted-foreground/50 hover:!text-foreground'
           )}
         >
           <MoreHorizontal className="h-3.5 w-3.5" />
@@ -96,7 +132,10 @@ export function ValidationHistoryCard({
           menuRef={menuRef}
           isEditing={editing}
           onRenameStart={startEdit}
-          onDelete={() => { cancelMenu(); onDelete(); }}
+          onDelete={() => {
+            cancelMenu();
+            onDelete();
+          }}
         />
       )}
     </div>

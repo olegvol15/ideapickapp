@@ -40,7 +40,8 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   });
 
   const raw = completion.choices[0]?.message?.content;
-  if (!raw) throw AppError.invalidAiResponse('Refinement failed. Please try again.');
+  if (!raw)
+    throw AppError.invalidAiResponse('Refinement failed. Please try again.');
   let refineJson: unknown;
   try {
     refineJson = JSON.parse(raw);

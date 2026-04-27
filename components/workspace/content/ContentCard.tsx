@@ -1,14 +1,22 @@
 'use client';
 
 import { useState } from 'react';
-import { Copy, Check, Trash2, ChevronUp, ChevronDown, MessageSquare, Share2, Bookmark } from 'lucide-react';
+import {
+  Copy,
+  Check,
+  Trash2,
+  ChevronUp,
+  ChevronDown,
+  MessageSquare,
+  Share2,
+  Bookmark,
+} from 'lucide-react';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 import { XPostPreview } from './XPostPreview';
 import type { ContentItem } from '@/types/workspace.types';
 
 interface ContentCardProps {
-  item:     ContentItem;
+  item: ContentItem;
   onDelete: (id: string) => void;
 }
 
@@ -32,7 +40,7 @@ function parseReddit(text: string): { title: string | null; body: string } {
 
 function RedditCard({ item, onDelete }: ContentCardProps) {
   const { copied, copy } = useCopy(item.text);
-  const { title, body }  = parseReddit(item.text);
+  const { title, body } = parseReddit(item.text);
   const wordCount = item.text.trim().split(/\s+/).filter(Boolean).length;
   const charCount = item.text.length;
 
@@ -40,16 +48,29 @@ function RedditCard({ item, onDelete }: ContentCardProps) {
     <div className="group overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm transition-shadow hover:shadow-md">
       {/* Header bar */}
       <div className="flex items-center gap-2 border-b border-border/30 px-4 py-2.5">
-        <span className="text-[11px] font-bold text-orange-500">r/startups</span>
+        <span className="text-[11px] font-bold text-orange-500">
+          r/startups
+        </span>
         <span className="text-[10px] text-muted-foreground/40">·</span>
-        <span className="text-[10px] text-muted-foreground/50">Posted by <span className="text-muted-foreground/70">u/ideapickapp</span></span>
+        <span className="text-[10px] text-muted-foreground/50">
+          Posted by{' '}
+          <span className="text-muted-foreground/70">u/ideapickapp</span>
+        </span>
         <div className="ml-auto flex items-center gap-1">
           <button
             onClick={copy}
             title="Copy"
             className="flex items-center gap-1.5 rounded-lg border border-border/40 bg-background/40 px-2 py-1 text-[10px] font-semibold text-muted-foreground transition-all hover:border-border hover:text-foreground"
           >
-            {copied ? <><Check className="h-3 w-3 text-emerald-500" /> Copied</> : <><Copy className="h-3 w-3" /> Copy</>}
+            {copied ? (
+              <>
+                <Check className="h-3 w-3 text-emerald-500" /> Copied
+              </>
+            ) : (
+              <>
+                <Copy className="h-3 w-3" /> Copy
+              </>
+            )}
           </button>
           <button
             onClick={() => onDelete(item.id)}
@@ -68,7 +89,9 @@ function RedditCard({ item, onDelete }: ContentCardProps) {
           <button className="rounded p-0.5 text-muted-foreground/40 transition-colors hover:bg-orange-500/10 hover:text-orange-500">
             <ChevronUp className="h-4 w-4" />
           </button>
-          <span className="text-[11px] font-bold text-muted-foreground/50">0</span>
+          <span className="text-[11px] font-bold text-muted-foreground/50">
+            0
+          </span>
           <button className="rounded p-0.5 text-muted-foreground/40 transition-colors hover:bg-blue-500/10 hover:text-blue-500">
             <ChevronDown className="h-4 w-4" />
           </button>
@@ -119,7 +142,15 @@ function XCard({ item, onDelete }: ContentCardProps) {
           title="Copy"
           className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-card/90 px-2.5 py-1.5 text-[10px] font-semibold text-muted-foreground backdrop-blur-sm transition-all hover:border-border hover:text-foreground"
         >
-          {copied ? <><Check className="h-3 w-3 text-emerald-500" /> Copied</> : <><Copy className="h-3 w-3" /> Copy</>}
+          {copied ? (
+            <>
+              <Check className="h-3 w-3 text-emerald-500" /> Copied
+            </>
+          ) : (
+            <>
+              <Copy className="h-3 w-3" /> Copy
+            </>
+          )}
         </button>
         <button
           onClick={() => onDelete(item.id)}

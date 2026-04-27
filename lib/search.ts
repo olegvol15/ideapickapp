@@ -194,7 +194,9 @@ async function searchWithType(
       })
     );
 
-    return normalized.filter(type === 'signal' ? isPainSignal : isCompetitorPage);
+    return normalized.filter(
+      type === 'signal' ? isPainSignal : isCompetitorPage
+    );
   } catch {
     return [];
   }
@@ -203,7 +205,9 @@ async function searchWithType(
 export async function searchAll(
   queries: { query: string; type: 'competitor' | 'signal' }[]
 ): Promise<Competitor[]> {
-  const batches = await Promise.all(queries.map(({ query, type }) => searchWithType(query, type)));
+  const batches = await Promise.all(
+    queries.map(({ query, type }) => searchWithType(query, type))
+  );
   const seen = new Set<string>();
   const results: Competitor[] = [];
 

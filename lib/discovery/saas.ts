@@ -34,7 +34,9 @@ function extractPricingSignal(snippet: string): string | undefined {
 }
 
 export async function discoverSaas(queries: string[]): Promise<Competitor[]> {
-  const competitors = await searchAll(queries.map((q) => ({ query: q, type: 'competitor' as const })));
+  const competitors = await searchAll(
+    queries.map((q) => ({ query: q, type: 'competitor' as const }))
+  );
   return competitors.map((c) => ({
     ...c,
     platform: 'Web' as const,

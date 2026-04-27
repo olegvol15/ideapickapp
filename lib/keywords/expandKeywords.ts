@@ -29,12 +29,19 @@ export async function expandKeywords(input: {
     const raw = JSON.parse(completion.choices[0]?.message?.content ?? '{}');
 
     return {
-      base: typeof raw.base === 'string' && raw.base.trim() ? raw.base.trim() : fallback.base,
+      base:
+        typeof raw.base === 'string' && raw.base.trim()
+          ? raw.base.trim()
+          : fallback.base,
       variations: Array.isArray(raw.variations)
-        ? (raw.variations as unknown[]).filter((v): v is string => typeof v === 'string').slice(0, 3)
+        ? (raw.variations as unknown[])
+            .filter((v): v is string => typeof v === 'string')
+            .slice(0, 3)
         : [],
       niches: Array.isArray(raw.niches)
-        ? (raw.niches as unknown[]).filter((v): v is string => typeof v === 'string').slice(0, 3)
+        ? (raw.niches as unknown[])
+            .filter((v): v is string => typeof v === 'string')
+            .slice(0, 3)
         : [],
     };
   } catch {

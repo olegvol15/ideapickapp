@@ -226,8 +226,6 @@ function SidebarMenuButton({
   children,
   ...props
 }: SidebarMenuButtonProps) {
-  const Comp = asChild ? React.Fragment : 'button';
-
   if (asChild) {
     const child = React.Children.only(children) as React.ReactElement<{
       className?: string;
@@ -246,7 +244,7 @@ function SidebarMenuButton({
   }
 
   return (
-    <Comp
+    <button
       data-slot="sidebar-menu-button"
       className={cn(
         'group flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition-all',
@@ -258,7 +256,7 @@ function SidebarMenuButton({
       {...props}
     >
       {children}
-    </Comp>
+    </button>
   );
 }
 

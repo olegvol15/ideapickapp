@@ -48,9 +48,7 @@ export function Providers({
           disableTransitionOnChange
           nonce={nonce}
         >
-          <ErrorBoundary>
-            {children}
-          </ErrorBoundary>
+          <ErrorBoundary>{children}</ErrorBoundary>
           <ThemedToaster />
         </ThemeProvider>
       </AuthProvider>

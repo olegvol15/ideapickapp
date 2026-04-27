@@ -116,7 +116,10 @@ export const MobileMetricsSchema = z.object({
   // ASO-proxy fields
   keywordInTopTitles: z.boolean().optional(),
   hasWeakIncumbents: z.boolean().optional(),
-  topAppRevEstimate: z.object({ low: z.number(), high: z.number() }).nullable().optional(),
+  topAppRevEstimate: z
+    .object({ low: z.number(), high: z.number() })
+    .nullable()
+    .optional(),
   // Legacy fields kept optional so old saved validations still parse
   avgRating: z.number().optional(),
   avgReviews: z.number().optional(),
@@ -143,7 +146,10 @@ export const NicheResultSchema = z.object({
   marketDominance: z.enum(['HIGH', 'MEDIUM', 'LOW']),
   keywordInTopTitles: z.boolean().optional(),
   hasWeakIncumbents: z.boolean().optional(),
-  topAppRevEstimate: z.object({ low: z.number(), high: z.number() }).nullable().optional(),
+  topAppRevEstimate: z
+    .object({ low: z.number(), high: z.number() })
+    .nullable()
+    .optional(),
 });
 
 // Fields the LLM returns on the mobile path — narrative only, no scores/decision
@@ -155,7 +161,16 @@ export const MobileExplanationSchema = z.object({
   confidenceReason: z.string().optional(),
   keyInsights: z.array(z.string()).optional(),
   nextStep: z.string().optional(),
-  nextStepType: z.enum(['reddit-post', 'landing-page', 'interviews', 'prototype', 'survey', 'other']).optional(),
+  nextStepType: z
+    .enum([
+      'reddit-post',
+      'landing-page',
+      'interviews',
+      'prototype',
+      'survey',
+      'other',
+    ])
+    .optional(),
   validationEffort: ValidationEffortSchema.optional(),
   willingnessToPay: WillingnessToPaySchema.optional(),
   scoreBreakdown: ValidationScoreBreakdownSchema.optional(),
@@ -184,7 +199,16 @@ export const EnhancedValidationResultSchema = z.object({
   decision: z.enum(['proceed', 'test-first', 'drop']).optional(),
   decisionReason: z.string().optional(),
   nextStep: z.string().optional(),
-  nextStepType: z.enum(['reddit-post', 'landing-page', 'interviews', 'prototype', 'survey', 'other']).optional(),
+  nextStepType: z
+    .enum([
+      'reddit-post',
+      'landing-page',
+      'interviews',
+      'prototype',
+      'survey',
+      'other',
+    ])
+    .optional(),
   validationEffort: ValidationEffortSchema.optional(),
   willingnessToPay: WillingnessToPaySchema.optional(),
   scoreBreakdown: ValidationScoreBreakdownSchema.optional(),
@@ -198,27 +222,35 @@ export const EnhancedValidationResultSchema = z.object({
   metrics: MobileMetricsSchema.optional(),
   rawScores: MobileScoresSchema.optional(),
   rawDecision: z.string().optional(),
-  painAnalysis: z.object({
-    weightedScore: z.number(),
-    topPainClusters: z.array(PainClusterSchema),
-  }).optional(),
+  painAnalysis: z
+    .object({
+      weightedScore: z.number(),
+      topPainClusters: z.array(PainClusterSchema),
+    })
+    .optional(),
   niches: z.array(NicheResultSchema).optional(),
   marketInsights: z.array(z.string()).optional(),
   opportunityInsights: z.array(z.string()).optional(),
   confidenceScore: z.number().optional(),
 
   // Optional — multi-keyword niche discovery
-  nicheAnalysis: z.object({
-    evaluatedKeywords: z.array(z.string()),
-    bestKeyword: z.string(),
-    bestKeywordScores: MobileScoresSchema,
-    alternativeKeywords: z.array(z.string()),
-    reasoning: z.string(),
-    comparisonNote: z.string().optional(),
-  }).optional(),
-  bestEntryStrategy: z.enum(['ENTER_VIA_NICHE', 'BROAD_MARKET', 'NO_VIABLE_ENTRY']).optional(),
+  nicheAnalysis: z
+    .object({
+      evaluatedKeywords: z.array(z.string()),
+      bestKeyword: z.string(),
+      bestKeywordScores: MobileScoresSchema,
+      alternativeKeywords: z.array(z.string()),
+      reasoning: z.string(),
+      comparisonNote: z.string().optional(),
+    })
+    .optional(),
+  bestEntryStrategy: z
+    .enum(['ENTER_VIA_NICHE', 'BROAD_MARKET', 'NO_VIABLE_ENTRY'])
+    .optional(),
 });
-export type EnhancedValidationResult = z.infer<typeof EnhancedValidationResultSchema>;
+export type EnhancedValidationResult = z.infer<
+  typeof EnhancedValidationResultSchema
+>;
 
 // ─── Generate (LLM portion only — competitors are appended from Tavily) ───────
 

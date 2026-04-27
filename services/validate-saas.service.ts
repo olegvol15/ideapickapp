@@ -13,14 +13,27 @@ interface SaasValidationParams {
   audience: string | undefined;
   problem: string | undefined;
   signalQuery: string | undefined;
-  llmCompetitors: Array<{ name: string; url: string; source: string; snippet: string }>;
+  llmCompetitors: Array<{
+    name: string;
+    url: string;
+    source: string;
+    snippet: string;
+  }>;
   onResearch: (competitors: Competitor[]) => void;
 }
 
 export async function runSaasValidation(
   params: SaasValidationParams
 ): Promise<{ result: EnhancedValidationResult; competitors: Competitor[] }> {
-  const { description, productType, audience, problem, signalQuery, llmCompetitors, onResearch } = params;
+  const {
+    description,
+    productType,
+    audience,
+    problem,
+    signalQuery,
+    llmCompetitors,
+    onResearch,
+  } = params;
 
   // Fetch Tavily signals
   const signalResults = signalQuery
@@ -37,7 +50,13 @@ export async function runSaasValidation(
   // LLM validation analysis
   const analysisCompletion = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
-    messages: buildValidationAnalysisMessages(description, productType, audience, problem, competitors),
+    messages: buildValidationAnalysisMessages(
+      description,
+      productType,
+      audience,
+      problem,
+      competitors
+    ),
     temperature: 0.4,
     max_tokens: 2000,
     response_format: { type: 'json_object' },
@@ -45,8 +64,12 @@ export async function runSaasValidation(
 
   let analysisJson: unknown = {};
   try {
-    analysisJson = JSON.parse(analysisCompletion.choices[0]?.message?.content ?? '{}');
-  } catch { /* use empty fallback */ }
+    analysisJson = JSON.parse(
+      analysisCompletion.choices[0]?.message?.content ?? '{}'
+    );
+  } catch {
+    /* use empty fallback */
+  }
 
   const parsed = EnhancedValidationResultSchema.safeParse(analysisJson);
   if (!parsed.success) {

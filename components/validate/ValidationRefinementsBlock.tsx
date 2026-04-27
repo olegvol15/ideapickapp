@@ -12,7 +12,10 @@ interface ValidationRefinementsBlockProps {
   ideaContext?: IdeaContext;
 }
 
-export function ValidationRefinementsBlock({ result, ideaContext }: ValidationRefinementsBlockProps) {
+export function ValidationRefinementsBlock({
+  result,
+  ideaContext,
+}: ValidationRefinementsBlockProps) {
   const refinements = buildRefinements(result, ideaContext);
   if (refinements.length === 0) return null;
 
@@ -21,14 +24,26 @@ export function ValidationRefinementsBlock({ result, ideaContext }: ValidationRe
       <SectionHeading>Refinements to consider</SectionHeading>
       <div className="flex flex-col gap-3">
         {refinements.map((r, i) => (
-          <div key={i} className="flex flex-col gap-1.5 rounded-lg border border-border bg-muted/15 px-4 py-3">
+          <div
+            key={i}
+            className="flex flex-col gap-1.5 rounded-lg border border-border bg-muted/15 px-4 py-3"
+          >
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={cn('text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border shrink-0', SUGGESTION_TYPE_STYLE[r.type])}>
+              <span
+                className={cn(
+                  'text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border shrink-0',
+                  SUGGESTION_TYPE_STYLE[r.type]
+                )}
+              >
                 {r.type}
               </span>
-              <span className="text-sm font-semibold text-foreground/90 leading-snug">{r.title}</span>
+              <span className="text-sm font-semibold text-foreground/90 leading-snug">
+                {r.title}
+              </span>
             </div>
-            <p className="text-xs text-muted-foreground/65 leading-snug">{r.reason}</p>
+            <p className="text-xs text-muted-foreground/65 leading-snug">
+              {r.reason}
+            </p>
           </div>
         ))}
       </div>

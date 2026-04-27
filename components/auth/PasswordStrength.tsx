@@ -20,9 +20,9 @@ function getScore(password: string): 'weak' | 'medium' | 'strong' {
 }
 
 const config = {
-  weak:   { filled: 1, color: 'bg-red-500',   label: 'Weak' },
-  medium: { filled: 2, color: 'bg-amber-400',  label: 'Medium' },
-  strong: { filled: 3, color: 'bg-green-500',  label: 'Strong' },
+  weak: { filled: 1, color: 'bg-red-500', label: 'Weak' },
+  medium: { filled: 2, color: 'bg-amber-400', label: 'Medium' },
+  strong: { filled: 3, color: 'bg-green-500', label: 'Strong' },
 };
 
 export function PasswordStrength({ password }: PasswordStrengthProps) {
@@ -41,7 +41,9 @@ export function PasswordStrength({ password }: PasswordStrengthProps) {
           />
         ))}
       </div>
-      <span className="text-xs text-muted-foreground w-12 text-right">{label}</span>
+      <span className="text-xs text-muted-foreground w-12 text-right">
+        {label}
+      </span>
     </div>
   );
 }

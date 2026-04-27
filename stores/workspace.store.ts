@@ -1,6 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { WorkspaceTask, ContentItem, WorkspaceTab, ContentType, TaskStatus } from '@/types/workspace.types';
+import type {
+  WorkspaceTask,
+  ContentItem,
+  WorkspaceTab,
+  ContentType,
+  TaskStatus,
+} from '@/types/workspace.types';
 import type { Idea } from '@/types';
 
 interface PersistedWorkspace {
@@ -15,7 +21,9 @@ interface WorkspaceStore extends PersistedWorkspace {
   pendingContent: { text: string; type: ContentType } | null;
 
   setActiveTab: (tab: WorkspaceTab) => void;
-  setPendingContent: (content: { text: string; type: ContentType } | null) => void;
+  setPendingContent: (
+    content: { text: string; type: ContentType } | null
+  ) => void;
   setWorkspaceTitle: (ideaId: string, title: string) => void;
   setWorkspaceIdea: (ideaId: string, idea: Idea) => void;
 
@@ -24,8 +32,18 @@ interface WorkspaceStore extends PersistedWorkspace {
   deleteTask: (ideaId: string, taskId: string) => void;
   reorderTasks: (ideaId: string, tasks: WorkspaceTask[]) => void;
 
-  addContentItem: (ideaId: string, item: Omit<ContentItem, 'id' | 'createdAt'>) => void;
+  addContentItem: (
+    ideaId: string,
+    item: Omit<ContentItem, 'id' | 'createdAt'>
+  ) => void;
   deleteContentItem: (ideaId: string, itemId: string) => void;
+
+  hydrateWorkspace: (
+    ideaId: string,
+    tasks: WorkspaceTask[],
+    content: ContentItem[],
+    idea: Idea
+  ) => void;
 }
 
 export const useWorkspaceStore = create<WorkspaceStore>()(
@@ -41,7 +59,9 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
       setActiveTab: (tab) => set({ activeTab: tab }),
       setPendingContent: (content) => set({ pendingContent: content }),
       setWorkspaceTitle: (ideaId, title) =>
-        set((s) => ({ workspaceTitles: { ...s.workspaceTitles, [ideaId]: title } })),
+        set((s) => ({
+          workspaceTitles: { ...s.workspaceTitles, [ideaId]: title },
+        })),
       setWorkspaceIdea: (ideaId, idea) =>
         set((s) => ({
           workspaceIdeas: { ...s.workspaceIdeas, [ideaId]: idea },
@@ -54,7 +74,12 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
             ...s.todos,
             [ideaId]: [
               ...(s.todos[ideaId] ?? []),
-              { id: crypto.randomUUID(), title, status, createdAt: new Date().toISOString() },
+              {
+                id: crypto.randomUUID(),
+                title,
+                status,
+                createdAt: new Date().toISOString(),
+              },
             ],
           },
         })),
@@ -87,7 +112,11 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
           contentItems: {
             ...s.contentItems,
             [ideaId]: [
-              { ...item, id: crypto.randomUUID(), createdAt: new Date().toISOString() },
+              {
+                ...item,
+                id: crypto.randomUUID(),
+                createdAt: new Date().toISOString(),
+              },
               ...(s.contentItems[ideaId] ?? []),
             ],
           },
@@ -97,8 +126,18 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
         set((s) => ({
           contentItems: {
             ...s.contentItems,
-            [ideaId]: (s.contentItems[ideaId] ?? []).filter((c) => c.id !== itemId),
+            [ideaId]: (s.contentItems[ideaId] ?? []).filter(
+              (c) => c.id !== itemId
+            ),
           },
+        })),
+
+      hydrateWorkspace: (ideaId, tasks, content, idea) =>
+        set((s) => ({
+          todos: { ...s.todos, [ideaId]: tasks },
+          contentItems: { ...s.contentItems, [ideaId]: content },
+          workspaceIdeas: { ...s.workspaceIdeas, [ideaId]: idea },
+          workspaceTitles: { ...s.workspaceTitles, [ideaId]: idea.title },
         })),
     }),
     {

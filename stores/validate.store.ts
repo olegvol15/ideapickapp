@@ -17,7 +17,12 @@ interface ValidateState {
   pushLocalValidation: (entry: PersistedValidation) => void;
   removeLocalValidation: (id: string) => void;
   renameLocalValidation: (id: string, description: string) => void;
-  updateLocalValidation: (id: string, updates: Partial<Pick<PersistedValidation, 'description' | 'result' | 'competitors'>>) => void;
+  updateLocalValidation: (
+    id: string,
+    updates: Partial<
+      Pick<PersistedValidation, 'description' | 'result' | 'competitors'>
+    >
+  ) => void;
   updateLocalValidationId: (oldId: string, newId: string) => void;
 }
 

@@ -14,3 +14,9 @@ export const roadmapKeys = {
 export const validationKeys = {
   all: (userId?: string) => ['validations', userId] as const,
 };
+
+export const workspaceKeys = {
+  all: (userId?: string) => ['workspaces', userId] as const,
+  bySlug: (userId: string, slug: string) =>
+    ['workspaces', userId, slug] as const,
+};

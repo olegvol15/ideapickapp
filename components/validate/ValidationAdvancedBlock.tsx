@@ -17,41 +17,95 @@ interface ValidationAdvancedBlockProps {
   competitors: Competitor[];
 }
 
-export function ValidationAdvancedBlock({ result, competitors }: ValidationAdvancedBlockProps) {
+export function ValidationAdvancedBlock({
+  result,
+  competitors,
+}: ValidationAdvancedBlockProps) {
   const [open, setOpen] = useState(false);
 
   const {
-    competitionScore, opportunityScore,
-    scoreBreakdown, willingnessToPay, evidencedSignals, signals,
-    nicheAnalysis, rawScores, metrics, bestEntryStrategy,
+    competitionScore,
+    opportunityScore,
+    scoreBreakdown,
+    willingnessToPay,
+    evidencedSignals,
+    signals,
+    nicheAnalysis,
+    rawScores,
+    metrics,
+    bestEntryStrategy,
     marketInsights,
   } = result;
 
-  const signalItems     = competitors.filter((c) => c.type === 'signal').slice(0, 4);
-  const competitorItems = competitors.filter((c) => c.type !== 'signal').slice(0, 5);
+  const signalItems = competitors
+    .filter((c) => c.type === 'signal')
+    .slice(0, 4);
+  const competitorItems = competitors
+    .filter((c) => c.type !== 'signal')
+    .slice(0, 5);
 
-  const allEvidence = evidencedSignals && evidencedSignals.length > 0
-    ? [...evidencedSignals].sort((a, b) =>
-        ({ strong: 0, moderate: 1, weak: 2 }[a.strength] - { strong: 0, moderate: 1, weak: 2 }[b.strength]))
-    : signals.slice(0, 5).map((s) => ({ text: s, strength: 'moderate' as const }));
+  const allEvidence =
+    evidencedSignals && evidencedSignals.length > 0
+      ? [...evidencedSignals].sort(
+          (a, b) =>
+            ({ strong: 0, moderate: 1, weak: 2 })[a.strength] -
+            { strong: 0, moderate: 1, weak: 2 }[b.strength]
+        )
+      : signals
+          .slice(0, 5)
+          .map((s) => ({ text: s, strength: 'moderate' as const }));
 
-  const compColor: Tone = competitionScore >= 70 ? 'rose' : competitionScore >= 40 ? 'amber' : 'emerald';
-  const detailedBreakdown = scoreBreakdown?.pain && scoreBreakdown?.competition && scoreBreakdown?.opportunity
-    ? [
-        { title: 'Pain',        total: result.painScore,        tone: scoreColor(result.painScore),        items: scoreBreakdown.pain },
-        { title: 'Competition', total: competitionScore,         tone: compColor,                           items: scoreBreakdown.competition },
-        { title: 'Opportunity', total: opportunityScore,         tone: scoreColor(opportunityScore),        items: scoreBreakdown.opportunity },
-      ]
-    : null;
+  const compColor: Tone =
+    competitionScore >= 70
+      ? 'rose'
+      : competitionScore >= 40
+        ? 'amber'
+        : 'emerald';
+  const detailedBreakdown =
+    scoreBreakdown?.pain &&
+    scoreBreakdown?.competition &&
+    scoreBreakdown?.opportunity
+      ? [
+          {
+            title: 'Pain',
+            total: result.painScore,
+            tone: scoreColor(result.painScore),
+            items: scoreBreakdown.pain,
+          },
+          {
+            title: 'Competition',
+            total: competitionScore,
+            tone: compColor,
+            items: scoreBreakdown.competition,
+          },
+          {
+            title: 'Opportunity',
+            total: opportunityScore,
+            tone: scoreColor(opportunityScore),
+            items: scoreBreakdown.opportunity,
+          },
+        ]
+      : null;
 
-  const hasNicheComparison = !!(nicheAnalysis && bestEntryStrategy === 'ENTER_VIA_NICHE');
-  const nicheWhyBullets    = hasNicheComparison ? buildNicheWhyBullets(nicheAnalysis!, rawScores, metrics) : [];
-  const baseComp  = rawScores?.competitionScore  ?? 0;
-  const baseOpp   = rawScores?.opportunityScore  ?? 0;
+  const hasNicheComparison = !!(
+    nicheAnalysis && bestEntryStrategy === 'ENTER_VIA_NICHE'
+  );
+  const nicheWhyBullets = hasNicheComparison
+    ? buildNicheWhyBullets(nicheAnalysis!, rawScores, metrics)
+    : [];
+  const baseComp = rawScores?.competitionScore ?? 0;
+  const baseOpp = rawScores?.opportunityScore ?? 0;
   const nicheComp = nicheAnalysis?.bestKeywordScores.competitionScore ?? 0;
-  const nicheOpp  = nicheAnalysis?.bestKeywordScores.opportunityScore ?? 0;
+  const nicheOpp = nicheAnalysis?.bestKeywordScores.opportunityScore ?? 0;
 
-  const hasContent = !!(competitorItems.length || signalItems.length || detailedBreakdown || willingnessToPay || allEvidence.length || (marketInsights && marketInsights.length > 0));
+  const hasContent = !!(
+    competitorItems.length ||
+    signalItems.length ||
+    detailedBreakdown ||
+    willingnessToPay ||
+    allEvidence.length ||
+    (marketInsights && marketInsights.length > 0)
+  );
   if (!hasContent) return null;
 
   return (
@@ -62,26 +116,45 @@ export function ValidationAdvancedBlock({ result, competitors }: ValidationAdvan
       >
         <div className="flex items-center gap-3">
           <SectionHeading>Advanced analysis</SectionHeading>
-          <span className="text-xs text-muted-foreground/45 -mt-[2px]">breakdown · evidence · sources</span>
+          <span className="text-xs text-muted-foreground/45 -mt-[2px]">
+            breakdown · evidence · sources
+          </span>
         </div>
-        {open ? <ChevronUp className="h-4 w-4 text-muted-foreground/50" /> : <ChevronDown className="h-4 w-4 text-muted-foreground/50" />}
+        {open ? (
+          <ChevronUp className="h-4 w-4 text-muted-foreground/50" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-muted-foreground/50" />
+        )}
       </button>
 
       {open && (
         <div className="border-t border-border px-6 pb-6 pt-6 flex flex-col gap-6">
-
           {detailedBreakdown && (
             <div className="flex flex-col gap-5">
               <SectionHeading>Score breakdown</SectionHeading>
               {detailedBreakdown.map((group) => (
                 <div key={group.title} className="flex flex-col gap-2.5">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 w-24">{group.title}</span>
-                    <span className={cn('text-xs font-semibold tabular-nums', colorClass(group.tone, 'text'))}>{group.total}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 w-24">
+                      {group.title}
+                    </span>
+                    <span
+                      className={cn(
+                        'text-xs font-semibold tabular-nums',
+                        colorClass(group.tone, 'text')
+                      )}
+                    >
+                      {group.total}
+                    </span>
                   </div>
                   <div className="ml-2 flex flex-col gap-2">
                     {group.items.map((item) => (
-                      <ScoreBreakdownRow key={`${group.title}-${item.label}`} label={item.label} value={item.score} tone={group.tone} />
+                      <ScoreBreakdownRow
+                        key={`${group.title}-${item.label}`}
+                        label={item.label}
+                        value={item.score}
+                        tone={group.tone}
+                      />
                     ))}
                   </div>
                 </div>
@@ -90,22 +163,44 @@ export function ValidationAdvancedBlock({ result, competitors }: ValidationAdvan
           )}
 
           {willingnessToPay && (
-            <div className={cn('flex flex-col gap-3', detailedBreakdown && 'border-t border-border pt-5')}>
+            <div
+              className={cn(
+                'flex flex-col gap-3',
+                detailedBreakdown && 'border-t border-border pt-5'
+              )}
+            >
               <SectionHeading>Willingness to Pay</SectionHeading>
-              <span className={cn('text-2xl font-bold leading-none',
-                willingnessToPay.level === 'high' ? 'text-emerald-500' : willingnessToPay.level === 'medium' ? 'text-amber-500' : 'text-rose-500'
-              )}>{cap(willingnessToPay.level)}</span>
+              <span
+                className={cn(
+                  'text-2xl font-bold leading-none',
+                  willingnessToPay.level === 'high'
+                    ? 'text-emerald-500'
+                    : willingnessToPay.level === 'medium'
+                      ? 'text-amber-500'
+                      : 'text-rose-500'
+                )}
+              >
+                {cap(willingnessToPay.level)}
+              </span>
               <div className="flex flex-col gap-2">
                 {willingnessToPay.freeSubstitutes && (
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Free alternatives</span>
-                    <span className="text-sm text-foreground/75 leading-snug">{willingnessToPay.freeSubstitutes}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                      Free alternatives
+                    </span>
+                    <span className="text-sm text-foreground/75 leading-snug">
+                      {willingnessToPay.freeSubstitutes}
+                    </span>
                   </div>
                 )}
                 {willingnessToPay.paidAlternatives && (
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Paid alternatives</span>
-                    <span className="text-sm text-foreground/75 leading-snug">{willingnessToPay.paidAlternatives}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                      Paid alternatives
+                    </span>
+                    <span className="text-sm text-foreground/75 leading-snug">
+                      {willingnessToPay.paidAlternatives}
+                    </span>
                   </div>
                 )}
               </div>
@@ -115,11 +210,16 @@ export function ValidationAdvancedBlock({ result, competitors }: ValidationAdvan
           {hasNicheComparison && nicheAnalysis && (
             <div className="border-t border-border pt-5 flex flex-col gap-3">
               <SectionHeading>Niche vs broad market</SectionHeading>
-              <p className="text-xs font-semibold text-foreground/80">&ldquo;{nicheAnalysis.bestKeyword}&rdquo;</p>
+              <p className="text-xs font-semibold text-foreground/80">
+                &ldquo;{nicheAnalysis.bestKeyword}&rdquo;
+              </p>
               {nicheWhyBullets.length > 0 && (
                 <ul className="flex flex-col gap-1.5">
                   {nicheWhyBullets.map((b, i) => (
-                    <li key={i} className="flex items-start gap-2 text-xs text-foreground/75 leading-snug">
+                    <li
+                      key={i}
+                      className="flex items-start gap-2 text-xs text-foreground/75 leading-snug"
+                    >
                       <span className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500/70" />
                       {b}
                     </li>
@@ -127,8 +227,18 @@ export function ValidationAdvancedBlock({ result, competitors }: ValidationAdvan
                 </ul>
               )}
               <div className="flex flex-col gap-1.5 mt-1">
-                <CompareRow label="Competition" base={baseComp} niche={nicheComp} lowerBetter />
-                <CompareRow label="Opportunity" base={baseOpp}  niche={nicheOpp}  lowerBetter={false} />
+                <CompareRow
+                  label="Competition"
+                  base={baseComp}
+                  niche={nicheComp}
+                  lowerBetter
+                />
+                <CompareRow
+                  label="Opportunity"
+                  base={baseOpp}
+                  niche={nicheOpp}
+                  lowerBetter={false}
+                />
               </div>
             </div>
           )}
@@ -138,7 +248,10 @@ export function ValidationAdvancedBlock({ result, competitors }: ValidationAdvan
               <SectionHeading>Market data</SectionHeading>
               <ul className="flex flex-col gap-1.5">
                 {marketInsights.map((insight, i) => (
-                  <li key={i} className="flex items-start gap-2 text-xs text-foreground/70 leading-snug">
+                  <li
+                    key={i}
+                    className="flex items-start gap-2 text-xs text-foreground/70 leading-snug"
+                  >
                     <span className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/40" />
                     {insight}
                   </li>
@@ -154,10 +267,20 @@ export function ValidationAdvancedBlock({ result, competitors }: ValidationAdvan
                   <SectionHeading>Evidence signals</SectionHeading>
                   <ul className="mt-3 flex flex-col gap-2">
                     {allEvidence.map((s, i) => (
-                      <li key={i} className="flex items-start gap-2.5 text-sm text-foreground/80 leading-snug">
-                        <span className={cn('mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full',
-                          s.strength === 'strong' ? 'bg-emerald-500' : s.strength === 'moderate' ? 'bg-amber-500/70' : 'bg-muted-foreground/50'
-                        )} />
+                      <li
+                        key={i}
+                        className="flex items-start gap-2.5 text-sm text-foreground/80 leading-snug"
+                      >
+                        <span
+                          className={cn(
+                            'mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full',
+                            s.strength === 'strong'
+                              ? 'bg-emerald-500'
+                              : s.strength === 'moderate'
+                                ? 'bg-amber-500/70'
+                                : 'bg-muted-foreground/50'
+                          )}
+                        />
                         {s.text}
                       </li>
                     ))}
@@ -187,7 +310,6 @@ export function ValidationAdvancedBlock({ result, competitors }: ValidationAdvan
               )}
             </div>
           )}
-
         </div>
       )}
     </div>

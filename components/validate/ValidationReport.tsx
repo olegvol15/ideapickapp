@@ -17,10 +17,17 @@ interface ValidationReportProps {
   ideaContext?: IdeaContext;
 }
 
-export function ValidationReport({ result, competitors, previousResult, ideaContext }: ValidationReportProps) {
+export function ValidationReport({
+  result,
+  competitors,
+  previousResult,
+  ideaContext,
+}: ValidationReportProps) {
   return (
     <div className="flex flex-col gap-4">
-      {previousResult && <ValidationDeltaCard result={result} previousResult={previousResult} />}
+      {previousResult && (
+        <ValidationDeltaCard result={result} previousResult={previousResult} />
+      )}
       <ValidationScoreBlock result={result} ideaContext={ideaContext} />
       <ValidationCompetitorsBlock result={result} competitors={competitors} />
       <ValidationNextMoveBlock result={result} ideaContext={ideaContext} />

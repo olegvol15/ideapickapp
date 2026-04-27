@@ -11,12 +11,15 @@ When writing a git commit message:
 <type>(<scope>): <short summary in imperative mood>
 
 ## Why
-Brief explanation of the motivation behind this change. 
+
+Brief explanation of the motivation behind this change.
 
 ## Context
+
 - Bullet points of specific technical implementation details
 - Mention any breaking changes or migration requirements
 - Reference issue numbers if applicable (e.g., Refs: #123)
 
 ## Impact
+
 Summary of how this affects the system or the end-user

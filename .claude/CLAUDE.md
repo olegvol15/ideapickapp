@@ -8,23 +8,23 @@ Here is the same version, cleaned up and without any emojis or decorative elemen
 
 > If a file becomes hard to read — it’s already wrong.
 
-* One file = one responsibility
-* Readability over cleverness
-* If logic is hard to follow, refactor immediately
-* Avoid “temporary” solutions — they become permanent
+- One file = one responsibility
+- Readability over cleverness
+- If logic is hard to follow, refactor immediately
+- Avoid “temporary” solutions — they become permanent
 
 ---
 
 ## Stack
 
-* Next.js 16 (App Router, server-first)
-* TypeScript (strict mode)
-* Tailwind CSS v4 + shadcn/ui (Radix primitives)
-* Zustand (client state)
-* TanStack React Query (server state)
-* Supabase (auth + database)
-* Zod (validation + type inference)
-* pnpm
+- Next.js 16 (App Router, server-first)
+- TypeScript (strict mode)
+- Tailwind CSS v4 + shadcn/ui (Radix primitives)
+- Zustand (client state)
+- TanStack React Query (server state)
+- Supabase (auth + database)
+- Zod (validation + type inference)
+- pnpm
 
 ---
 
@@ -41,10 +41,10 @@ Strict separation of concerns:
 
 ### Forbidden
 
-* Business logic inside components
-* API or database calls inside components
-* Complex logic inside JSX
-* Mixing multiple responsibilities in one file
+- Business logic inside components
+- API or database calls inside components
+- Complex logic inside JSX
+- Mixing multiple responsibilities in one file
 
 ---
 
@@ -65,14 +65,13 @@ Strict separation of concerns:
 
 ## TypeScript
 
-* Strict mode always — no `any`, no suppression
-* Define types in `types/` and re-export via `types/index.ts`
-* Use `z.infer<typeof schema>` — do not duplicate types
-* Use `import type` for type-only imports
-* Prefer:
-
-  * interface for object shapes
-  * type for unions and transformations
+- Strict mode always — no `any`, no suppression
+- Define types in `types/` and re-export via `types/index.ts`
+- Use `z.infer<typeof schema>` — do not duplicate types
+- Use `import type` for type-only imports
+- Prefer:
+  - interface for object shapes
+  - type for unions and transformations
 
 ---
 
@@ -80,23 +79,23 @@ Strict separation of concerns:
 
 ### Rules
 
-* Named exports only — no default exports
-* Add 'use client' only when required
-* Props typed with interface
-* No business logic inside components
-* No nested components inside the same file
-* Avoid deeply nested JSX — extract subcomponents
+- Named exports only — no default exports
+- Add 'use client' only when required
+- Props typed with interface
+- No business logic inside components
+- No nested components inside the same file
+- Avoid deeply nested JSX — extract subcomponents
 
 ### Structure
 
-* components/ui/ → primitives (Button, Card)
-* features/.../components/ → feature-specific UI
+- components/ui/ → primitives (Button, Card)
+- features/.../components/ → feature-specific UI
 
 ### Styling
 
-* Use cn() for class merging
-* Use CVA for variants
-* Never hardcode colors — use CSS variables
+- Use cn() for class merging
+- Use CVA for variants
+- Never hardcode colors — use CSS variables
 
 ---
 
@@ -104,33 +103,33 @@ Strict separation of concerns:
 
 Use hooks for:
 
-* Data transformation
-* Orchestration logic
-* Combining multiple sources of state
+- Data transformation
+- Orchestration logic
+- Combining multiple sources of state
 
 ### Rules
 
-* No UI inside hooks
-* No direct database access inside hooks
-* Keep hooks focused and composable
+- No UI inside hooks
+- No direct database access inside hooks
+- Keep hooks focused and composable
 
 ---
 
 ## Services
 
-* Pure business logic and data access
-* No React, no UI, no HTTP layer
+- Pure business logic and data access
+- No React, no UI, no HTTP layer
 
 ### Rules
 
-* Explicit input/output types
-* One responsibility per service
-* No uncontrolled side effects
+- Explicit input/output types
+- One responsibility per service
+- No uncontrolled side effects
 
 ### Database behavior
 
-* Reads return null or empty array on failure
-* Writes throw AppError
+- Reads return null or empty array on failure
+- Writes throw AppError
 
 ---
 
@@ -138,20 +137,20 @@ Use hooks for:
 
 ### Zustand
 
-* Store names follow use*Store convention
-* Use persist with partialize
-* Storage keys: ideapick:<feature>
-* Define explicit persisted state types
+- Store names follow use\*Store convention
+- Use persist with partialize
+- Storage keys: ideapick:<feature>
+- Define explicit persisted state types
 
 ---
 
 ### React Query
 
-* Use query key factories from lib/api-keys.ts
-* Always scope queries by userId
-* staleTime: 0
-* No automatic retries for mutations
-* Invalidate queries on success
+- Use query key factories from lib/api-keys.ts
+- Always scope queries by userId
+- staleTime: 0
+- No automatic retries for mutations
+- Invalidate queries on success
 
 ---
 
@@ -166,11 +165,11 @@ Each route must:
 
 ### Rules
 
-* No business logic in route handlers
-* Signature: (req: NextRequest) => Promise<Response>
-* Named exports only
-* Use streaming (NDJSON) where needed
-* Return errors using AppError
+- No business logic in route handlers
+- Signature: (req: NextRequest) => Promise<Response>
+- Named exports only
+- Use streaming (NDJSON) where needed
+- Return errors using AppError
 
 ---
 
@@ -190,105 +189,105 @@ Use AppError factory methods:
 
 ### Client behavior
 
-* 5xx and 429 → toast
-* 4xx → inline errors
-* 401 and 403 → redirect
+- 5xx and 429 → toast
+- 4xx → inline errors
+- 401 and 403 → redirect
 
 ---
 
 ## Styling
 
-* Tailwind v4 with CSS variables
-* Dark/light mode via --dark class
-* Never hardcode colors
+- Tailwind v4 with CSS variables
+- Dark/light mode via --dark class
+- Never hardcode colors
 
 ### Text hierarchy
 
-* --text-1 → primary
-* --text-4 → muted
+- --text-1 → primary
+- --text-4 → muted
 
 ### Brand
 
-* --brand-color: #0077b6
+- --brand-color: #0077b6
 
 ---
 
 ## AI / LLM
 
-* Model: gpt-4o-mini
-* Prompts stored in prompts/ as functions
-* Always validate output with Zod
-* Throw AppError.invalidAiResponse() on invalid output
+- Model: gpt-4o-mini
+- Prompts stored in prompts/ as functions
+- Always validate output with Zod
+- Throw AppError.invalidAiResponse() on invalid output
 
 ### Rules
 
-* Temperature:
+- Temperature:
+  - 0.4 for structured output
+  - 0.7 for creative output
 
-  * 0.4 for structured output
-  * 0.7 for creative output
-* Wrap parsing in try/catch
+- Wrap parsing in try/catch
 
 ---
 
 ## Database (Supabase)
 
-* Use SSR client for server
-* Use browser client for client
-* Always type database responses
-* No raw any
+- Use SSR client for server
+- Use browser client for client
+- Always type database responses
+- No raw any
 
 Tables:
 
-* generations
-* saved_ideas
-* validations
-* roadmaps
+- generations
+- saved_ideas
+- validations
+- roadmaps
 
 ---
 
 ## Auth
 
-* requireAuth() in protected routes
-* useAuth() for client state
-* Middleware handles session refresh
-* Do not manually manage cookies
+- requireAuth() in protected routes
+- useAuth() for client state
+- Middleware handles session refresh
+- Do not manually manage cookies
 
 ---
 
 ## Validation
 
-* All input validated with Zod (lib/schemas.ts)
-* No inline schemas in route handlers
-* Enums validated against constants
+- All input validated with Zod (lib/schemas.ts)
+- No inline schemas in route handlers
+- Enums validated against constants
 
 ---
 
 ## Logging
 
-* Use Pino (server only)
-* No console.log in production
-* Do not import logger in client code
+- Use Pino (server only)
+- No console.log in production
+- Do not import logger in client code
 
 ---
 
 ## Code Quality
 
-* No unused code
-* No duplicate logic
-* No dead components
-* Delete anything not used
-* Refactor when complexity increases
+- No unused code
+- No duplicate logic
+- No dead components
+- Delete anything not used
+- Refactor when complexity increases
 
 ---
 
 ## Anti-Patterns
 
-* Large multi-purpose files
-* Business logic in components
-* Nested components
-* Duplicated logic
-* Temporary hacks
-* Unused UI components
+- Large multi-purpose files
+- Business logic in components
+- Nested components
+- Duplicated logic
+- Temporary hacks
+- Unused UI components
 
 ---
 

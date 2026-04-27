@@ -35,7 +35,10 @@ export default function ResetPasswordPage() {
     setLoading(true);
     const result = await updatePassword(data.password);
     setLoading(false);
-    if (result.error) { setError(result.error); return; }
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
     router.push('/ideas');
   }
 
@@ -55,8 +58,12 @@ export default function ResetPasswordPage() {
           <span className="font-display text-sm uppercase tracking-[0.25em] text-foreground">
             IDEA<span className="text-primary">PICK</span>
           </span>
-          <p className="mt-4 text-xl font-bold text-foreground">Set new password</p>
-          <p className="mt-1 text-sm text-muted-foreground">Choose a strong password for your account</p>
+          <p className="mt-4 text-xl font-bold text-foreground">
+            Set new password
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Choose a strong password for your account
+          </p>
         </div>
 
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
@@ -74,14 +81,20 @@ export default function ResetPasswordPage() {
                 variant="ghost"
                 size="icon"
                 className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
-                onClick={() => setShowPassword(v => !v)}
+                onClick={() => setShowPassword((v) => !v)}
                 tabIndex={-1}
               >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </Button>
             </div>
             {form.formState.errors.password && (
-              <p className="text-xs text-red-500 mt-1">{form.formState.errors.password.message}</p>
+              <p className="text-xs text-red-500 mt-1">
+                {form.formState.errors.password.message}
+              </p>
             )}
             <PasswordStrength password={password} />
           </div>
@@ -98,14 +111,20 @@ export default function ResetPasswordPage() {
               <button
                 type="button"
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                onClick={() => setShowConfirm(v => !v)}
+                onClick={() => setShowConfirm((v) => !v)}
                 tabIndex={-1}
               >
-                {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showConfirm ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </button>
             </div>
             {form.formState.errors.confirmPassword && (
-              <p className="text-xs text-red-500 mt-1">{form.formState.errors.confirmPassword.message}</p>
+              <p className="text-xs text-red-500 mt-1">
+                {form.formState.errors.confirmPassword.message}
+              </p>
             )}
           </div>
 

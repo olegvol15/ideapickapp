@@ -5,14 +5,14 @@ import { Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface AddTaskInputProps {
-  id?:   string;
+  id?: string;
   onAdd: (title: string) => void;
 }
 
 export function AddTaskInput({ id, onAdd }: AddTaskInputProps) {
-  const [open, setOpen]   = useState(false);
+  const [open, setOpen] = useState(false);
   const [value, setValue] = useState('');
-  const inputRef          = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   function expand() {
     setOpen(true);
@@ -48,10 +48,13 @@ export function AddTaskInput({ id, onAdd }: AddTaskInputProps) {
       <input
         ref={inputRef}
         value={value}
-        onChange={e => setValue(e.target.value)}
-        onKeyDown={e => {
-          if (e.key === 'Enter')  submit();
-          if (e.key === 'Escape') { setValue(''); setOpen(false); }
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') submit();
+          if (e.key === 'Escape') {
+            setValue('');
+            setOpen(false);
+          }
         }}
         onBlur={submit}
         placeholder="Task name…"

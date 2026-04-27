@@ -28,7 +28,12 @@ import {
   useDeleteGeneration,
   useRenameGeneration,
 } from '@/hooks/use-generations';
-import { useDeleteValidation, useRenameValidation, useGetValidations } from '@/hooks/use-validations';
+import {
+  useDeleteValidation,
+  useRenameValidation,
+  useGetValidations,
+} from '@/hooks/use-validations';
+import { useWorkspaces } from '@/hooks/use-workspaces';
 import { cn } from '@/lib/utils';
 import {
   Sidebar,
@@ -41,7 +46,6 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { toast } from 'sonner';
 
 function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
@@ -57,9 +61,16 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const deleteValidationMutation = useDeleteValidation(user?.id);
   const renameValidationMutation = useRenameValidation(user?.id);
 
-  // Workspace entries (locally persisted, keyed by ideaId)
+  // Workspace entries: signed-in users use DB, guests use local persistence.
   const workspaceTitles = useWorkspaceStore((s) => s.workspaceTitles);
-  const recentWorkspaces = Object.entries(workspaceTitles).slice(0, 5);
+  const { data: dbWorkspaces } = useWorkspaces(user?.id);
+  const recentWorkspaces = user
+    ? (dbWorkspaces ?? [])
+        .map((w) => ({ id: w.idea_slug, title: w.title }))
+        .slice(0, 5)
+    : Object.entries(workspaceTitles)
+        .map(([id, title]) => ({ id, title }))
+        .slice(0, 5);
 
   // Research recents — logged-in users use React Query, others use Zustand store
   const localHistory = useResearchStore((s) => s.localHistory);
@@ -73,11 +84,18 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
   // Validations — logged-in users use React Query (DB), others use Zustand store
   const localValidations = useValidateStore((s) => s.localValidations);
-  const removeLocalValidation = useValidateStore((s) => s.removeLocalValidation);
-  const renameLocalValidation = useValidateStore((s) => s.renameLocalValidation);
+  const removeLocalValidation = useValidateStore(
+    (s) => s.removeLocalValidation
+  );
+  const renameLocalValidation = useValidateStore(
+    (s) => s.renameLocalValidation
+  );
   const { data: dbValidations } = useGetValidations(user?.id);
   const recentValidations = user
-    ? (dbValidations ?? []).map((v) => ({ id: v.id, description: v.description }))
+    ? (dbValidations ?? []).map((v) => ({
+        id: v.id,
+        description: v.description,
+      }))
     : localValidations.map((v) => ({ id: v.id, description: v.description }));
 
   function handleNewBrainstorm() {
@@ -233,7 +251,7 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                       transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                       className="overflow-hidden"
                     >
-                      {recentWorkspaces.map(([id, title]) => (
+                      {recentWorkspaces.map(({ id, title }) => (
                         <Link
                           key={id}
                           href={`/workspace/${id}`}
@@ -297,7 +315,11 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                           }}
                           onRename={(description) => {
                             renameLocalValidation(entry.id, description);
-                            if (user) renameValidationMutation.mutate({ id: entry.id, description });
+                            if (user)
+                              renameValidationMutation.mutate({
+                                id: entry.id,
+                                description,
+                              });
                           }}
                           onDelete={() => {
                             removeLocalValidation(entry.id);
@@ -310,7 +332,10 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                       {recentValidations.length > 5 && (
                         <Link
                           href="/history"
-                          onClick={() => { onNavigate?.(); setOpenMobile(false); }}
+                          onClick={() => {
+                            onNavigate?.();
+                            setOpenMobile(false);
+                          }}
                           className="flex w-full items-center px-2.5 py-2 text-xs text-muted-foreground/50 transition-colors hover:text-muted-foreground"
                         >
                           See all validations ({recentValidations.length})
@@ -363,19 +388,29 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                             if (user) {
                               deleteMutation.mutate(entry.createdAt, {
                                 onSuccess: () => {
-                                  if (pathname === `/brainstorms/${entry.createdAt}`)
+                                  if (
+                                    pathname ===
+                                    `/brainstorms/${entry.createdAt}`
+                                  )
                                     router.push('/');
                                 },
                               });
                             } else {
-                              useResearchStore.getState().removeLocalHistory(entry.createdAt);
-                              if (pathname === `/brainstorms/${entry.createdAt}`)
+                              useResearchStore
+                                .getState()
+                                .removeLocalHistory(entry.createdAt);
+                              if (
+                                pathname === `/brainstorms/${entry.createdAt}`
+                              )
                                 router.push('/');
                             }
                           }}
                           onRename={(newPrompt) => {
                             if (user) {
-                              renameMutation.mutate({ id: entry.createdAt, prompt: newPrompt });
+                              renameMutation.mutate({
+                                id: entry.createdAt,
+                                prompt: newPrompt,
+                              });
                             } else {
                               useResearchStore
                                 .getState()
@@ -387,7 +422,10 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                       {recentBrainstorms.length > 5 && (
                         <Link
                           href="/history?tab=brainstorms"
-                          onClick={() => { onNavigate?.(); setOpenMobile(false); }}
+                          onClick={() => {
+                            onNavigate?.();
+                            setOpenMobile(false);
+                          }}
                           className="flex w-full items-center px-2.5 py-2 text-xs text-muted-foreground/50 transition-colors hover:text-muted-foreground"
                         >
                           See all brainstorms ({recentBrainstorms.length})
@@ -404,7 +442,10 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             {navigation.map((item) => {
               const Icon = item.icon;
               return (
-                <SidebarMenuItem key={item.href} className="flex justify-center">
+                <SidebarMenuItem
+                  key={item.href}
+                  className="flex justify-center"
+                >
                   <SidebarMenuButton
                     asChild
                     isActive={item.active}
