@@ -5,8 +5,9 @@ import {
   buildQueryGenerationMessages,
   buildAnalysisMessages,
 } from '@/prompts/generate.prompts';
-import { requireAuth, checkRateLimit } from '@/lib/supabase/auth';
-import { generateLimiter, generateDailyLimiter } from '@/lib/rate-limit';
+import { checkRateLimit } from '@/lib/supabase/auth';
+import { createClient } from '@/lib/supabase/server';
+import { generateLimiter, generateDailyLimiter, guestGenerateLimiter } from '@/lib/rate-limit';
 import { validateGenerateInput } from '@/lib/validate-input';
 import { GenerateLLMOutputSchema } from '@/lib/schemas';
 import { AppError } from '@/lib/errors/app-error';
@@ -19,9 +20,19 @@ export const POST = async (req: NextRequest): Promise<Response> => {
   let body: GenerateRequest;
 
   try {
-    const user = await requireAuth();
-    await checkRateLimit(generateLimiter, user.id);
-    await checkRateLimit(generateDailyLimiter, user.id);
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+      await checkRateLimit(generateLimiter, user.id);
+      await checkRateLimit(generateDailyLimiter, user.id);
+    } else {
+      const ip =
+        req.headers.get('x-forwarded-for')?.split(',')[0].trim() ??
+        req.headers.get('x-real-ip') ??
+        'anonymous';
+      await checkRateLimit(guestGenerateLimiter, ip);
+    }
 
     try {
       body = await req.json();

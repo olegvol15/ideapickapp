@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   useResearchStore,
   type PersistedResearch,
@@ -25,14 +25,41 @@ export function useResearch(userId: string | undefined) {
   const store = useResearchStore();
   const saveGenerationMutation = useSaveGeneration(userId);
   const abortRef = useRef<AbortController | null>(null);
-  const analysisIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
-    null
-  );
+  const analysisIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const prevUserIdRef = useRef<string | undefined>(undefined);
+
+  const [guestModalOpen, setGuestModalOpen] = useState(false);
 
   const isGenerating =
     store.phase === 'thinking' ||
     store.phase === 'generating' ||
     store.phase === 'streaming';
+
+  // Migrate in-memory guest result to account on sign-in (same session only)
+  useEffect(() => {
+    const prevId = prevUserIdRef.current;
+    prevUserIdRef.current = userId;
+
+    if (!prevId && userId) {
+      const state = useResearchStore.getState();
+      if (state.result && !state.generationId) {
+        saveGenerationMutation
+          .mutateAsync({
+            prompt: state.prompt,
+            productType: state.productType,
+            difficulty: state.difficulty,
+            result: state.result,
+          })
+          .then((savedId) => {
+            if (savedId) {
+              useResearchStore.getState().setResult(state.result!, savedId);
+            }
+          })
+          .catch(() => null);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   function clearAnalysisInterval() {
     if (analysisIntervalRef.current) {
@@ -83,7 +110,14 @@ export function useResearch(userId: string | undefined) {
       );
     } catch (err: unknown) {
       clearAnalysisInterval();
-      if ((err as { name?: string }).name === 'AbortError') return;
+      const e = err as { name?: string; status?: number };
+      if (e.name === 'AbortError') return;
+      // Guest hit the rate limit — show auth prompt instead of error UI
+      if (!userId && e.status === 429) {
+        store.setPhase('idle');
+        setGuestModalOpen(true);
+        return;
+      }
       store.setPhase('error');
       store.setErrorMessage(
         err instanceof Error ? err.message : 'Something went wrong'
@@ -138,5 +172,7 @@ export function useResearch(userId: string | undefined) {
     handleClear,
     isGenerating,
     errorMsg: store.errorMessage ?? 'Something went wrong',
+    guestModalOpen,
+    setGuestModalOpen,
   };
 }

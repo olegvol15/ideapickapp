@@ -47,3 +47,10 @@ export const expandLimiter = new Ratelimit({
   limiter: Ratelimit.slidingWindow(40, '1 h'),
   prefix: 'rl:expand',
 });
+
+// 1 free generation per IP per day for unauthenticated guests.
+export const guestGenerateLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(1, '24 h'),
+  prefix: 'rl:guest:generate',
+});

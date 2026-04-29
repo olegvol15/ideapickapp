@@ -88,6 +88,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/auth', request.url));
   }
 
+  // /onboarding: requires auth; bounce away if already completed
+  if (request.nextUrl.pathname.startsWith('/onboarding')) {
+    if (!user) return NextResponse.redirect(new URL('/auth', request.url));
+    if (user.user_metadata?.onboarding_completed) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+  }
+
   // Set the per-request CSP on whatever response Supabase ended up with.
   supabaseResponse.headers.set('Content-Security-Policy', buildCsp(nonce));
 

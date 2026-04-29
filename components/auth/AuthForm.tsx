@@ -91,7 +91,7 @@ export function AuthForm({ onSuccess, defaultMode = 'signin' }: AuthFormProps) {
       return;
     }
     if (onSuccess) onSuccess();
-    else router.push('/ideas');
+    else router.push('/onboarding');
   }
 
   async function handleForgot(data: ForgotData) {

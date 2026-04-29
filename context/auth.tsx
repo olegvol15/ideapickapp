@@ -18,6 +18,7 @@ interface AuthContextValue {
   signInWithGoogle: () => Promise<AuthResult>;
   resetPasswordForEmail: (email: string) => Promise<AuthResult>;
   updatePassword: (password: string) => Promise<AuthResult>;
+  updateMetadata: (data: Record<string, unknown>) => Promise<AuthResult>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -89,6 +90,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: error?.message ?? null };
   }
 
+  async function updateMetadata(data: Record<string, unknown>): Promise<AuthResult> {
+    const { error } = await supabase.auth.updateUser({ data });
+    return { error: error?.message ?? null };
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -100,6 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signInWithGoogle,
         resetPasswordForEmail,
         updatePassword,
+        updateMetadata,
       }}
     >
       {children}

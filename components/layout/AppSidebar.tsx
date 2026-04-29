@@ -16,6 +16,7 @@ import {
   Plus,
 } from 'lucide-react';
 import { UserMenu } from '@/components/auth/UserMenu';
+import { GuestSignInCard } from '@/components/auth/GuestSignInCard';
 import { IdeaPickLogo } from '@/components/brand/IdeaPickLogo';
 import { BrainstormItem } from '@/components/layout/BrainstormItem';
 import { ValidationItem } from '@/components/validate/ValidationItem';
@@ -487,7 +488,11 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           openDesktop ? 'px-2 pb-4' : 'flex justify-center px-0 pb-4'
         )}
       >
-        <UserMenu variant={openDesktop ? 'sidebar' : 'compact'} />
+        {!user && openDesktop ? (
+          <GuestSignInCard />
+        ) : (
+          <UserMenu variant={openDesktop ? 'sidebar' : 'compact'} />
+        )}
       </SidebarFooter>
     </>
   );

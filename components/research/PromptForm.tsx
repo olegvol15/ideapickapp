@@ -16,6 +16,7 @@ import { ThinkingIndicator } from './ThinkingIndicator';
 import { useAuth } from '@/context/auth';
 import { useResearch } from '@/hooks/use-research';
 import { useResearchStore } from '@/stores/research.store';
+import { GuestPromptModal } from '@/components/auth/GuestPromptModal';
 import { PRODUCT_TYPE_OPTIONS, DIFFICULTY_OPTIONS } from '@/constants/products';
 
 export function PromptForm() {
@@ -35,7 +36,7 @@ export function PromptForm() {
     statusLabel,
   } = useResearchStore();
 
-  const { handleGenerate, handleCancel, handleClear, isGenerating, errorMsg } =
+  const { handleGenerate, handleCancel, handleClear, isGenerating, errorMsg, guestModalOpen, setGuestModalOpen } =
     useResearch(user?.id);
 
   return (
@@ -192,6 +193,8 @@ export function PromptForm() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <GuestPromptModal open={guestModalOpen} onClose={() => setGuestModalOpen(false)} />
     </div>
   );
 }

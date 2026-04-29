@@ -1,3 +1,4 @@
+import type { SearchParams } from 'next/dist/server/request/search-params';
 import { IdeaPickLogo } from '@/components/brand/IdeaPickLogo';
 import { AuthForm } from '@/components/auth/AuthForm';
 
@@ -7,7 +8,9 @@ const STEPS = [
   { n: '3', title: 'Ship', desc: 'Roadmap and start building.' },
 ];
 
-export default function AuthPage() {
+export default async function AuthPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const params = await searchParams;
+  const defaultMode = params.mode === 'signup' ? 'signup' : 'signin';
   return (
     // Single unified background — no hard split
     <div className="dark relative flex min-h-screen bg-[#060d18]">
@@ -111,7 +114,7 @@ export default function AuthPage() {
       {/* ── Right panel ── */}
       <div className="relative flex flex-1 items-center justify-center px-8 py-12">
         <div className="w-full max-w-sm">
-          <AuthForm />
+          <AuthForm defaultMode={defaultMode as 'signin' | 'signup'} />
         </div>
       </div>
     </div>
