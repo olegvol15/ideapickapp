@@ -18,4 +18,9 @@ export type {
   GenerateRequest,
   GenerateResponse,
   ValidationResult,
+  QuickValidateRequest,
+  QuickValidateResponse,
+  ExploreIdea,
+  ExploreIdeasRequest,
+  ExploreIdeasResponse,
 } from './api.types';

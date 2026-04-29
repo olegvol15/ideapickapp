@@ -279,6 +279,34 @@ const GapSchema = z.object({
   opportunity: z.string(),
 });
 
+// ─── ExploreIdeas ─────────────────────────────────────────────────────────────
+
+const ExploreIdeaSchema = z.object({
+  title: z.string().min(1).max(80),
+  description: z.string().min(1),
+  score: z.number().int().min(0).max(100),
+  verdict: z.string().min(1).max(30),
+  bullets: z.array(z.string()).min(2).max(3),
+  nextStep: z.string().min(1),
+});
+export type ExploreIdea = z.infer<typeof ExploreIdeaSchema>;
+
+export const ExploreResultSchema = z.object({
+  ideas: z.array(ExploreIdeaSchema).length(3),
+});
+
+// ─── QuickValidate ────────────────────────────────────────────────────────────
+
+export const QuickValidateResultSchema = z.object({
+  verdict: z.string().min(1).max(30),
+  score: z.number().int().min(0).max(100),
+  bullets: z.array(z.string()).length(3),
+  nextStep: z.string().min(1),
+});
+export type QuickValidateResult = z.infer<typeof QuickValidateResultSchema>;
+
+// ─── Generate (LLM portion only — competitors are appended from Tavily) ───────
+
 export const GenerateLLMOutputSchema = z.object({
   marketContext: MarketContextLLMSchema,
   competitorAnalysis: z.array(CompetitorAnalysisSchema),

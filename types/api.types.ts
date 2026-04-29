@@ -26,3 +26,35 @@ export interface ValidationResult {
   risks: string[];
   verdict: string;
 }
+
+export interface ExploreIdea {
+  title: string;
+  description: string;
+  score: number;
+  verdict: string;
+  bullets: string[];
+  nextStep: string;
+}
+
+export interface ExploreIdeasRequest {
+  interest: string;
+  constraints: string[];
+  previousIdeas?: string[];
+}
+
+export interface ExploreIdeasResponse {
+  ideas: ExploreIdea[];
+}
+
+export interface QuickValidateRequest {
+  description: string;
+  audience: string;
+  problem: string;
+}
+
+export interface QuickValidateResponse {
+  verdict: string;
+  score: number;
+  bullets: string[];
+  nextStep: string;
+}

@@ -5,7 +5,6 @@ import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AuthGate } from '@/components/auth/AuthGate';
 import type { Idea, SignalLevel } from '@/types';
 import { computeOpportunityScore } from '@/lib/scoring';
 import { useAuth } from '@/context/auth';
@@ -21,21 +20,20 @@ interface OpportunityCardProps extends Idea {
   onExplore: () => void;
   onUnsave?: () => void;
   generationId?: string | null;
+  onGuestAction?: () => void;
 }
 
 export function OpportunityCard({
   onExplore,
   onUnsave,
   generationId,
+  onGuestAction,
   ...ideaProps
 }: OpportunityCardProps) {
   const idea = ideaProps as Idea;
   const score = computeOpportunityScore(idea);
   const { user } = useAuth();
-  const { saved, toggle, requiresAuth, clearAuthRequired } = useSavedIdea(
-    idea,
-    user?.id
-  );
+  const { saved, toggle } = useSavedIdea(idea, user?.id);
 
   const buildSignal: SignalLevel =
     idea.difficulty === 'Easy'
@@ -45,17 +43,17 @@ export function OpportunityCard({
         : 'Low';
 
   function handleSaveToggle() {
+    if (!user) { onGuestAction?.(); return; }
     const isNowSaved = toggle(generationId);
     if (!isNowSaved && saved) onUnsave?.();
   }
 
   return (
-    <>
-      <Card
-        className="cursor-pointer transition-colors duration-200 hover:border-primary/30"
-        onClick={onExplore}
-      >
-        <CardContent className="p-5">
+    <Card
+      className="cursor-pointer transition-colors duration-200 hover:border-primary/30"
+      onClick={onExplore}
+    >
+      <CardContent className="p-5">
           <div className="flex items-start justify-between gap-3 mb-2">
             <h3 className="text-[14px] font-bold uppercase tracking-wide leading-snug text-foreground">
               {idea.title}
@@ -137,9 +135,6 @@ export function OpportunityCard({
             </div>
           </div>
         </CardContent>
-      </Card>
-
-      <AuthGate open={requiresAuth} onClose={clearAuthRequired} />
-    </>
+    </Card>
   );
 }

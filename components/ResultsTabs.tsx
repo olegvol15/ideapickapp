@@ -9,6 +9,8 @@ import { OpportunityModal } from '@/components/opportunity/opportunity-modal';
 import { MarketDashboard } from '@/components/market/market-dashboard';
 import { CompetitorsList } from '@/components/market/competitors-list';
 import { useIdeaDraftStore } from '@/stores/idea-draft.store';
+import { useAuth } from '@/context/auth';
+import { GuestPromptModal } from '@/components/auth/GuestPromptModal';
 import type { GenerateResponse, Idea } from '@/types';
 
 type Tab = 'opportunities' | 'market' | 'competitors';
@@ -37,8 +39,11 @@ export function ResultsTabs({
 }: ResultsTabsProps) {
   const [active, setActive] = useState<Tab>('opportunities');
   const [modalOpen, setModalOpen] = useState(false);
+  const [guestModalOpen, setGuestModalOpen] = useState(false);
+  const { user } = useAuth();
 
   function openIdea(idea: Idea) {
+    if (!user) { setGuestModalOpen(true); return; }
     useIdeaDraftStore.getState().setDraft(idea, generationId ?? null);
     setModalOpen(true);
   }
@@ -93,6 +98,7 @@ export function ResultsTabs({
                         {...idea}
                         generationId={generationId}
                         onExplore={() => openIdea(idea)}
+                        onGuestAction={() => setGuestModalOpen(true)}
                       />
                     </motion.div>
                   ))}
@@ -118,6 +124,7 @@ export function ResultsTabs({
       </div>
 
       <OpportunityModal open={modalOpen} onClose={() => setModalOpen(false)} />
+      <GuestPromptModal open={guestModalOpen} onClose={() => setGuestModalOpen(false)} />
     </>
   );
 }

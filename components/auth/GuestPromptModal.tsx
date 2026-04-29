@@ -54,25 +54,27 @@ export function GuestPromptModal({ open, onClose }: GuestPromptModalProps) {
         <div className="mb-6">
           <h2 className="text-lg font-bold text-white">Get more ideas</h2>
           <p className="mt-2 text-sm leading-relaxed text-white/45">
-            You&apos;ve used your free generation. Sign up to get unlimited ideas,
+            You&apos;ve reached your generation limit. Sign up to get unlimited ideas,
             save your workspace, and validate your concepts.
           </p>
         </div>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           <Button
             asChild
             className="w-full bg-[#0077b6] text-white hover:bg-[#0066a0] font-medium"
           >
-            <Link href="/auth?mode=signup">Sign up — it&apos;s free</Link>
+            <Link href="/auth?mode=signup">Sign up</Link>
           </Button>
-          <Button
-            asChild
-            variant="ghost"
-            className="w-full text-white/50 hover:text-white hover:bg-white/[0.06]"
-          >
-            <Link href="/auth">Sign in</Link>
-          </Button>
+          <p className="text-center text-xs text-white/35">
+            Already have an account?{' '}
+            <Link
+              href="/auth"
+              className="text-white/60 underline-offset-2 hover:text-white hover:underline"
+            >
+              Log in
+            </Link>
+          </p>
         </div>
       </div>
     </div>

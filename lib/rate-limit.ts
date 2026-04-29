@@ -54,3 +54,17 @@ export const guestGenerateLimiter = new Ratelimit({
   limiter: Ratelimit.slidingWindow(1, '24 h'),
   prefix: 'rl:guest:generate',
 });
+
+// Explore ideas — generates 4 ideas from interest + constraints.
+export const exploreIdeasLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(20, '1 h'),
+  prefix: 'rl:explore-ideas',
+});
+
+// Quick onboarding validation — lightweight, single LLM call.
+export const quickValidateLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(30, '1 h'),
+  prefix: 'rl:quick-validate',
+});

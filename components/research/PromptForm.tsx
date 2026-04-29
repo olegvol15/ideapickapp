@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -34,10 +35,21 @@ export function PromptForm() {
     visibleCount,
     generationId,
     statusLabel,
+    autoGenerate,
+    setAutoGenerate,
   } = useResearchStore();
 
   const { handleGenerate, handleCancel, handleClear, isGenerating, errorMsg, guestModalOpen, setGuestModalOpen } =
     useResearch(user?.id);
+
+  const handleGenerateRef = useRef(handleGenerate);
+  handleGenerateRef.current = handleGenerate;
+
+  useEffect(() => {
+    if (!autoGenerate) return;
+    setAutoGenerate(false);
+    void handleGenerateRef.current();
+  }, [autoGenerate, setAutoGenerate]);
 
   return (
     <div className="flex flex-col gap-5">

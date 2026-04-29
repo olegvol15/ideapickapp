@@ -64,7 +64,8 @@ export async function middleware(request: NextRequest) {
 
   const isApiRoute =
     request.nextUrl.pathname.startsWith('/api/') &&
-    !request.nextUrl.pathname.startsWith('/api/auth/');
+    !request.nextUrl.pathname.startsWith('/api/auth/') &&
+    !request.nextUrl.pathname.startsWith('/api/generate');
 
   if (isApiRoute) {
     const contentLength = Number(request.headers.get('content-length') ?? 0);
