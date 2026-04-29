@@ -2,78 +2,51 @@ import { IdeaPickLogo } from '@/components/brand/IdeaPickLogo';
 import { AuthForm } from '@/components/auth/AuthForm';
 
 const STEPS = [
-  {
-    n: '01',
-    title: 'Generate',
-    desc: 'AI-powered idea generation tailored to your interests and market gaps.',
-  },
-  {
-    n: '02',
-    title: 'Validate',
-    desc: 'Score your idea against real market signals and competitor data.',
-  },
-  {
-    n: '03',
-    title: 'Ship',
-    desc: 'Turn validated ideas into a structured roadmap and start building.',
-  },
+  { n: '1', title: 'Generate', desc: 'AI-powered ideas tailored to your market.' },
+  { n: '2', title: 'Validate', desc: 'Score against real market signals.' },
+  { n: '3', title: 'Ship', desc: 'Roadmap and start building.' },
 ];
 
 export default function AuthPage() {
   return (
-    <div className="dark flex min-h-screen">
+    // Single unified background — no hard split
+    <div className="dark relative flex min-h-screen bg-[#060d18]">
+      {/* Full-page blue glow anchored to the left */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(ellipse 70% 80% at 0% 30%, rgba(0,119,182,0.35) 0%, transparent 60%)',
+        }}
+      />
+      {/* Secondary glow — bottom left corner */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(ellipse 50% 50% at -5% 100%, rgba(0,80,140,0.3) 0%, transparent 55%)',
+        }}
+      />
+      {/* Right side fades darker — gives the form area breathing room */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(ellipse 60% 100% at 100% 50%, rgba(0,0,0,0.55) 0%, transparent 70%)',
+        }}
+      />
+
       {/* ── Left panel ── */}
-      <div className="relative hidden w-[48%] shrink-0 flex-col justify-between overflow-hidden bg-[#060d18] p-12 lg:flex">
-        {/* Deep blue glow — top centre */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              'radial-gradient(ellipse 100% 60% at 50% -10%, rgba(0,119,182,0.6) 0%, transparent 60%)',
-          }}
-        />
-        {/* Secondary glow — bottom left */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              'radial-gradient(ellipse 70% 50% at -10% 110%, rgba(0,80,140,0.45) 0%, transparent 60%)',
-          }}
-        />
-
-        {/* Decorative concentric rings — bottom right */}
-        <div aria-hidden className="pointer-events-none absolute -bottom-24 -right-24 h-[420px] w-[420px]">
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="absolute inset-0 rounded-full border border-white/[0.04]"
-              style={{ transform: `scale(${i * 0.25})`, transformOrigin: 'center' }}
-            />
-          ))}
-        </div>
-
-        {/* Subtle noise texture overlay */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.025]"
-          style={{
-            backgroundImage:
-              'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")',
-            backgroundSize: '180px 180px',
-          }}
-        />
-
+      <div className="relative hidden w-[46%] shrink-0 flex-col justify-between p-12 lg:flex">
         {/* Logo */}
         <IdeaPickLogo className="relative text-white [&>span]:text-[#5ba3f5]" />
 
-        {/* Centre copy + step list */}
+        {/* Bottom content */}
         <div className="relative">
-          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#5ba3f5]/70">
-            How it works
-          </p>
-          <h2 className="mb-4 text-[2.4rem] font-bold leading-[1.1] tracking-tight text-white">
+          <h2 className="mb-3 text-[2.2rem] font-bold leading-[1.1] tracking-tight text-white">
             From idea to
             <br />
             <span
@@ -87,97 +60,58 @@ export default function AuthPage() {
             </span>
             , faster.
           </h2>
-          <p className="mb-10 text-sm leading-relaxed text-white/45">
+          <p className="mb-10 text-sm leading-relaxed text-white/40">
             The full stack for startup thinkers — generate,
             <br />
             validate, and roadmap your next big idea.
           </p>
 
-          {/* Vertical timeline */}
-          <div className="relative flex flex-col gap-0">
-            {/* Connector line */}
-            <div
-              aria-hidden
-              className="pointer-events-none absolute left-[18px] top-6 w-px"
-              style={{
-                height: 'calc(100% - 2.5rem)',
-                background:
-                  'linear-gradient(to bottom, rgba(91,163,245,0.5) 0%, rgba(91,163,245,0.1) 100%)',
-              }}
-            />
-
-            {STEPS.map(({ n, title, desc }, idx) => (
-              <div key={n} className={`relative flex gap-5 ${idx < STEPS.length - 1 ? 'pb-7' : ''}`}>
-                {/* Step indicator */}
-                <div className="relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#5ba3f5]/30 bg-[#0d1f35] text-[11px] font-bold tracking-wider text-[#5ba3f5]">
+          {/* Step cards */}
+          <div className="flex gap-3">
+            {STEPS.map(({ n, title, desc }, i) => (
+              <div
+                key={n}
+                className="flex-1 rounded-xl p-4"
+                style={{
+                  background: i === 0 ? 'rgba(0,119,182,0.18)' : 'rgba(255,255,255,0.06)',
+                  border: i === 0 ? '1px solid rgba(0,119,182,0.45)' : '1px solid rgba(255,255,255,0.07)',
+                }}
+              >
+                <div
+                  className="mb-3 flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold"
+                  style={{
+                    background: i === 0 ? 'rgba(0,119,182,0.5)' : 'rgba(255,255,255,0.10)',
+                    color: i === 0 ? '#fff' : 'rgba(255,255,255,0.4)',
+                  }}
+                >
                   {n}
                 </div>
-
-                <div className="pt-1">
-                  <p className="mb-0.5 text-sm font-semibold text-white">{title}</p>
-                  <p className="text-xs leading-relaxed text-white/40">{desc}</p>
-                </div>
+                <p
+                  className="mb-1 text-[13px] font-semibold"
+                  style={{ color: 'rgba(255,255,255,0.85)' }}
+                >
+                  {title}
+                </p>
+                <p
+                  className="text-[11px] leading-relaxed"
+                  style={{ color: i === 0 ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.28)' }}
+                >
+                  {desc}
+                </p>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Footer */}
         <p className="relative text-xs text-white/20">
           &copy; {new Date().getFullYear()} IdeaPick
         </p>
       </div>
 
       {/* ── Right panel ── */}
-      <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-black px-8 py-12">
-
-        {/* Decorative blur orbs */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-32 right-0 h-[500px] w-[500px] rounded-full opacity-[0.07]"
-          style={{ background: 'radial-gradient(circle, #0077b6 0%, transparent 70%)', filter: 'blur(60px)' }}
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-24 left-1/4 h-[400px] w-[400px] rounded-full opacity-[0.05]"
-          style={{ background: 'radial-gradient(circle, #0077b6 0%, transparent 70%)', filter: 'blur(80px)' }}
-        />
-
-        {/* Subtle dot grid */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.18]"
-          style={{
-            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.35) 1px, transparent 1px)',
-            backgroundSize: '28px 28px',
-          }}
-        />
-
-        {/* Fade dot grid toward edges */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              'radial-gradient(ellipse 70% 70% at 50% 50%, transparent 40%, black 100%)',
-          }}
-        />
-
-        {/* Form card */}
-        <div className="relative w-full max-w-md">
-          {/* Top shimmer line */}
-          <div
-            aria-hidden
-            className="absolute inset-x-0 -top-px h-px"
-            style={{
-              background:
-                'linear-gradient(90deg, transparent, rgba(0,119,182,0.5) 40%, rgba(255,255,255,0.15) 50%, rgba(0,119,182,0.5) 60%, transparent)',
-            }}
-          />
-
-          <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-10 shadow-[0_32px_80px_rgba(0,0,0,0.7)] backdrop-blur-sm">
-            <AuthForm />
-          </div>
+      <div className="relative flex flex-1 items-center justify-center px-8 py-12">
+        <div className="w-full max-w-sm">
+          <AuthForm />
         </div>
       </div>
     </div>
