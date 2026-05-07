@@ -4,7 +4,7 @@ import { buildRoadmapMessages } from '@/prompts/roadmap.prompts';
 import { requireAuth, checkRateLimit } from '@/lib/supabase/auth';
 import { roadmapLimiter } from '@/lib/rate-limit';
 import { validateIdeaSize } from '@/lib/validate-input';
-import { RoadmapGraphSchema } from '@/lib/schemas';
+import { IdeaSchema, RoadmapGraphSchema } from '@/lib/schemas';
 import { withErrorHandling } from '@/lib/errors/api-handler';
 import { AppError } from '@/lib/errors/app-error';
 import type { Idea } from '@/types';
@@ -17,13 +17,12 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   let idea: Idea;
   try {
     const body = await req.json();
-    idea = body.idea;
-  } catch {
+    const ideaParsed = IdeaSchema.safeParse(body?.idea);
+    if (!ideaParsed.success) throw AppError.validation('Invalid idea');
+    idea = ideaParsed.data as Idea;
+  } catch (err) {
+    if (err instanceof AppError) throw err;
     throw AppError.validation('Invalid request body');
-  }
-
-  if (!idea?.title) {
-    throw AppError.validation('Idea is required');
   }
 
   validateIdeaSize(idea);

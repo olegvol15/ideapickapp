@@ -46,7 +46,7 @@ export async function saveGeneration(params: {
     .select('id')
     .single();
 
-  if (error) throw new Error(`[db] saveGeneration: ${error.message}`);
+  if (error) throw new Error('Failed to save generation', { cause: error });
   return data.id;
 }
 
@@ -66,7 +66,7 @@ export async function saveIdeaToDB(params: {
     .select('id')
     .single();
 
-  if (error) throw new Error(`[db] saveIdeaToDB: ${error.message}`);
+  if (error) throw new Error('Failed to save idea', { cause: error });
   return data.id;
 }
 
@@ -81,7 +81,7 @@ export async function unsaveIdeaFromDB(
     .eq('user_id', userId)
     .eq('id', ideaId);
 
-  if (error) throw error;
+  if (error) throw new Error('Failed to delete idea', { cause: error });
 }
 
 export async function getSavedIdeasFromDB(
@@ -108,7 +108,7 @@ export async function deleteGeneration(
     .delete()
     .eq('user_id', userId)
     .eq('id', id);
-  if (error) throw new Error(`[db] deleteGeneration: ${error.message}`);
+  if (error) throw new Error('Failed to delete generation', { cause: error });
 }
 
 export async function renameGeneration(
@@ -122,7 +122,7 @@ export async function renameGeneration(
     .update({ prompt })
     .eq('user_id', userId)
     .eq('id', id);
-  if (error) throw new Error(`[db] renameGeneration: ${error.message}`);
+  if (error) throw new Error('Failed to rename generation', { cause: error });
 }
 
 export async function getGenerations(userId: string): Promise<GenerationRow[]> {
@@ -184,7 +184,7 @@ export async function saveValidation(params: {
     })
     .select('id')
     .single();
-  if (error) throw new Error(`[db] saveValidation: ${error.message}`);
+  if (error) throw new Error('Failed to save validation', { cause: error });
   return data.id;
 }
 
@@ -199,7 +199,7 @@ export async function renameValidation(
     .update({ description })
     .eq('user_id', userId)
     .eq('id', id);
-  if (error) throw new Error(`[db] renameValidation: ${error.message}`);
+  if (error) throw new Error('Failed to rename validation', { cause: error });
 }
 
 export async function updateValidation(
@@ -215,7 +215,7 @@ export async function updateValidation(
     .update({ description, result_json: result, competitors_json: competitors })
     .eq('user_id', userId)
     .eq('id', id);
-  if (error) throw new Error(`[db] updateValidation: ${error.message}`);
+  if (error) throw new Error('Failed to update validation', { cause: error });
 }
 
 export async function deleteValidation(
@@ -228,7 +228,7 @@ export async function deleteValidation(
     .delete()
     .eq('user_id', userId)
     .eq('id', id);
-  if (error) throw new Error(`[db] deleteValidation: ${error.message}`);
+  if (error) throw new Error('Failed to delete validation', { cause: error });
 }
 
 export async function getValidations(userId: string): Promise<ValidationRow[]> {
@@ -287,7 +287,7 @@ export async function upsertRoadmapToDB(params: {
   const { error } = await supabase
     .from('roadmaps')
     .upsert(row, { onConflict: 'user_id,slug' });
-  if (error) throw new Error(`[db] upsertRoadmapToDB: ${error.message}`);
+  if (error) throw new Error('Failed to save roadmap', { cause: error });
 }
 
 export interface LoadedRoadmap {
@@ -361,7 +361,7 @@ export async function upsertWorkspaceToDB(params: {
     },
     { onConflict: 'user_id,idea_slug' }
   );
-  if (error) throw new Error(`[db] upsertWorkspaceToDB: ${error.message}`);
+  if (error) throw new Error('Failed to save workspace', { cause: error });
 }
 
 export async function loadWorkspaceFromDB(
@@ -407,5 +407,5 @@ export async function deleteWorkspaceFromDB(
     .delete()
     .eq('user_id', userId)
     .eq('idea_slug', slug);
-  if (error) throw new Error(`[db] deleteWorkspaceFromDB: ${error.message}`);
+  if (error) throw new Error('Failed to delete workspace', { cause: error });
 }

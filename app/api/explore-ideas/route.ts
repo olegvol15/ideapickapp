@@ -32,12 +32,14 @@ export const POST = async (req: NextRequest): Promise<Response> => {
 
     if (!Array.isArray(constraints))
       throw AppError.validation('constraints must be an array');
-    if (constraints.some((c) => typeof c !== 'string'))
-      throw AppError.validation('constraints must be strings');
+    if (constraints.length > 10)
+      throw AppError.validation('constraints must have 10 items or fewer');
+    if (constraints.some((c) => typeof c !== 'string' || c.length > 200))
+      throw AppError.validation('each constraint must be a string of 200 characters or fewer');
 
     const prevIdeas =
       Array.isArray(previousIdeas) && previousIdeas.every((p) => typeof p === 'string')
-        ? (previousIdeas as string[])
+        ? (previousIdeas as string[]).slice(0, 20).map((p) => p.slice(0, 200))
         : undefined;
 
     const ideas = await runExploreIdeas(interest.trim(), constraints as string[], prevIdeas);

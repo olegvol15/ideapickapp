@@ -17,11 +17,15 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   let instruction: string;
 
   try {
-    const body = (await req.json()) as { idea?: Idea; instruction?: string };
+    const body = (await req.json()) as { idea?: unknown; instruction?: unknown };
     if (!body.idea || !body.instruction) {
       throw AppError.validation('Missing idea or instruction');
     }
-    idea = body.idea;
+    const ideaParsed = IdeaSchema.safeParse(body.idea);
+    if (!ideaParsed.success) throw AppError.validation('Invalid idea');
+    idea = ideaParsed.data as Idea;
+    if (typeof body.instruction !== 'string')
+      throw AppError.validation('instruction must be a string');
     instruction = body.instruction;
   } catch (err) {
     if (err instanceof AppError) throw err;

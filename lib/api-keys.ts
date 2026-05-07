@@ -13,6 +13,7 @@ export const roadmapKeys = {
 
 export const validationKeys = {
   all: (userId?: string) => ['validations', userId] as const,
+  byId: (userId: string, id: string) => ['validations', userId, id] as const,
 };
 
 export const workspaceKeys = {

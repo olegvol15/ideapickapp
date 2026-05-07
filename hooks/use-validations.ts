@@ -6,12 +6,17 @@ import {
   deleteValidation,
   renameValidation,
   getValidations,
+  getValidation,
   updateValidation,
 } from '@/services/db.service';
+import { useValidateStore } from '@/stores/validate.store';
 import { toast } from 'sonner';
 import { validationKeys } from '@/lib/api-keys';
 import type { EnhancedValidationResult } from '@/lib/schemas';
 import type { Competitor } from '@/types';
+
+export const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function useSaveValidation(userId: string | undefined) {
   const queryClient = useQueryClient();
@@ -90,5 +95,28 @@ export function useGetValidations(userId: string | undefined) {
     queryKey: validationKeys.all(userId),
     queryFn: () => getValidations(userId!),
     enabled: !!userId,
+  });
+}
+
+export function useGetValidation(userId: string | undefined, id: string) {
+  const localEntry = useValidateStore((s) =>
+    s.localValidations.find((v) => v.id === id)
+  );
+  const isUUID = UUID_RE.test(id);
+  return useQuery({
+    queryKey: validationKeys.byId(userId ?? '', id),
+    queryFn: () => getValidation(userId!, id),
+    enabled: !!userId && isUUID,
+    placeholderData:
+      !isUUID && localEntry
+        ? {
+            id: localEntry.id,
+            description: localEntry.description,
+            product_type: localEntry.productType,
+            result_json: localEntry.result,
+            competitors_json: localEntry.competitors,
+            created_at: new Date(localEntry.createdAt).toISOString(),
+          }
+        : undefined,
   });
 }

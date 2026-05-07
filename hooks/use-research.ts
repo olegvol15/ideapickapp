@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, startTransition } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import {
   useResearchStore,
@@ -36,7 +36,7 @@ export function useResearch(userId: string | undefined) {
         'Almost there…',
       ];
       store.setPhase('generating');
-      store.setStatusLabel('Searching the market…');
+      startTransition(() => store.setStatusLabel('Searching the market…'));
       return generateIdeasStream(
         { prompt: vars.prompt, productType: vars.productType, difficulty: vars.difficulty },
         {
@@ -46,10 +46,10 @@ export function useResearch(userId: string | undefined) {
               competitors.length > 0
                 ? `Found ${competitors.length} competitor${competitors.length !== 1 ? 's' : ''}, analyzing gaps…`
                 : 'Analyzing the market…';
-            store.setStatusLabel(msg);
+            startTransition(() => store.setStatusLabel(msg));
             let idx = 0;
             analysisIntervalRef.current = setInterval(() => {
-              store.setStatusLabel(cycleMessages[idx]);
+              startTransition(() => store.setStatusLabel(cycleMessages[idx]));
               idx = Math.min(idx + 1, cycleMessages.length - 1);
             }, 3500);
           },
