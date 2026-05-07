@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import type { Idea } from '@/types';
 import {
   useGetSavedIdeas,
@@ -10,17 +9,13 @@ import {
 
 export interface UseSavedIdeaReturn {
   saved: boolean;
-  toggle: (generationId?: string | null) => boolean;
-  requiresAuth: boolean;
-  clearAuthRequired: () => void;
+  toggle: (generationId?: string | null) => void;
 }
 
 export function useSavedIdea(
   idea: Idea | null,
   userId: string | undefined
 ): UseSavedIdeaReturn {
-  const [requiresAuth, setRequiresAuth] = useState(false);
-
   const { data: savedIdeas = [] } = useGetSavedIdeas(userId);
   const saveIdea = useSaveIdea(userId);
   const unsaveIdea = useUnsaveIdea(userId);
@@ -31,27 +26,14 @@ export function useSavedIdea(
       : null;
   const saved = !!savedRow;
 
-  function toggle(generationId?: string | null): boolean {
-    if (!idea?.title) return false;
-
-    if (!userId) {
-      setRequiresAuth(true);
-      return saved;
-    }
-
-    const next = !saved;
-    if (next) {
-      saveIdea.mutate({ generationId: generationId ?? null, idea });
-    } else if (savedRow) {
+  function toggle(generationId?: string | null): void {
+    if (!idea?.title || !userId) return;
+    if (saved && savedRow) {
       unsaveIdea.mutate(savedRow.id);
+    } else {
+      saveIdea.mutate({ generationId: generationId ?? null, idea });
     }
-    return next;
   }
 
-  return {
-    saved,
-    toggle,
-    requiresAuth,
-    clearAuthRequired: () => setRequiresAuth(false),
-  };
+  return { saved, toggle };
 }

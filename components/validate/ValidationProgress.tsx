@@ -7,6 +7,7 @@ import { CompetitorLogo } from '@/components/market/competitors-list/CompetitorL
 import { Pulse } from './Pulse';
 import { StepIcon } from './StepIcon';
 import { useCyclingLabel } from '@/hooks/use-cycling-label';
+import { SCORING_LABELS } from '@/constants/scoring';
 import { stepStatus, getSearchKeywords } from '@/lib/validate/progress';
 import type { StepStatus } from '@/lib/validate/progress';
 import type { Competitor } from '@/types';
@@ -28,7 +29,7 @@ export function ValidationProgress({
   description,
   onCancel,
 }: ValidationProgressProps) {
-  const scoringLabel = useCyclingLabel(phase === 'analyzing');
+  const scoringLabel = useCyclingLabel(phase === 'analyzing', SCORING_LABELS);
   const isMobile = productType === 'Mobile App';
   const searchKeywords = getSearchKeywords(description, isMobile);
   const competitorItems = competitors

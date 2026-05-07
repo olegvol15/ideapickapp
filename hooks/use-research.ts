@@ -1,79 +1,122 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import {
   useResearchStore,
   type PersistedResearch,
 } from '@/stores/research.store';
 import { useSaveGeneration } from '@/hooks/use-generations';
 import { generateIdeasStream } from '@/services/generate.service';
-
-const THINKING_DELAY_MS = 800;
-const CARD_STAGGER_MS = 380;
-
-const CYCLE_MESSAGES = [
-  'Mapping the competitive landscape…',
-  'Identifying market opportunities…',
-  'Crafting product ideas…',
-  'Scoring difficulty and demand…',
-  'Almost there…',
-];
-
-const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+import { wait } from '@/lib/utils';
+import type { GenerateResponse, ProductType, Difficulty } from '@/types';
 
 export function useResearch(userId: string | undefined) {
   const store = useResearchStore();
   const saveGenerationMutation = useSaveGeneration(userId);
   const abortRef = useRef<AbortController | null>(null);
   const analysisIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const prevUserIdRef = useRef<string | undefined>(undefined);
-
-  const [guestModalOpen, setGuestModalOpen] = useState(false);
 
   const isGenerating =
     store.phase === 'thinking' ||
     store.phase === 'generating' ||
     store.phase === 'streaming';
 
-  // Migrate in-memory guest result to account on sign-in (same session only)
-  useEffect(() => {
-    const prevId = prevUserIdRef.current;
-    prevUserIdRef.current = userId;
-
-    if (!prevId && userId) {
-      const state = useResearchStore.getState();
-      if (state.result && !state.generationId) {
-        saveGenerationMutation
-          .mutateAsync({
-            prompt: state.prompt,
-            productType: state.productType,
-            difficulty: state.difficulty,
-            result: state.result,
-          })
-          .then((savedId) => {
-            if (savedId) {
-              useResearchStore.getState().setResult(state.result!, savedId);
-            }
-          })
-          .catch(() => null);
+  const generateMutation = useMutation<
+    GenerateResponse,
+    Error & { status?: number },
+    { prompt: string; productType: ProductType | ''; difficulty: Difficulty | ''; signal: AbortSignal }
+  >({
+    mutationFn: async (vars) => {
+      const cycleMessages = [
+        'Mapping the competitive landscape…',
+        'Identifying market opportunities…',
+        'Crafting product ideas…',
+        'Scoring difficulty and demand…',
+        'Almost there…',
+      ];
+      store.setPhase('generating');
+      store.setStatusLabel('Searching the market…');
+      return generateIdeasStream(
+        { prompt: vars.prompt, productType: vars.productType, difficulty: vars.difficulty },
+        {
+          signal: vars.signal,
+          onCompetitors: (competitors) => {
+            const msg =
+              competitors.length > 0
+                ? `Found ${competitors.length} competitor${competitors.length !== 1 ? 's' : ''}, analyzing gaps…`
+                : 'Analyzing the market…';
+            store.setStatusLabel(msg);
+            let idx = 0;
+            analysisIntervalRef.current = setInterval(() => {
+              store.setStatusLabel(cycleMessages[idx]);
+              idx = Math.min(idx + 1, cycleMessages.length - 1);
+            }, 3500);
+          },
+        }
+      );
+    },
+    onSuccess: async (data, vars) => {
+      if (analysisIntervalRef.current) {
+        clearInterval(analysisIntervalRef.current);
+        analysisIntervalRef.current = null;
       }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]);
+      store.setResult(data, null);
 
-  function clearAnalysisInterval() {
+      const savedId = await saveGenerationMutation
+        .mutateAsync({
+          prompt: vars.prompt,
+          productType: vars.productType,
+          difficulty: vars.difficulty,
+          result: data,
+        })
+        .catch(() => null);
+
+      if (savedId) store.setResult(data, savedId);
+
+      const entry: PersistedResearch = {
+        prompt: vars.prompt,
+        productType: vars.productType,
+        difficulty: vars.difficulty,
+        result: data,
+        generationId: savedId,
+        createdAt: Date.now(),
+      };
+      store.pushLocalHistory(entry);
+
+      store.setPhase('streaming');
+      for (let i = 0; i < data.ideas.length; i++) {
+        if (i > 0) await wait(380);
+        store.setVisibleCount(i + 1);
+      }
+      store.setPhase('done');
+    },
+    onError: (err) => {
+      if (analysisIntervalRef.current) {
+        clearInterval(analysisIntervalRef.current);
+        analysisIntervalRef.current = null;
+      }
+      if (err.name === 'AbortError') return;
+      if (!userId && err.status === 429) {
+        store.setPhase('idle');
+        store.setGuestRateLimited(true);
+        return;
+      }
+      store.setPhase('error');
+      store.setErrorMessage(err.message ?? 'Something went wrong');
+    },
+    retry: false,
+  });
+
+  function handleGenerate(): void {
+    const { prompt, productType, difficulty } = useResearchStore.getState();
+    if (!prompt.trim() || generateMutation.isPending) return;
+
+    abortRef.current?.abort();
     if (analysisIntervalRef.current) {
       clearInterval(analysisIntervalRef.current);
       analysisIntervalRef.current = null;
     }
-  }
-
-  async function handleGenerate(): Promise<void> {
-    const { prompt, productType, difficulty } = useResearchStore.getState();
-    if (!prompt.trim() || isGenerating) return;
-
-    abortRef.current?.abort();
-    clearAnalysisInterval();
     const abort = new AbortController();
     abortRef.current = abort;
 
@@ -82,87 +125,29 @@ export function useResearch(userId: string | undefined) {
     store.setErrorMessage(null);
     store.setVisibleCount(0);
     store.setResult(null, null);
-    await wait(THINKING_DELAY_MS);
 
-    store.setPhase('generating');
-    store.setStatusLabel('Searching the market…');
-
-    let data;
-    try {
-      data = await generateIdeasStream(
-        { prompt, productType, difficulty },
-        {
-          signal: abort.signal,
-          onCompetitors: (competitors) => {
-            const firstMsg =
-              competitors.length > 0
-                ? `Found ${competitors.length} competitor${competitors.length !== 1 ? 's' : ''}, analyzing gaps…`
-                : 'Analyzing the market…';
-            store.setStatusLabel(firstMsg);
-
-            let idx = 0;
-            analysisIntervalRef.current = setInterval(() => {
-              store.setStatusLabel(CYCLE_MESSAGES[idx]);
-              idx = Math.min(idx + 1, CYCLE_MESSAGES.length - 1);
-            }, 3500);
-          },
-        }
-      );
-    } catch (err: unknown) {
-      clearAnalysisInterval();
-      const e = err as { name?: string; status?: number };
-      if (e.name === 'AbortError') return;
-      // Guest hit the rate limit — show auth prompt instead of error UI
-      if (!userId && e.status === 429) {
-        store.setPhase('idle');
-        setGuestModalOpen(true);
-        return;
-      }
-      store.setPhase('error');
-      store.setErrorMessage(
-        err instanceof Error ? err.message : 'Something went wrong'
-      );
-      return;
-    }
-
-    clearAnalysisInterval();
-    store.setResult(data, null);
-
-    const savedId = await saveGenerationMutation
-      .mutateAsync({ prompt, productType, difficulty, result: data })
-      .catch(() => null);
-
-    if (savedId) store.setResult(data, savedId);
-
-    const entry: PersistedResearch = {
-      prompt,
-      productType,
-      difficulty,
-      result: data,
-      generationId: savedId,
-      createdAt: Date.now(),
-    };
-    store.pushLocalHistory(entry);
-
-    store.setPhase('streaming');
-    for (let i = 0; i < data.ideas.length; i++) {
-      if (i > 0) await wait(CARD_STAGGER_MS);
-      store.setVisibleCount(i + 1);
-    }
-
-    store.setPhase('done');
+    wait(800).then(() => {
+      if (abort.signal.aborted) return;
+      generateMutation.mutate({ prompt, productType, difficulty, signal: abort.signal });
+    });
   }
 
   function handleCancel(): void {
     abortRef.current?.abort();
-    clearAnalysisInterval();
+    if (analysisIntervalRef.current) {
+      clearInterval(analysisIntervalRef.current);
+      analysisIntervalRef.current = null;
+    }
     const { result } = useResearchStore.getState();
     store.setPhase(result ? 'done' : 'idle');
   }
 
   function handleClear(): void {
     abortRef.current?.abort();
-    clearAnalysisInterval();
+    if (analysisIntervalRef.current) {
+      clearInterval(analysisIntervalRef.current);
+      analysisIntervalRef.current = null;
+    }
     store.clear();
   }
 
@@ -172,7 +157,5 @@ export function useResearch(userId: string | undefined) {
     handleClear,
     isGenerating,
     errorMsg: store.errorMessage ?? 'Something went wrong',
-    guestModalOpen,
-    setGuestModalOpen,
   };
 }

@@ -31,6 +31,7 @@ interface ResearchState {
   errorMessage: string | null;
 
   autoGenerate: boolean;
+  guestRateLimited: boolean;
 
   setPrompt: (v: string) => void;
   setProductType: (v: ProductType | '') => void;
@@ -41,6 +42,7 @@ interface ResearchState {
   setErrorMessage: (msg: string | null) => void;
   setResult: (result: GenerateResponse | null, generationId: string | null) => void;
   setAutoGenerate: (v: boolean) => void;
+  setGuestRateLimited: (v: boolean) => void;
   restore: (entry: PersistedResearch) => void;
   pushLocalHistory: (entry: PersistedResearch) => void;
   removeLocalHistory: (createdAt: string) => void;
@@ -60,6 +62,7 @@ export const useResearchStore = create<ResearchState>()((set) => ({
   statusLabel: '',
   errorMessage: null,
   autoGenerate: false,
+  guestRateLimited: false,
 
   setPrompt: (v) => set({ prompt: v }),
   setProductType: (v) => set({ productType: v }),
@@ -70,6 +73,7 @@ export const useResearchStore = create<ResearchState>()((set) => ({
   setErrorMessage: (msg) => set({ errorMessage: msg }),
   setResult: (result, generationId) => set({ result, generationId }),
   setAutoGenerate: (v) => set({ autoGenerate: v }),
+  setGuestRateLimited: (v) => set({ guestRateLimited: v }),
 
   restore: (entry) =>
     set({
@@ -114,5 +118,6 @@ export const useResearchStore = create<ResearchState>()((set) => ({
       statusLabel: '',
       errorMessage: null,
       autoGenerate: false,
+      guestRateLimited: false,
     }),
 }));

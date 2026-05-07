@@ -1,133 +1,86 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRef } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { validateIdeaStream } from '@/services/validate.service';
 import { useValidateStore } from '@/stores/validate.store';
-import { useSaveValidation } from '@/hooks/use-validations';
-import { updateValidation } from '@/services/db.service';
+import { useSaveValidation, useUpdateValidation } from '@/hooks/use-validations';
 import { useAuth } from '@/context/auth';
-import { useValidationPhase } from '@/hooks/use-validation-phase';
+import { wait } from '@/lib/utils';
 import { toast } from 'sonner';
 import type { EnhancedValidationResult } from '@/lib/schemas';
 import type { Competitor } from '@/types';
 
-interface SubmitOverrides {
-  description?: string;
-  productType?: string;
-  audience?: string;
-  problem?: string;
-}
-
 export function useValidateWorkflow() {
   const { user } = useAuth();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
+  const store = useValidateStore();
   const saveValidation = useSaveValidation(user?.id);
-  const pushLocalValidation = useValidateStore((s) => s.pushLocalValidation);
-  const updateLocalValidationId = useValidateStore(
-    (s) => s.updateLocalValidationId
-  );
-  const updateLocalValidation = useValidateStore(
-    (s) => s.updateLocalValidation
-  );
+  const updateValidationMutation = useUpdateValidation(user?.id);
+  const abortRef = useRef<AbortController | null>(null);
 
-  const [description, setDescription] = useState('');
-  const [productType, setProductType] = useState('');
-  const [audience, setAudience] = useState('');
-  const [problem, setProblem] = useState('');
+  const isActive =
+    store.phase === 'thinking' ||
+    store.phase === 'researching' ||
+    store.phase === 'analyzing';
 
-  const [result, setResult] = useState<EnhancedValidationResult | null>(null);
-  const [prevResult, setPrevResult] = useState<EnhancedValidationResult | null>(
-    null
-  );
-  const [competitors, setCompetitors] = useState<Competitor[]>([]);
-  const [competitorCount, setCompetitorCount] = useState(0);
-  const [version, setVersion] = useState(1);
-  const [currentId, setCurrentId] = useState<string | null>(null);
-
-  const { phase, error, abortRef, isActive, setPhase, setError, cancel } =
-    useValidationPhase();
-
-  const canSubmit =
-    description.trim().length > 0 && productType.length > 0 && !isActive;
-
-  async function handleSubmit(overrides?: SubmitOverrides) {
-    const desc = overrides?.description ?? description;
-    const pt = overrides?.productType ?? productType;
-    const aud = overrides?.audience ?? audience;
-    const prob = overrides?.problem ?? problem;
-
-    if (overrides?.description) setDescription(overrides.description);
-    if (overrides?.productType) setProductType(overrides.productType);
-    if (overrides?.audience) setAudience(overrides.audience);
-    if (overrides?.problem) setProblem(overrides.problem);
-
+  function cancel() {
     abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
+    store.setPhase('idle');
+  }
 
-    setPrevResult(result);
-    setResult(null);
-    setCompetitors([]);
-    setCompetitorCount(0);
-    setError('');
-    setPhase('thinking');
-
-    await new Promise((r) => setTimeout(r, 800));
-    if (controller.signal.aborted) return;
-
-    setPhase('researching');
-
-    try {
-      const data = await validateIdeaStream(
+  const validateMutation = useMutation<
+    { result: EnhancedValidationResult; competitors: Competitor[] },
+    Error,
+    { desc: string; pt: string; aud: string | undefined; prob: string | undefined; signal: AbortSignal }
+  >({
+    mutationFn: async (vars) => {
+      await wait(800);
+      if (vars.signal.aborted) throw new DOMException('Aborted', 'AbortError');
+      store.setPhase('researching');
+      return validateIdeaStream(
         {
-          description: desc,
-          productType: pt,
-          audience: aud.trim() || undefined,
-          problem: prob.trim() || undefined,
+          description: vars.desc,
+          productType: vars.pt,
+          audience: vars.aud,
+          problem: vars.prob,
         },
         {
-          signal: controller.signal,
+          signal: vars.signal,
           onResearch: (found) => {
-            setCompetitorCount(found.length);
-            setCompetitors(found);
-            setPhase('analyzing');
+            store.setCompetitors(found);
+            store.setPhase('analyzing');
           },
         }
       );
+    },
+    onSuccess: (data, vars) => {
+      store.setResult(data.result);
+      store.setCompetitors(data.competitors);
+      store.setPhase('done');
 
-      setResult(data.result);
-      setCompetitors(data.competitors);
-      setPhase('done');
+      const { currentId } = useValidateStore.getState();
 
-      if (currentId && !overrides?.productType) {
-        setVersion((v) => v + 1);
+      if (currentId) {
+        store.incrementVersion();
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        updateLocalValidation(currentId, {
-          description: desc,
+        store.updateLocalValidation(currentId, {
+          description: vars.desc,
           result: data.result,
           competitors: data.competitors,
         });
-        if (user) {
-          updateValidation(
-            user.id,
-            currentId,
-            desc,
-            data.result,
-            data.competitors
-          ).catch(() => {
-            toast.error('Failed to update validation.');
-          });
-        }
+        updateValidationMutation.mutate({
+          id: currentId,
+          description: vars.desc,
+          result: data.result,
+          competitors: data.competitors,
+        });
       } else {
         const localId = String(Date.now());
-        setCurrentId(localId);
-        pushLocalValidation({
+        store.setCurrentId(localId);
+        store.pushLocalValidation({
           id: localId,
-          description: desc,
-          productType: pt,
+          description: vars.desc,
+          productType: vars.pt,
           result: data.result,
           competitors: data.competitors,
           createdAt: Date.now(),
@@ -135,69 +88,55 @@ export function useValidateWorkflow() {
         if (user) {
           saveValidation
             .mutateAsync({
-              description: desc,
-              productType: pt,
+              description: vars.desc,
+              productType: vars.pt,
               result: data.result,
               competitors: data.competitors,
             })
             .then((uuid) => {
               if (uuid) {
-                updateLocalValidationId(localId, uuid);
-                setCurrentId(uuid);
+                store.updateLocalValidationId(localId, uuid);
+                store.setCurrentId(uuid);
               }
             })
-            .catch(() => {
-              toast.error('Failed to save validation to your account.');
-            });
+            .catch(() => toast.error('Failed to save validation to your account.'));
         }
       }
-    } catch (err: unknown) {
-      if ((err as { name?: string }).name === 'AbortError') return;
-      setError(
-        (err as { message?: string }).message ??
-          'Something went wrong. Please try again.'
-      );
-      setPhase('error');
-    }
+    },
+    onError: (err) => {
+      if (err.name === 'AbortError') return;
+      store.setError(err.message ?? 'Something went wrong. Please try again.');
+      store.setPhase('error');
+    },
+    retry: false,
+  });
+
+  function handleSubmit(desc: string, pt: string, aud?: string, prob?: string) {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    store.setPrevResult(store.result);
+    store.setResult(null);
+    store.setCompetitors([]);
+    store.setError('');
+    store.setPhase('thinking');
+
+    validateMutation.mutate({
+      desc,
+      pt,
+      aud: aud?.trim() || undefined,
+      prob: prob?.trim() || undefined,
+      signal: controller.signal,
+    });
   }
 
-  // Auto-submit when arriving from the idea modal via query params (runs once on mount).
-  // Immediately strips params from URL so a page refresh doesn't re-trigger.
-  useEffect(() => {
-    const desc = searchParams.get('description');
-    const pt = searchParams.get('productType');
-    if (!desc || !pt) return;
-    const aud = searchParams.get('audience') ?? undefined;
-    const prob = searchParams.get('problem') ?? undefined;
-    router.replace('/validate');
-    handleSubmit({
-      description: desc,
-      productType: pt,
-      audience: aud,
-      problem: prob,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   return {
-    description,
-    setDescription,
-    productType,
-    setProductType,
-    audience,
-    setAudience,
-    problem,
-    setProblem,
-    phase,
-    error,
+    phase: store.phase,
+    error: store.error,
     isActive,
     cancel,
-    canSubmit,
-    result,
-    prevResult,
-    competitors,
-    competitorCount,
-    version,
     handleSubmit,
+    resetSession: store.resetSession,
   };
 }

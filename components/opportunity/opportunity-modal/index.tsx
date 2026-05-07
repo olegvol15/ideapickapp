@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Bookmark, Loader2, ShieldCheck, Wand2, Map } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -65,12 +65,13 @@ export function OpportunityModal({ open, onClose }: OpportunityModalProps) {
     router.push(`/validate?${params.toString()}`);
   }
 
-  const {
-    saved,
-    toggle: toggleSave,
-    requiresAuth,
-    clearAuthRequired,
-  } = useSavedIdea(displayIdea, user?.id);
+  const [requiresAuth, setRequiresAuth] = useState(false);
+  const { saved, toggle: toggleSave } = useSavedIdea(displayIdea, user?.id);
+
+  function handleSaveToggle() {
+    if (!user) { setRequiresAuth(true); return; }
+    toggleSave(generationId);
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -147,7 +148,7 @@ export function OpportunityModal({ open, onClose }: OpportunityModalProps) {
                             'h-8 w-8',
                             saved && 'text-primary border-primary/30'
                           )}
-                          onClick={() => toggleSave(generationId)}
+                          onClick={handleSaveToggle}
                           title={saved ? 'Unsave' : 'Save idea'}
                         >
                           <Bookmark
@@ -295,7 +296,7 @@ export function OpportunityModal({ open, onClose }: OpportunityModalProps) {
           </div>
         </motion.div>
       )}
-      <AuthGate open={requiresAuth} onClose={clearAuthRequired} />
+      <AuthGate open={requiresAuth} onClose={() => setRequiresAuth(false)} />
     </AnimatePresence>
   );
 }

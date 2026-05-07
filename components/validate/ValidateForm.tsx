@@ -1,5 +1,7 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -16,29 +18,41 @@ import { ValidationProgress } from './ValidationProgress';
 import { ValidationReport } from './ValidationReport';
 import { RefinePanel } from './RefinePanel';
 import { useValidateWorkflow } from '@/hooks/use-validate-workflow';
+import { useValidateStore } from '@/stores/validate.store';
 import { PRODUCT_TYPE_OPTIONS } from '@/constants/products';
 
 export function ValidateForm() {
-  const {
-    description,
-    setDescription,
-    productType,
-    setProductType,
-    audience,
-    setAudience,
-    problem,
-    setProblem,
-    phase,
-    error,
-    isActive,
-    cancel,
-    canSubmit,
-    result,
-    prevResult,
-    competitors,
-    version,
-    handleSubmit,
-  } = useValidateWorkflow();
+  const [description, setDescription] = useState('');
+  const [productType, setProductType] = useState('');
+  const [audience, setAudience] = useState('');
+  const [problem, setProblem] = useState('');
+
+  const { result, prevResult, competitors, version } = useValidateStore();
+  const { phase, error, isActive, cancel, handleSubmit, resetSession } =
+    useValidateWorkflow();
+
+  const canSubmit = description.trim().length > 0 && productType.length > 0 && !isActive;
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Auto-submit when arriving from the idea modal via query params (runs once on mount).
+  // Immediately strips params from URL so a page refresh doesn't re-trigger.
+  useEffect(() => {
+    const desc = searchParams.get('description');
+    const pt = searchParams.get('productType');
+    if (!desc || !pt) return;
+    const aud = searchParams.get('audience') ?? undefined;
+    const prob = searchParams.get('problem') ?? undefined;
+    setDescription(desc);
+    setProductType(pt);
+    if (aud) setAudience(aud);
+    if (prob) setProblem(prob);
+    router.replace('/validate');
+    resetSession();
+    handleSubmit(desc, pt, aud, prob);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="flex flex-col gap-5">
@@ -85,7 +99,10 @@ export function ValidateForm() {
             onChange={(e) => setProblem(e.target.value)}
             maxLength={300}
           />
-          <Button onClick={() => handleSubmit()} disabled={!canSubmit}>
+          <Button
+            onClick={() => handleSubmit(description, productType, audience, problem)}
+            disabled={!canSubmit}
+          >
             Validate Idea →
           </Button>
         </>
@@ -135,7 +152,9 @@ export function ValidateForm() {
               result={result}
               version={version}
               isLoading={isActive}
-              onRevalidate={(newDesc) => handleSubmit({ description: newDesc })}
+              onRevalidate={(newDesc) =>
+                handleSubmit(newDesc, productType, audience, problem)
+              }
             />
           </motion.div>
         )}
@@ -160,7 +179,11 @@ export function ValidateForm() {
                 {error}
               </p>
             </div>
-            <Button variant="link" size="sm" onClick={() => handleSubmit()}>
+            <Button
+              variant="link"
+              size="sm"
+              onClick={() => handleSubmit(description, productType, audience, problem)}
+            >
               Try again →
             </Button>
           </motion.div>

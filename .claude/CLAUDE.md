@@ -99,13 +99,55 @@ Strict separation of concerns:
 
 ---
 
-## Hooks
+## Hooks (STRICT CONTRACT)
 
-Use hooks for:
+Hooks are orchestration layers, NOT state managers.
 
-- Data transformation
-- Orchestration logic
-- Combining multiple sources of state
+### Allowed
+
+- useQuery / useMutation
+- Composing other hooks
+- Pure data transformation
+
+### Forbidden
+
+- useState (for server data)
+- useEffect (for fetching or syncing)
+- Direct API or database calls
+- Side effects
+
+### Side effects rule
+
+Side effects are ONLY allowed inside:
+
+- useMutation (onSuccess, onError)
+
+### Pattern (MANDATORY)
+
+1. Call useQuery / useMutation
+2. Return query object
+3. Apply only pure transformations
+
+### Example (VALID)
+
+```ts
+export const useIdeas = () => {
+  const query = useQuery({
+    queryKey: apiKeys.ideas.list(),
+    queryFn: getIdeas,
+  })
+
+  return {
+    ...query,
+    ideas: query.data ?? [],
+  }
+}
+Example (INVALID)
+const [ideas, setIdeas] = useState([])
+
+useEffect(() => {
+  fetchIdeas().then(setIdeas)
+}, [])
 
 ### Rules
 

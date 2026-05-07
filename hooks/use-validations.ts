@@ -6,7 +6,9 @@ import {
   deleteValidation,
   renameValidation,
   getValidations,
+  updateValidation,
 } from '@/services/db.service';
+import { toast } from 'sonner';
 import { validationKeys } from '@/lib/api-keys';
 import type { EnhancedValidationResult } from '@/lib/schemas';
 import type { Competitor } from '@/types';
@@ -55,6 +57,31 @@ export function useDeleteValidation(userId: string | undefined) {
       if (userId)
         queryClient.invalidateQueries({ queryKey: validationKeys.all(userId) });
     },
+  });
+}
+
+export function useUpdateValidation(userId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      description,
+      result,
+      competitors,
+    }: {
+      id: string;
+      description: string;
+      result: EnhancedValidationResult;
+      competitors: Competitor[];
+    }) => {
+      if (!userId) return Promise.resolve();
+      return updateValidation(userId, id, description, result, competitors);
+    },
+    onSuccess: () => {
+      if (userId)
+        queryClient.invalidateQueries({ queryKey: validationKeys.all(userId) });
+    },
+    onError: () => toast.error('Failed to update validation.'),
   });
 }
 

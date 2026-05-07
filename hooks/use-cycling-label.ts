@@ -2,26 +2,15 @@
 
 import { useState, useEffect } from 'react';
 
-const SCORING_LABELS = [
-  'Computing competition scores…',
-  'Weighing pain signals…',
-  'Identifying market opportunities…',
-  'Running niche comparison…',
-  'Finalising validation report…',
-];
-
-export function useCyclingLabel(active: boolean): string {
+export function useCyclingLabel(active: boolean, messages: string[], intervalMs = 2800): string {
   const [idx, setIdx] = useState(0);
   useEffect(() => {
     if (!active) {
       setIdx(0);
       return;
     }
-    const id = setInterval(
-      () => setIdx((i) => (i + 1) % SCORING_LABELS.length),
-      2800
-    );
+    const id = setInterval(() => setIdx((i) => (i + 1) % messages.length), intervalMs);
     return () => clearInterval(id);
-  }, [active]);
-  return SCORING_LABELS[idx];
+  }, [active, messages, intervalMs]);
+  return messages[idx];
 }

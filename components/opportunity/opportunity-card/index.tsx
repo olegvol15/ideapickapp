@@ -44,8 +44,8 @@ export function OpportunityCard({
 
   function handleSaveToggle() {
     if (!user) { onGuestAction?.(); return; }
-    const isNowSaved = toggle(generationId);
-    if (!isNowSaved && saved) onUnsave?.();
+    if (saved) onUnsave?.();
+    toggle(generationId);
   }
 
   return (

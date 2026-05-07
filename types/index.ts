@@ -14,6 +14,8 @@ export type {
   Gap,
 } from './market.types';
 
+export type { Phase, IdeaStep } from './onboarding.types';
+
 export type {
   GenerateRequest,
   GenerateResponse,

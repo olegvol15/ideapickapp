@@ -3,6 +3,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
+import { useResearchStore } from '@/stores/research.store';
+import { saveGeneration } from '@/services/db.service';
 
 interface AuthResult {
   error: string | null;
@@ -36,8 +38,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      const newUser = session?.user ?? null;
+      setUser(newUser);
+
+      if (event === 'SIGNED_IN' && newUser) {
+        const state = useResearchStore.getState();
+        if (state.result && !state.generationId) {
+          saveGeneration({
+            userId: newUser.id,
+            prompt: state.prompt,
+            productType: state.productType,
+            difficulty: state.difficulty,
+            result: state.result,
+          })
+            .then((savedId) => {
+              if (savedId) useResearchStore.getState().setResult(state.result!, savedId);
+            })
+            .catch(() => null);
+        }
+      }
     });
 
     return () => subscription.unsubscribe();

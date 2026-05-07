@@ -37,9 +37,11 @@ export function PromptForm() {
     statusLabel,
     autoGenerate,
     setAutoGenerate,
+    guestRateLimited,
+    setGuestRateLimited,
   } = useResearchStore();
 
-  const { handleGenerate, handleCancel, handleClear, isGenerating, errorMsg, guestModalOpen, setGuestModalOpen } =
+  const { handleGenerate, handleCancel, handleClear, isGenerating, errorMsg } =
     useResearch(user?.id);
 
   const handleGenerateRef = useRef(handleGenerate);
@@ -206,7 +208,10 @@ export function PromptForm() {
         )}
       </AnimatePresence>
 
-      <GuestPromptModal open={guestModalOpen} onClose={() => setGuestModalOpen(false)} />
+      <GuestPromptModal
+        open={guestRateLimited}
+        onClose={() => setGuestRateLimited(false)}
+      />
     </div>
   );
 }
