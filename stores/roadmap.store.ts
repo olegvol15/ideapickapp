@@ -18,6 +18,7 @@ interface RoadmapStoreState {
   expandedIds: string[];
   busyNodeId: string | null;
   localPlans: PlanEntry[];
+  selectedNodeId: string | null;
 
   initCanvas: (params: {
     ideaId: string;
@@ -37,6 +38,9 @@ interface RoadmapStoreState {
   ) => void;
   setBusy: (id: string | null) => void;
   setLocalPlans: (plans: PlanEntry[]) => void;
+  setSelectedNode: (id: string | null) => void;
+  addNode: (rfNode: Node, rfEdge: Edge | null, rmNode: RoadmapNode) => void;
+  deleteNode: (id: string) => void;
   reset: () => void;
 }
 
@@ -48,6 +52,7 @@ export const useRoadmapStore = create<RoadmapStoreState>()((set) => ({
   expandedIds: [],
   busyNodeId: null,
   localPlans: [],
+  selectedNodeId: null,
 
   initCanvas: ({ ideaId, nodes, edges, rmNodes, expandedIds }) =>
     set({ ideaId, rfNodes: nodes, rfEdges: edges, rmNodes, expandedIds }),
@@ -84,6 +89,35 @@ export const useRoadmapStore = create<RoadmapStoreState>()((set) => ({
 
   setLocalPlans: (plans) => set({ localPlans: plans }),
 
+  setSelectedNode: (id) => set({ selectedNodeId: id }),
+
+  addNode: (rfNode, rfEdge, rmNode) =>
+    set((s) => ({
+      rfNodes: [...s.rfNodes, rfNode],
+      rfEdges: rfEdge ? [...s.rfEdges, rfEdge] : s.rfEdges,
+      rmNodes: [...s.rmNodes, rmNode],
+    })),
+
+  deleteNode: (id) =>
+    set((s) => {
+      const toDelete = new Set<string>();
+      const queue = [id];
+      while (queue.length) {
+        const cur = queue.shift()!;
+        toDelete.add(cur);
+        s.rmNodes.forEach((n) => {
+          if (n.parent === cur && !toDelete.has(n.id)) queue.push(n.id);
+        });
+      }
+      return {
+        rfNodes: s.rfNodes.filter((n) => !toDelete.has(n.id)),
+        rfEdges: s.rfEdges.filter((e) => !toDelete.has(e.source) && !toDelete.has(e.target)),
+        rmNodes: s.rmNodes.filter((n) => !toDelete.has(n.id)),
+        expandedIds: s.expandedIds.filter((eid) => !toDelete.has(eid)),
+        selectedNodeId: toDelete.has(s.selectedNodeId ?? '') ? null : s.selectedNodeId,
+      };
+    }),
+
   reset: () =>
     set({
       ideaId: null,
@@ -92,5 +126,6 @@ export const useRoadmapStore = create<RoadmapStoreState>()((set) => ({
       rmNodes: [],
       expandedIds: [],
       busyNodeId: null,
+      selectedNodeId: null,
     }),
 }));

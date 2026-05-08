@@ -92,8 +92,8 @@ export default function RoadmapPage() {
           </h1>
         </div>
         <p className="ml-auto hidden text-xs text-muted-foreground/60 sm:block">
-          Click <span className="font-bold text-foreground/60">+</span> on any
-          node to expand
+          Click any node for details · use{' '}
+          <span className="font-bold text-foreground/60">New Step</span> to add your own
         </p>
       </div>
 

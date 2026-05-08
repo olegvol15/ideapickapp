@@ -1,4 +1,5 @@
 export type RoadmapNodeType = 'root' | 'branch' | 'leaf';
+export type RoadmapNodeStatus = 'todo' | 'in-progress' | 'done';
 
 export interface RoadmapNode {
   id: string;
@@ -7,6 +8,7 @@ export interface RoadmapNode {
   parent?: string;
   description?: string;
   actionType?: 'tweet' | 'reddit' | null;
+  status?: RoadmapNodeStatus;
 }
 
 export interface RoadmapGraph {

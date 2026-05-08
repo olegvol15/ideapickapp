@@ -5,6 +5,7 @@ import {
   ReactFlow,
   Background,
   Controls,
+  Panel,
   addEdge,
   Handle,
   Position,
@@ -16,16 +17,17 @@ import {
 } from '@xyflow/react';
 import dagre from '@dagrejs/dagre';
 import { motion } from 'framer-motion';
-import { Loader2, Plus, Twitter, MessageSquare } from 'lucide-react';
+import { Loader2, Plus, Twitter, MessageSquare, SquarePlus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import '@xyflow/react/dist/style.css';
 
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { typedApi } from '@/lib/api/client';
 import type { Idea } from '@/types';
-import type { RoadmapNode, RoadmapNodeType } from '@/types/roadmap.types';
+import type { RoadmapNode, RoadmapNodeType, RoadmapNodeStatus } from '@/types/roadmap.types';
 import type { ContentType } from '@/types/workspace.types';
 import {
   saveRoadmapState,
@@ -35,11 +37,13 @@ import {
 } from '@/services/storage.service';
 import { useRoadmapStore } from '@/stores/roadmap.store';
 import { useGetRoadmap, useUpsertRoadmap } from '@/hooks/use-roadmaps';
+import { NodeDetailSheet } from './NodeDetailSheet';
+import { CreateNodeDialog } from './CreateNodeDialog';
 
 // ─── Layout constants ─────────────────────────────────────────────────────────
 
 const NODE_W = 244;
-const NODE_H = 88;
+const NODE_H = 96;
 const CHILD_OFFSET = 260;
 const CHILD_STEP = 112;
 
@@ -48,13 +52,7 @@ const CHILD_STEP = 112;
 function dagreLayout(nodes: Node[], edges: Edge[]): Node[] {
   const g = new dagre.graphlib.Graph();
   g.setDefaultEdgeLabel(() => ({}));
-  g.setGraph({
-    rankdir: 'LR',
-    nodesep: 80,
-    ranksep: 260,
-    marginx: 80,
-    marginy: 80,
-  });
+  g.setGraph({ rankdir: 'LR', nodesep: 80, ranksep: 260, marginx: 80, marginy: 80 });
   nodes.forEach((n) => g.setNode(n.id, { width: NODE_W, height: NODE_H }));
   edges.forEach((e) => g.setEdge(e.source, e.target));
   dagre.layout(g);
@@ -72,7 +70,7 @@ function mkEdge(source: string, target: string): Edge {
     source,
     target,
     type: 'smoothstep',
-    style: { stroke: 'rgba(96,165,250,0.45)', strokeWidth: 2.5 },
+    style: { stroke: 'rgba(96,165,250,0.35)', strokeWidth: 2 },
   };
 }
 
@@ -82,11 +80,13 @@ interface NodeData {
   label: string;
   nodeType: RoadmapNodeType;
   description?: string;
+  status?: RoadmapNodeStatus;
   expanded: boolean;
   expanding: boolean;
   canExpand: boolean;
   actionType?: 'tweet' | 'reddit' | null;
   onExpand: () => void;
+  onSelect: () => void;
   onGenerateContent?: () => void;
   [key: string]: unknown;
 }
@@ -94,47 +94,94 @@ interface NodeData {
 // ─── Node visual styles ───────────────────────────────────────────────────────
 
 const NODE_WRAP: Record<RoadmapNodeType, string> = {
-  root: 'bg-primary/[0.18] border-2 border-primary/55 shadow-primary/10',
-  branch: 'bg-card border border-border/80 hover:border-border',
-  leaf: 'bg-background/50 border border-border/50 hover:border-border/70',
+  root: 'bg-primary/[0.10] border-2 border-primary/35',
+  branch: 'bg-card border border-border',
+  leaf: 'bg-background/60 border border-border/60',
+};
+
+const ACCENT_COLOR: Record<RoadmapNodeType, string> = {
+  root: 'bg-primary',
+  branch: 'bg-amber-500',
+  leaf: 'bg-emerald-500',
+};
+
+const TYPE_BADGE_CLASS: Record<RoadmapNodeType, string> = {
+  root: 'border-primary/30 text-primary',
+  branch: 'border-amber-500/30 text-amber-600 dark:text-amber-400',
+  leaf: 'border-emerald-500/30 text-emerald-600 dark:text-emerald-400',
+};
+
+const STATUS_DOT_CLASS: Record<RoadmapNodeStatus, string> = {
+  'todo': 'bg-muted-foreground/35',
+  'in-progress': 'bg-amber-500',
+  'done': 'bg-emerald-500',
 };
 
 // ─── Custom node component ────────────────────────────────────────────────────
 
-function RoadmapNodeCmp({ data }: NodeProps) {
+function RoadmapNodeCmp({ id, data }: NodeProps) {
   const d = data as NodeData;
+  const isSelected = useRoadmapStore((s) => s.selectedNodeId === id);
 
   return (
     <motion.div
       className={cn(
-        'relative rounded-2xl px-5 py-[18px] shadow-xl',
-        NODE_WRAP[d.nodeType]
+        'relative overflow-hidden rounded-2xl shadow-lg transition-all hover:shadow-xl cursor-pointer',
+        NODE_WRAP[d.nodeType],
+        d.expanding && 'opacity-50',
+        isSelected && 'ring-2 ring-primary/50 ring-offset-2 ring-offset-background'
       )}
       style={{ width: NODE_W, minHeight: NODE_H }}
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: d.expanding ? 0.5 : 1, y: 0 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
+      onClick={() => d.onSelect()}
     >
       <Handle type="target" position={Position.Left} style={{ opacity: 0 }} />
       <Handle type="source" position={Position.Right} style={{ opacity: 0 }} />
 
-      <p
-        className={cn(
-          'leading-snug text-foreground',
-          d.nodeType === 'root' && 'text-[15px] font-bold',
-          d.nodeType === 'branch' && 'text-[13px] font-semibold',
-          d.nodeType === 'leaf' && 'text-[12px] font-medium text-foreground/85'
-        )}
-      >
-        {d.label}
-      </p>
+      {/* Left accent stripe */}
+      <div className={cn('absolute inset-y-0 left-0 w-[3px]', ACCENT_COLOR[d.nodeType])} />
 
-      {d.description && (
-        <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground/60 line-clamp-2">
-          {d.description}
-        </p>
+      {/* Status dot */}
+      {d.status && (
+        <div
+          className={cn(
+            'absolute right-3 top-3 h-2 w-2 rounded-full',
+            STATUS_DOT_CLASS[d.status]
+          )}
+        />
       )}
 
+      <div className="px-4 py-3.5 pl-5">
+        <div className="mb-1.5 flex items-center gap-1.5">
+          <Badge
+            variant="outline"
+            className={cn('h-4 px-1.5 text-[9px] uppercase tracking-widest', TYPE_BADGE_CLASS[d.nodeType])}
+          >
+            {d.nodeType}
+          </Badge>
+        </div>
+
+        <p
+          className={cn(
+            'leading-snug text-foreground',
+            d.nodeType === 'root' && 'text-[14px] font-bold',
+            d.nodeType === 'branch' && 'text-[13px] font-semibold',
+            d.nodeType === 'leaf' && 'text-[12px] font-medium text-foreground/85'
+          )}
+        >
+          {d.label}
+        </p>
+
+        {d.description && (
+          <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground/60 line-clamp-2">
+            {d.description}
+          </p>
+        )}
+      </div>
+
+      {/* Expand button */}
       {d.canExpand && !d.expanded && (
         <button
           onClick={(e) => {
@@ -143,34 +190,33 @@ function RoadmapNodeCmp({ data }: NodeProps) {
           }}
           disabled={d.expanding}
           className={cn(
-            'absolute -right-4 top-1/2 -translate-y-1/2 z-20',
+            'absolute -right-3.5 top-1/2 z-20 -translate-y-1/2',
             'flex h-7 w-7 items-center justify-center rounded-full',
-            'border border-border/60 bg-card text-muted-foreground shadow-lg',
+            'border border-border/60 bg-card text-muted-foreground shadow-md',
             'transition-all duration-150',
-            'hover:border-primary/60 hover:text-primary hover:scale-110 active:scale-95',
+            'hover:border-primary/50 hover:text-primary hover:scale-110 active:scale-95',
             d.expanding && 'pointer-events-none'
           )}
         >
           {d.expanding ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+            <Loader2 className="h-3 w-3 animate-spin text-primary" />
           ) : (
-            <Plus className="h-3.5 w-3.5" />
+            <Plus className="h-3 w-3" />
           )}
         </button>
       )}
 
+      {/* Social action button */}
       {d.actionType && d.onGenerateContent && (
         <button
           onClick={(e) => {
             e.stopPropagation();
             d.onGenerateContent!();
           }}
-          title={
-            d.actionType === 'tweet' ? 'Generate tweet' : 'Generate Reddit post'
-          }
+          title={d.actionType === 'tweet' ? 'Generate tweet' : 'Generate Reddit post'}
           className={cn(
             'absolute bottom-2 right-2 z-20',
-            'flex h-6 w-6 items-center justify-center rounded-full',
+            'flex h-5 w-5 items-center justify-center rounded-full',
             'border shadow-sm transition-all duration-150 hover:scale-110 active:scale-95',
             d.actionType === 'tweet'
               ? 'border-sky-400/30 bg-sky-400/10 text-sky-400 hover:bg-sky-400/20'
@@ -178,9 +224,9 @@ function RoadmapNodeCmp({ data }: NodeProps) {
           )}
         >
           {d.actionType === 'tweet' ? (
-            <Twitter className="h-3 w-3" />
+            <Twitter className="h-2.5 w-2.5" />
           ) : (
-            <MessageSquare className="h-3 w-3" />
+            <MessageSquare className="h-2.5 w-2.5" />
           )}
         </button>
       )}
@@ -205,37 +251,28 @@ export function RoadmapCanvas({
   initialLoading?: boolean;
   userId: string | undefined;
   authLoading?: boolean;
-  onGenerateContent?: (
-    label: string,
-    description: string,
-    actionType: ContentType
-  ) => void;
+  onGenerateContent?: (label: string, description: string, actionType: ContentType) => void;
 }) {
   const router = useRouter();
   const store = useRoadmapStore();
 
   const upsertRoadmap = useUpsertRoadmap(userId);
 
-  const expandNodeRef = useRef<(nodeId: string, nodeLabel: string) => void>(
-    () => {}
-  );
+  const expandNodeRef = useRef<(nodeId: string, nodeLabel: string) => void>(() => {});
+  const setSelectedNodeRef = useRef<(id: string) => void>(() => {});
 
   const cachedState = useMemo(() => loadRoadmapState(ideaId), [ideaId]);
 
   const [loading, setLoading] = useState(cachedState ? false : initialLoading);
   const [error, setError] = useState<string | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   const freshGenerationRef = useRef(false);
   const dbSyncedRef = useRef(false);
 
-  // DB query — only when no session cache is present and auth has resolved
-  const { data: dbRoadmap, isFetched: dbFetched } = useGetRoadmap(
-    ideaId,
-    userId,
-    {
-      enabled: !cachedState && !authLoading,
-    }
-  );
+  const { data: dbRoadmap, isFetched: dbFetched } = useGetRoadmap(ideaId, userId, {
+    enabled: !cachedState && !authLoading,
+  });
 
   // ── Node / edge builders ───────────────────────────────────────────────────
 
@@ -252,28 +289,23 @@ export function RoadmapCanvas({
         label: rn.label,
         nodeType: rn.type,
         description: rn.description,
+        status: rn.status,
         expanded: expandedIds.includes(rn.id),
         expanding: false,
-        canExpand: rn.type !== 'root',
+        canExpand: rn.type === 'branch',
         actionType: rn.actionType,
         onExpand: () => expandNodeRef.current(rn.id, rn.label),
+        onSelect: () => setSelectedNodeRef.current(rn.id),
         onGenerateContent:
           rn.actionType && onGenerateContent
-            ? () =>
-                onGenerateContent(
-                  rn.label,
-                  rn.description ?? '',
-                  rn.actionType as ContentType
-                )
+            ? () => onGenerateContent(rn.label, rn.description ?? '', rn.actionType as ContentType)
             : undefined,
       } satisfies NodeData,
     }));
   }
 
   function buildFlowEdges(rmNodes: RoadmapNode[]): Edge[] {
-    return rmNodes
-      .filter((rn) => rn.parent)
-      .map((rn) => mkEdge(rn.parent!, rn.id));
+    return rmNodes.filter((rn) => rn.parent).map((rn) => mkEdge(rn.parent!, rn.id));
   }
 
   // ── Persist to sessionStorage + DB ────────────────────────────────────────
@@ -283,7 +315,6 @@ export function RoadmapCanvas({
     const positions: RoadmapState['positions'] = {};
     for (const n of rfNodes) positions[n.id] = n.position;
     const state: RoadmapState = { rmNodes, positions, expandedIds };
-
     saveRoadmapState(ideaId, state);
     upsertRoadmap.mutate({ slug: ideaId, idea, state, bumpTimestamp: true });
     useRoadmapStore.getState().setLocalPlans(listPlans());
@@ -293,8 +324,7 @@ export function RoadmapCanvas({
 
   const expandNode = useCallback(
     async (nodeId: string, nodeLabel: string) => {
-      const { expandedIds, busyNodeId, rmNodes, rfNodes } =
-        useRoadmapStore.getState();
+      const { expandedIds, busyNodeId, rmNodes, rfNodes } = useRoadmapStore.getState();
       if (expandedIds.includes(nodeId) || busyNodeId !== null) return;
 
       store.setBusy(nodeId);
@@ -310,13 +340,7 @@ export function RoadmapCanvas({
       try {
         const { nodes: newRm } = await typedApi.post<{ nodes: RoadmapNode[] }>(
           '/api/roadmap/expand',
-          {
-            ideaTitle: idea.title,
-            ideaPitch: idea.pitch,
-            nodeId,
-            nodeLabel,
-            parentPath: path,
-          }
+          { ideaTitle: idea.title, ideaPitch: idea.pitch, nodeId, nodeLabel, parentPath: path }
         );
 
         const parent = rfNodes.find((n) => n.id === nodeId);
@@ -338,29 +362,21 @@ export function RoadmapCanvas({
             label: rn.label,
             nodeType: rn.type,
             description: rn.description,
+            status: rn.status,
             expanded: false,
             expanding: false,
-            canExpand: rn.type !== 'root',
+            canExpand: rn.type === 'branch',
             actionType: rn.actionType,
             onExpand: () => expandNodeRef.current(rn.id, rn.label),
+            onSelect: () => setSelectedNodeRef.current(rn.id),
             onGenerateContent:
               rn.actionType && onGenerateContent
-                ? () =>
-                    onGenerateContent(
-                      rn.label,
-                      rn.description ?? '',
-                      rn.actionType as ContentType
-                    )
+                ? () => onGenerateContent(rn.label, rn.description ?? '', rn.actionType as ContentType)
                 : undefined,
           } satisfies NodeData,
         }));
 
-        store.appendToGraph(
-          newFlowNodes,
-          newRm.map((rn) => mkEdge(rn.parent!, rn.id)),
-          newRm,
-          nodeId
-        );
+        store.appendToGraph(newFlowNodes, newRm.map((rn) => mkEdge(rn.parent!, rn.id)), newRm, nodeId);
         persistState();
       } catch {
         toast.error('Failed to expand this step. Please try again.');
@@ -369,22 +385,96 @@ export function RoadmapCanvas({
         store.setBusy(null);
       }
     },
-    [idea.title, idea.pitch, store, persistState]
+    [idea.title, idea.pitch, store, persistState, onGenerateContent]
   );
 
   useEffect(() => {
     expandNodeRef.current = expandNode;
   }, [expandNode]);
 
+  useEffect(() => {
+    setSelectedNodeRef.current = store.setSelectedNode;
+  }, [store.setSelectedNode]);
+
+  // ── Handle node update (label / description) ──────────────────────────────
+
+  const handleUpdateNode = useCallback(
+    (nodeId: string, patch: { label: string; description: string }) => {
+      store.patchNode(nodeId, patch);
+      useRoadmapStore.setState((s) => ({
+        rmNodes: s.rmNodes.map((n) => (n.id === nodeId ? { ...n, ...patch } : n)),
+      }));
+      persistState();
+    },
+    [store, persistState]
+  );
+
+  // ── Handle node delete ─────────────────────────────────────────────────────
+
+  const handleDeleteNode = useCallback(
+    (nodeId: string) => {
+      store.deleteNode(nodeId);
+      persistState();
+    },
+    [store, persistState]
+  );
+
+  // ── Handle status change from detail sheet ─────────────────────────────────
+
+  const handleStatusChange = useCallback(
+    (nodeId: string, status: RoadmapNodeStatus) => {
+      store.patchNode(nodeId, { status });
+      useRoadmapStore.setState((s) => ({
+        rmNodes: s.rmNodes.map((n) => (n.id === nodeId ? { ...n, status } : n)),
+      }));
+      persistState();
+    },
+    [store, persistState]
+  );
+
+  // ── Handle manual node creation ────────────────────────────────────────────
+
+  const handleAddNode = useCallback(
+    (rmNode: RoadmapNode) => {
+      const { rfNodes } = useRoadmapStore.getState();
+      const parentRfNode = rmNode.parent ? rfNodes.find((n) => n.id === rmNode.parent) : undefined;
+
+      const maxX = rfNodes.length > 0 ? Math.max(...rfNodes.map((n) => n.position.x)) : 0;
+      const position = parentRfNode
+        ? { x: parentRfNode.position.x + NODE_W + CHILD_OFFSET, y: parentRfNode.position.y }
+        : { x: maxX + NODE_W + 60, y: 200 };
+
+      const rfNode: Node = {
+        id: rmNode.id,
+        type: 'roadmapNode',
+        position,
+        data: {
+          label: rmNode.label,
+          nodeType: rmNode.type,
+          description: rmNode.description,
+          status: rmNode.status,
+          expanded: false,
+          expanding: false,
+          canExpand: rmNode.type !== 'root',
+          actionType: rmNode.actionType,
+          onExpand: () => expandNodeRef.current(rmNode.id, rmNode.label),
+          onSelect: () => setSelectedNodeRef.current(rmNode.id),
+          onGenerateContent: undefined,
+        } satisfies NodeData,
+      };
+
+      const rfEdge = rmNode.parent ? mkEdge(rmNode.parent, rmNode.id) : null;
+      store.addNode(rfNode, rfEdge, rmNode);
+      persistState();
+    },
+    [store, persistState]
+  );
+
   // ── Init from session cache ────────────────────────────────────────────────
 
   useEffect(() => {
     if (!cachedState) return;
-    const flowNodes = buildFlowNodes(
-      cachedState.rmNodes,
-      cachedState.positions,
-      cachedState.expandedIds
-    );
+    const flowNodes = buildFlowNodes(cachedState.rmNodes, cachedState.positions, cachedState.expandedIds);
     store.initCanvas({
       ideaId,
       nodes: flowNodes,
@@ -400,19 +490,15 @@ export function RoadmapCanvas({
 
   useEffect(() => {
     if (cachedState || freshGenerationRef.current) return;
-    if (authLoading) return; // wait for auth to resolve before querying DB or generating
-    if (userId && !dbFetched) return; // wait for DB query
+    if (authLoading) return;
+    if (userId && !dbFetched) return;
 
     if (dbRoadmap) {
       const { state } = dbRoadmap;
       saveRoadmapState(ideaId, state);
       store.initCanvas({
         ideaId,
-        nodes: buildFlowNodes(
-          state.rmNodes,
-          state.positions,
-          state.expandedIds
-        ),
+        nodes: buildFlowNodes(state.rmNodes, state.positions, state.expandedIds),
         edges: buildFlowEdges(state.rmNodes),
         rmNodes: state.rmNodes,
         expandedIds: state.expandedIds,
@@ -424,10 +510,7 @@ export function RoadmapCanvas({
     freshGenerationRef.current = true;
     (async () => {
       try {
-        const { nodes } = await typedApi.post<{ nodes: RoadmapNode[] }>(
-          '/api/roadmap',
-          { idea }
-        );
+        const { nodes } = await typedApi.post<{ nodes: RoadmapNode[] }>('/api/roadmap', { idea });
 
         const flowNodes: Node[] = nodes.map((rn) => ({
           id: rn.id,
@@ -436,19 +519,17 @@ export function RoadmapCanvas({
           data: {
             label: rn.label,
             nodeType: rn.type,
+            description: rn.description,
+            status: rn.status,
             expanded: false,
             expanding: false,
-            canExpand: rn.type !== 'root',
+            canExpand: rn.type === 'branch',
             actionType: rn.actionType,
             onExpand: () => expandNodeRef.current(rn.id, rn.label),
+            onSelect: () => setSelectedNodeRef.current(rn.id),
             onGenerateContent:
               rn.actionType && onGenerateContent
-                ? () =>
-                    onGenerateContent(
-                      rn.label,
-                      rn.description ?? '',
-                      rn.actionType as ContentType
-                    )
+                ? () => onGenerateContent(rn.label, rn.description ?? '', rn.actionType as ContentType)
                 : undefined,
           } satisfies NodeData,
         }));
@@ -462,20 +543,9 @@ export function RoadmapCanvas({
         };
 
         saveRoadmapState(ideaId, initialState);
-        store.initCanvas({
-          ideaId,
-          nodes: laid,
-          edges: flowEdges,
-          rmNodes: nodes,
-          expandedIds: [],
-        });
+        store.initCanvas({ ideaId, nodes: laid, edges: flowEdges, rmNodes: nodes, expandedIds: [] });
         store.setLocalPlans(listPlans());
-        upsertRoadmap.mutate({
-          slug: ideaId,
-          idea,
-          state: initialState,
-          bumpTimestamp: true,
-        });
+        upsertRoadmap.mutate({ slug: ideaId, idea, state: initialState, bumpTimestamp: true });
       } catch {
         setError('Failed to generate roadmap.');
       } finally {
@@ -485,7 +555,7 @@ export function RoadmapCanvas({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cachedState, userId, dbFetched, dbRoadmap, authLoading]);
 
-  // ── DB sync after auth resolves (race condition) ───────────────────────────
+  // ── DB sync after auth resolves ────────────────────────────────────────────
 
   useEffect(() => {
     const { rmNodes, rfNodes, expandedIds } = useRoadmapStore.getState();
@@ -494,27 +564,18 @@ export function RoadmapCanvas({
     dbSyncedRef.current = true;
     const positions: RoadmapState['positions'] = {};
     for (const n of rfNodes) positions[n.id] = n.position;
-    upsertRoadmap.mutate({
-      slug: ideaId,
-      idea,
-      state: { rmNodes, positions, expandedIds },
-      bumpTimestamp: false,
-    });
+    upsertRoadmap.mutate({ slug: ideaId, idea, state: { rmNodes, positions, expandedIds }, bumpTimestamp: false });
   }, [userId, authLoading, loading, ideaId, idea, cachedState, upsertRoadmap]);
 
   // ── Reset store on unmount ─────────────────────────────────────────────────
 
   useEffect(() => {
-    return () => {
-      useRoadmapStore.getState().reset();
-    };
+    return () => { useRoadmapStore.getState().reset(); };
   }, [ideaId]);
 
   const onConnect = useCallback(
     (params: Connection) =>
-      useRoadmapStore.setState((state) => ({
-        rfEdges: addEdge(params, state.rfEdges),
-      })),
+      useRoadmapStore.setState((state) => ({ rfEdges: addEdge(params, state.rfEdges) })),
     []
   );
 
@@ -549,6 +610,7 @@ export function RoadmapCanvas({
         onEdgesChange={store.onEdgesChange}
         onConnect={onConnect}
         onNodeDragStop={() => persistState()}
+        onNodeClick={(_e, node) => store.setSelectedNode(node.id)}
         nodeTypes={NODE_TYPES}
         fitView
         fitViewOptions={{ padding: 0.22 }}
@@ -556,17 +618,34 @@ export function RoadmapCanvas({
         maxZoom={2}
         proOptions={{ hideAttribution: true }}
       >
-        <Background
-          variant={BackgroundVariant.Dots}
-          gap={24}
-          size={1}
-          color="rgba(255,255,255,0.05)"
-        />
+        <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="rgba(255,255,255,0.04)" />
         <Controls
           showInteractive={false}
           className="[&>button]:border-border [&>button]:bg-card [&>button]:text-foreground [&>button:hover]:bg-muted"
         />
+        <Panel position="top-right" className="m-3">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setCreateDialogOpen(true)}
+            className="gap-1.5 bg-card/80 backdrop-blur-sm shadow-sm"
+          >
+            <SquarePlus className="h-3.5 w-3.5" />
+            New Step
+          </Button>
+        </Panel>
       </ReactFlow>
+
+      <NodeDetailSheet
+        onStatusChange={handleStatusChange}
+        onDelete={handleDeleteNode}
+        onUpdate={handleUpdateNode}
+      />
+      <CreateNodeDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSubmit={handleAddNode}
+      />
     </div>
   );
 }
