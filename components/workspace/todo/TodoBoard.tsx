@@ -14,8 +14,9 @@ import {
 import { arrayMove } from '@dnd-kit/sortable';
 import { TodoColumn } from './TodoColumn';
 import { TodoCard } from './TodoCard';
+import { CreateTaskDialog } from './CreateTaskDialog';
 import { useWorkspaceStore } from '@/stores/workspace.store';
-import type { TaskStatus, WorkspaceTask } from '@/types/workspace.types';
+import type { NewTask, TaskStatus, WorkspaceTask } from '@/types/workspace.types';
 
 const STATUSES: TaskStatus[] = ['todo', 'in_progress', 'done'];
 
@@ -25,17 +26,13 @@ interface TodoBoardProps {
 
 export function TodoBoard({ ideaId }: TodoBoardProps) {
   const { todos, addTask, deleteTask, reorderTasks } = useWorkspaceStore();
-  // Read the raw store value — do NOT use `?? []` here because a new `[]` on every
-  // render would change the reference, trigger the effect, call setTasks, re-render,
-  // new `[]` again → infinite loop.
   const rawStoreTasks = todos[ideaId];
 
-  // Hold a local copy during drag to avoid store re-renders disrupting DnD tracking
   const [tasks, setTasks] = useState<WorkspaceTask[]>(rawStoreTasks ?? []);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogStatus, setDialogStatus] = useState<TaskStatus>('todo');
 
-  // Sync from store only when not dragging; rawStoreTasks is undefined (stable) when
-  // there are no tasks, so this effect only fires when the store array actually changes.
   useEffect(() => {
     if (activeId) return;
     const timer = window.setTimeout(() => setTasks(rawStoreTasks ?? []), 0);
@@ -46,12 +43,19 @@ export function TodoBoard({ ideaId }: TodoBoardProps) {
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
-  const activeTask = activeId
-    ? (tasks.find((t) => t.id === activeId) ?? null)
-    : null;
+  const activeTask = activeId ? (tasks.find((t) => t.id === activeId) ?? null) : null;
 
   function byStatus(status: TaskStatus) {
     return tasks.filter((t) => t.status === status);
+  }
+
+  function openDialog(status: TaskStatus) {
+    setDialogStatus(status);
+    setDialogOpen(true);
+  }
+
+  function handleCreate(task: NewTask) {
+    addTask(ideaId, task);
   }
 
   function onDragStart({ active }: DragStartEvent) {
@@ -72,14 +76,10 @@ export function TodoBoard({ ideaId }: TodoBoardProps) {
       : (overTask?.status ?? dragged.status);
 
     if (dragged.status !== targetStatus) {
-      // Cross-column: update status locally
       setTasks((prev) =>
-        prev.map((t) =>
-          t.id === dragged.id ? { ...t, status: targetStatus } : t
-        )
+        prev.map((t) => (t.id === dragged.id ? { ...t, status: targetStatus } : t))
       );
     } else if (overTask && overTask.id !== dragged.id) {
-      // Same column reorder
       const col = tasks.filter((t) => t.status === targetStatus);
       const from = col.findIndex((t) => t.id === dragged.id);
       const to = col.findIndex((t) => t.id === overId);
@@ -99,35 +99,39 @@ export function TodoBoard({ ideaId }: TodoBoardProps) {
   }
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCorners}
-      onDragStart={onDragStart}
-      onDragOver={onDragOver}
-      onDragEnd={onDragEnd}
-    >
-      <div className="flex h-full gap-3">
-        {STATUSES.map((status) => (
-          <TodoColumn
-            key={status}
-            status={status}
-            tasks={byStatus(status)}
-            onAdd={(title) => addTask(ideaId, title, status)}
-            onDelete={(id) => deleteTask(ideaId, id)}
-          />
-        ))}
-      </div>
+    <>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={onDragStart}
+        onDragOver={onDragOver}
+        onDragEnd={onDragEnd}
+      >
+        <div className="flex h-full gap-3">
+          {STATUSES.map((status) => (
+            <TodoColumn
+              key={status}
+              status={status}
+              tasks={byStatus(status)}
+              onAdd={() => openDialog(status)}
+              onDelete={(id) => deleteTask(ideaId, id)}
+            />
+          ))}
+        </div>
 
-      <DragOverlay dropAnimation={{ duration: 150, easing: 'ease' }}>
-        {activeTask && (
-          <TodoCard
-            task={activeTask}
-            status={activeTask.status}
-            onDelete={() => {}}
-            isOverlay
-          />
-        )}
-      </DragOverlay>
-    </DndContext>
+        <DragOverlay dropAnimation={{ duration: 150, easing: 'ease' }}>
+          {activeTask && (
+            <TodoCard task={activeTask} onDelete={() => {}} isOverlay />
+          )}
+        </DragOverlay>
+      </DndContext>
+
+      <CreateTaskDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        defaultStatus={dialogStatus}
+        onSubmit={handleCreate}
+      />
+    </>
   );
 }

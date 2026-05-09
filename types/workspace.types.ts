@@ -6,6 +6,7 @@ export interface WorkspaceSnapshot {
   title: string | undefined;
 }
 export type TaskStatus = 'todo' | 'in_progress' | 'done';
+export type TaskPriority = 'low' | 'medium' | 'high';
 export type ContentType = 'tweet' | 'reddit';
 export type ContentGoal = 'validate' | 'community' | 'features' | 'launch';
 
@@ -13,7 +14,18 @@ export interface WorkspaceTask {
   id: string;
   title: string;
   status: TaskStatus;
+  priority: TaskPriority;
+  description?: string;
+  dueDate?: string;
   createdAt: string;
+}
+
+export interface NewTask {
+  title: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  description?: string;
+  dueDate?: string;
 }
 
 export interface ContentItem {

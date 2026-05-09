@@ -2,9 +2,9 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Trash2 } from 'lucide-react';
+import { GripVertical, Trash2, CalendarDays, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { WorkspaceTask, TaskStatus } from '@/types/workspace.types';
+import type { WorkspaceTask, TaskStatus, TaskPriority } from '@/types/workspace.types';
 
 const STATUS_LINE: Record<TaskStatus, string> = {
   todo: 'bg-muted-foreground/20',
@@ -12,14 +12,40 @@ const STATUS_LINE: Record<TaskStatus, string> = {
   done: 'bg-emerald-400',
 };
 
+const PRIORITY_DOT: Record<TaskPriority, string> = {
+  low: 'bg-muted-foreground/30',
+  medium: 'bg-amber-400',
+  high: 'bg-rose-500',
+};
+
+const PRIORITY_LABEL: Record<TaskPriority, string> = {
+  low: 'Low',
+  medium: 'Med',
+  high: 'High',
+};
+
+const PRIORITY_TEXT: Record<TaskPriority, string> = {
+  low: 'text-muted-foreground/40',
+  medium: 'text-amber-500',
+  high: 'text-rose-500',
+};
+
+function formatDueDate(dueDate: string): { label: string; overdue: boolean } {
+  const due = new Date(dueDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const overdue = due < today;
+  const label = due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return { label, overdue };
+}
+
 interface TodoCardProps {
   task: WorkspaceTask;
-  status?: TaskStatus;
   onDelete: (id: string) => void;
   isOverlay?: boolean;
 }
 
-export function TodoCard({ task, status, onDelete, isOverlay }: TodoCardProps) {
+export function TodoCard({ task, onDelete, isOverlay }: TodoCardProps) {
   const {
     attributes,
     listeners,
@@ -29,11 +55,8 @@ export function TodoCard({ task, status, onDelete, isOverlay }: TodoCardProps) {
     isDragging,
   } = useSortable({ id: task.id });
 
-  const createdAt = new Date(task.createdAt);
-  const dateLabel = createdAt.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  });
+  const due = task.dueDate ? formatDueDate(task.dueDate) : null;
+  const priority = task.priority ?? 'medium';
 
   return (
     <div
@@ -45,16 +68,14 @@ export function TodoCard({ task, status, onDelete, isOverlay }: TodoCardProps) {
         isDragging && !isOverlay && 'opacity-20 shadow-none',
         isOverlay &&
           'rotate-[1deg] scale-[1.02] shadow-2xl ring-2 ring-primary/20 ring-offset-2 ring-offset-background',
-        !isDragging &&
-          !isOverlay &&
-          'border-border/50 hover:border-border hover:shadow-md'
+        !isDragging && !isOverlay && 'border-border/50 hover:border-border hover:shadow-md'
       )}
     >
       {/* Status accent line */}
       <span
         className={cn(
           'absolute left-0 inset-y-0 w-[3px] rounded-l-xl',
-          status ? STATUS_LINE[status] : 'bg-muted-foreground/20'
+          STATUS_LINE[task.status]
         )}
       />
 
@@ -69,13 +90,44 @@ export function TodoCard({ task, status, onDelete, isOverlay }: TodoCardProps) {
       </button>
 
       {/* Task body */}
-      <div className="flex min-w-0 flex-1 flex-col px-2 py-3">
+      <div className="flex min-w-0 flex-1 flex-col px-2 py-3 pr-1">
         <p className="text-[13px] font-medium leading-snug text-foreground/90">
           {task.title}
         </p>
-        <p className="mt-1.5 text-[10px] text-muted-foreground/30 opacity-0 transition-opacity group-hover:opacity-100">
-          Added {dateLabel}
-        </p>
+
+        {task.description && (
+          <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground/50">
+            {task.description}
+          </p>
+        )}
+
+        {(due || priority !== 'medium') && (
+          <div className="mt-2 flex items-center gap-2">
+            {/* Priority chip — only shown for low/high (medium is the default, no noise) */}
+            {priority !== 'medium' && (
+              <span className={cn('flex items-center gap-1 text-[10px] font-semibold', PRIORITY_TEXT[priority])}>
+                {priority === 'high' && <AlertCircle className="h-2.5 w-2.5" />}
+                <span
+                  className={cn('h-1.5 w-1.5 rounded-full', PRIORITY_DOT[priority], priority === 'high' && 'hidden')}
+                />
+                {PRIORITY_LABEL[priority]}
+              </span>
+            )}
+
+            {/* Due date */}
+            {due && (
+              <span
+                className={cn(
+                  'flex items-center gap-1 text-[10px] font-medium',
+                  due.overdue ? 'text-rose-500' : 'text-muted-foreground/40'
+                )}
+              >
+                <CalendarDays className="h-2.5 w-2.5" />
+                {due.overdue ? `Overdue · ${due.label}` : due.label}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Delete */}

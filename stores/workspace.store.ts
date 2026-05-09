@@ -6,6 +6,7 @@ import type {
   WorkspaceTab,
   ContentType,
   TaskStatus,
+  NewTask,
 } from '@/types/workspace.types';
 import type { Idea } from '@/types';
 
@@ -27,7 +28,7 @@ interface WorkspaceStore extends PersistedWorkspace {
   setWorkspaceTitle: (ideaId: string, title: string) => void;
   setWorkspaceIdea: (ideaId: string, idea: Idea) => void;
 
-  addTask: (ideaId: string, title: string, status?: TaskStatus) => void;
+  addTask: (ideaId: string, task: NewTask) => void;
   moveTask: (ideaId: string, taskId: string, status: TaskStatus) => void;
   deleteTask: (ideaId: string, taskId: string) => void;
   reorderTasks: (ideaId: string, tasks: WorkspaceTask[]) => void;
@@ -68,7 +69,7 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
           workspaceTitles: { ...s.workspaceTitles, [ideaId]: idea.title },
         })),
 
-      addTask: (ideaId, title, status = 'todo') =>
+      addTask: (ideaId, task) =>
         set((s) => ({
           todos: {
             ...s.todos,
@@ -76,9 +77,8 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
               ...(s.todos[ideaId] ?? []),
               {
                 id: crypto.randomUUID(),
-                title,
-                status,
                 createdAt: new Date().toISOString(),
+                ...task,
               },
             ],
           },
