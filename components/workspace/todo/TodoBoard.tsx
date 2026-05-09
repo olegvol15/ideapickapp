@@ -15,6 +15,7 @@ import { arrayMove } from '@dnd-kit/sortable';
 import { TodoColumn } from './TodoColumn';
 import { TodoCard } from './TodoCard';
 import { CreateTaskDialog } from './CreateTaskDialog';
+import { TaskDetailSheet } from './TaskDetailSheet';
 import { useWorkspaceStore } from '@/stores/workspace.store';
 import type { NewTask, TaskStatus, WorkspaceTask } from '@/types/workspace.types';
 
@@ -25,13 +26,14 @@ interface TodoBoardProps {
 }
 
 export function TodoBoard({ ideaId }: TodoBoardProps) {
-  const { todos, addTask, deleteTask, reorderTasks } = useWorkspaceStore();
+  const { todos, addTask, deleteTask, reorderTasks, setSelectedTask } = useWorkspaceStore();
   const rawStoreTasks = todos[ideaId];
 
   const [tasks, setTasks] = useState<WorkspaceTask[]>(rawStoreTasks ?? []);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogStatus, setDialogStatus] = useState<TaskStatus>('todo');
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createStatus, setCreateStatus] = useState<TaskStatus>('todo');
 
   useEffect(() => {
     if (activeId) return;
@@ -49,9 +51,13 @@ export function TodoBoard({ ideaId }: TodoBoardProps) {
     return tasks.filter((t) => t.status === status);
   }
 
-  function openDialog(status: TaskStatus) {
-    setDialogStatus(status);
-    setDialogOpen(true);
+  function openCreate(status: TaskStatus) {
+    setCreateStatus(status);
+    setCreateOpen(true);
+  }
+
+  function openEdit(task: WorkspaceTask) {
+    setSelectedTask(task.id);
   }
 
   function handleCreate(task: NewTask) {
@@ -113,7 +119,8 @@ export function TodoBoard({ ideaId }: TodoBoardProps) {
               key={status}
               status={status}
               tasks={byStatus(status)}
-              onAdd={() => openDialog(status)}
+              onAdd={() => openCreate(status)}
+              onEdit={openEdit}
               onDelete={(id) => deleteTask(ideaId, id)}
             />
           ))}
@@ -121,17 +128,19 @@ export function TodoBoard({ ideaId }: TodoBoardProps) {
 
         <DragOverlay dropAnimation={{ duration: 150, easing: 'ease' }}>
           {activeTask && (
-            <TodoCard task={activeTask} onDelete={() => {}} isOverlay />
+            <TodoCard task={activeTask} onEdit={() => {}} onDelete={() => {}} isOverlay />
           )}
         </DragOverlay>
       </DndContext>
 
       <CreateTaskDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        defaultStatus={dialogStatus}
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        defaultStatus={createStatus}
         onSubmit={handleCreate}
       />
+
+      <TaskDetailSheet ideaId={ideaId} />
     </>
   );
 }

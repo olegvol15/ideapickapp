@@ -35,10 +35,11 @@ interface TodoColumnProps {
   status: TaskStatus;
   tasks: WorkspaceTask[];
   onAdd: () => void;
+  onEdit: (task: WorkspaceTask) => void;
   onDelete: (id: string) => void;
 }
 
-export function TodoColumn({ status, tasks, onAdd, onDelete }: TodoColumnProps) {
+export function TodoColumn({ status, tasks, onAdd, onEdit, onDelete }: TodoColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
   const meta = COLUMN_META[status];
 
@@ -76,7 +77,7 @@ export function TodoColumn({ status, tasks, onAdd, onDelete }: TodoColumnProps) 
         <div className="min-h-0 flex-1 overflow-y-auto px-2.5">
           <div className="flex flex-col gap-2 py-1 pb-3">
             {tasks.map((task) => (
-              <TodoCard key={task.id} task={task} onDelete={onDelete} />
+              <TodoCard key={task.id} task={task} onEdit={onEdit} onDelete={onDelete} />
             ))}
 
             {tasks.length === 0 && (

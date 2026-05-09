@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -18,12 +18,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { NewTask, TaskPriority, TaskStatus } from '@/types/workspace.types';
+import type { NewTask, TaskPriority, TaskStatus, WorkspaceTask } from '@/types/workspace.types';
 
 interface CreateTaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultStatus: TaskStatus;
+  initialTask?: WorkspaceTask;
   onSubmit: (task: NewTask) => void;
 }
 
@@ -43,25 +44,30 @@ export function CreateTaskDialog({
   open,
   onOpenChange,
   defaultStatus,
+  initialTask,
   onSubmit,
 }: CreateTaskDialogProps) {
+  const isEditing = !!initialTask;
   const titleRef = useRef<HTMLInputElement>(null);
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<TaskPriority>('medium');
   const [status, setStatus] = useState<TaskStatus>(defaultStatus);
   const [dueDate, setDueDate] = useState('');
 
-  function reset() {
-    setTitle('');
-    setDescription('');
-    setPriority('medium');
-    setStatus(defaultStatus);
-    setDueDate('');
-  }
+  // Seed / reset fields every time the dialog opens
+  useEffect(() => {
+    if (!open) return;
+    setTitle(initialTask?.title ?? '');
+    setDescription(initialTask?.description ?? '');
+    setPriority(initialTask?.priority ?? 'medium');
+    setStatus(initialTask?.status ?? defaultStatus);
+    setDueDate(initialTask?.dueDate ?? '');
+    requestAnimationFrame(() => titleRef.current?.focus());
+  }, [open, initialTask, defaultStatus]);
 
   function handleOpenChange(next: boolean) {
-    if (!next) reset();
     onOpenChange(next);
   }
 
@@ -85,18 +91,16 @@ export function CreateTaskDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>New Task</DialogTitle>
+          <DialogTitle>{isEditing ? 'Edit Task' : 'New Task'}</DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-4">
-          {/* Title */}
           <div className="flex flex-col gap-1.5">
             <label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
               Title <span className="text-destructive">*</span>
             </label>
             <Input
               ref={titleRef}
-              autoFocus
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
@@ -105,7 +109,6 @@ export function CreateTaskDialog({
             />
           </div>
 
-          {/* Description */}
           <div className="flex flex-col gap-1.5">
             <label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
               Notes
@@ -118,7 +121,6 @@ export function CreateTaskDialog({
             />
           </div>
 
-          {/* Priority + Status row */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
@@ -157,7 +159,6 @@ export function CreateTaskDialog({
             </div>
           </div>
 
-          {/* Due date */}
           <div className="flex flex-col gap-1.5">
             <label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
               Due Date
@@ -176,7 +177,7 @@ export function CreateTaskDialog({
             Cancel
           </Button>
           <Button size="sm" onClick={handleSubmit} disabled={!title.trim()}>
-            Create Task
+            {isEditing ? 'Save Changes' : 'Create Task'}
           </Button>
         </DialogFooter>
       </DialogContent>

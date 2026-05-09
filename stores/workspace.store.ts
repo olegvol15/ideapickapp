@@ -20,8 +20,10 @@ interface PersistedWorkspace {
 interface WorkspaceStore extends PersistedWorkspace {
   activeTab: WorkspaceTab;
   pendingContent: { text: string; type: ContentType } | null;
+  selectedTaskId: string | null;
 
   setActiveTab: (tab: WorkspaceTab) => void;
+  setSelectedTask: (id: string | null) => void;
   setPendingContent: (
     content: { text: string; type: ContentType } | null
   ) => void;
@@ -29,6 +31,7 @@ interface WorkspaceStore extends PersistedWorkspace {
   setWorkspaceIdea: (ideaId: string, idea: Idea) => void;
 
   addTask: (ideaId: string, task: NewTask) => void;
+  updateTask: (ideaId: string, taskId: string, updates: Partial<Pick<WorkspaceTask, 'title' | 'description' | 'priority' | 'status' | 'dueDate'>>) => void;
   moveTask: (ideaId: string, taskId: string, status: TaskStatus) => void;
   deleteTask: (ideaId: string, taskId: string) => void;
   reorderTasks: (ideaId: string, tasks: WorkspaceTask[]) => void;
@@ -56,8 +59,10 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
       workspaceIdeas: {},
       activeTab: 'todo',
       pendingContent: null,
+      selectedTaskId: null,
 
       setActiveTab: (tab) => set({ activeTab: tab }),
+      setSelectedTask: (id) => set({ selectedTaskId: id }),
       setPendingContent: (content) => set({ pendingContent: content }),
       setWorkspaceTitle: (ideaId, title) =>
         set((s) => ({
@@ -81,6 +86,16 @@ export const useWorkspaceStore = create<WorkspaceStore>()(
                 ...task,
               },
             ],
+          },
+        })),
+
+      updateTask: (ideaId, taskId, updates) =>
+        set((s) => ({
+          todos: {
+            ...s.todos,
+            [ideaId]: (s.todos[ideaId] ?? []).map((t) =>
+              t.id === taskId ? { ...t, ...updates } : t
+            ),
           },
         })),
 
