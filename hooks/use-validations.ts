@@ -8,7 +8,7 @@ import {
   getValidations,
   getValidation,
   updateValidation,
-} from '@/services/db.service';
+} from '@/services/db/validation.db';
 import { useValidateStore } from '@/stores/validate.store';
 import { toast } from 'sonner';
 import { validationKeys } from '@/lib/api-keys';

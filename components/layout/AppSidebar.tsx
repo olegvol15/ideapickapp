@@ -10,7 +10,6 @@ import {
   ChevronDown,
   Gauge,
   History,
-  LayoutDashboard,
   LogIn,
   PanelLeftClose,
   Plus,
@@ -19,6 +18,7 @@ import { UserMenu } from '@/components/auth/UserMenu';
 import { GuestSignInCard } from '@/components/auth/GuestSignInCard';
 import { IdeaPickLogo } from '@/components/brand/IdeaPickLogo';
 import { BrainstormItem } from '@/components/layout/BrainstormItem';
+import { WorkspaceItem } from '@/components/workspace/WorkspaceItem';
 import { ValidationItem } from '@/components/validate/ValidationItem';
 import { useAuth } from '@/context/auth';
 import { useResearchStore } from '@/stores/research.store';
@@ -34,7 +34,7 @@ import {
   useRenameValidation,
   useGetValidations,
 } from '@/hooks/use-validations';
-import { useWorkspaces } from '@/hooks/use-workspaces';
+import { useWorkspaces, useDeleteWorkspace, useRenameWorkspace } from '@/hooks/use-workspaces';
 import { cn } from '@/lib/utils';
 import {
   Sidebar,
@@ -61,6 +61,8 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const renameMutation = useRenameGeneration(user?.id);
   const deleteValidationMutation = useDeleteValidation(user?.id);
   const renameValidationMutation = useRenameValidation(user?.id);
+  const deleteWorkspaceMutation = useDeleteWorkspace(user?.id);
+  const renameWorkspaceMutation = useRenameWorkspace(user?.id);
 
   // Workspace entries: signed-in users use DB, guests use local persistence.
   const workspaceTitles = useWorkspaceStore((s) => s.workspaceTitles);
@@ -253,23 +255,24 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                       className="overflow-hidden"
                     >
                       {recentWorkspaces.map(({ id, title }) => (
-                        <Link
+                        <WorkspaceItem
                           key={id}
-                          href={`/workspace/${id}`}
-                          onClick={() => {
+                          id={id}
+                          title={title}
+                          onNavigate={() => {
                             onNavigate?.();
                             setOpenMobile(false);
                           }}
-                          className={cn(
-                            'flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs transition-colors',
-                            pathname === `/workspace/${id}`
-                              ? 'bg-white/8 text-foreground'
-                              : 'text-muted-foreground/70 hover:bg-white/5 hover:text-foreground/90'
-                          )}
-                        >
-                          <LayoutDashboard className="h-3 w-3 shrink-0 opacity-50" />
-                          <span className="truncate">{title}</span>
-                        </Link>
+                          onRename={(newTitle) =>
+                            renameWorkspaceMutation.mutate({ slug: id, title: newTitle })
+                          }
+                          onDelete={() => {
+                            deleteWorkspaceMutation.mutate(id);
+                            if (pathname === `/workspace/${id}`) {
+                              startTransition(() => router.push('/'));
+                            }
+                          }}
+                        />
                       ))}
                     </motion.div>
                   )}

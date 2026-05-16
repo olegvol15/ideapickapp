@@ -6,7 +6,7 @@ import {
   deleteGeneration,
   renameGeneration,
   getGenerations,
-} from '@/services/db.service';
+} from '@/services/db/generation.db';
 import { generationKeys } from '@/lib/api-keys';
 import type { GenerateResponse, ProductType, Difficulty } from '@/types';
 

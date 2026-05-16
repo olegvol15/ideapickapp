@@ -152,7 +152,7 @@ function SidebarContent({ children, className }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="sidebar-content"
-      className={cn('min-h-0 flex-1 overflow-hidden px-4 py-4', className)}
+      className={cn('min-h-0 flex-1 overflow-y-auto px-4 py-4', className)}
     >
       {children}
     </div>

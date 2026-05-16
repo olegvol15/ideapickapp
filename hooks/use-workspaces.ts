@@ -6,7 +6,8 @@ import {
   loadWorkspaceFromDB,
   upsertWorkspaceToDB,
   deleteWorkspaceFromDB,
-} from '@/services/db.service';
+  renameWorkspaceInDB,
+} from '@/services/db/workspace.db';
 import { workspaceKeys } from '@/lib/api-keys';
 import type { Idea } from '@/types';
 import type { WorkspaceTask, ContentItem } from '@/types/workspace.types';
@@ -51,6 +52,20 @@ export function useUpsertWorkspace(userId: string | undefined) {
       queryClient.invalidateQueries({
         queryKey: workspaceKeys.bySlug(userId, vars.slug),
       });
+    },
+  });
+}
+
+export function useRenameWorkspace(userId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ slug, title }: { slug: string; title: string }) => {
+      if (!userId) return Promise.resolve();
+      return renameWorkspaceInDB(userId, slug, title);
+    },
+    onSuccess: () => {
+      if (userId)
+        queryClient.invalidateQueries({ queryKey: workspaceKeys.all(userId) });
     },
   });
 }

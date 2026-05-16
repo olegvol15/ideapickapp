@@ -5,7 +5,7 @@ import {
   getRoadmapsFromDB,
   loadRoadmapFromDB,
   upsertRoadmapToDB,
-} from '@/services/db.service';
+} from '@/services/db/roadmap.db';
 import { roadmapKeys } from '@/lib/api-keys';
 import type { Idea } from '@/types';
 import type { RoadmapState } from '@/services/storage.service';

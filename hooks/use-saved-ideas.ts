@@ -6,7 +6,7 @@ import {
   saveIdeaToDB,
   unsaveIdeaFromDB,
   type SavedIdeaRow,
-} from '@/services/db.service';
+} from '@/services/db/saved-idea.db';
 import { savedIdeaKeys } from '@/lib/api-keys';
 import type { Idea } from '@/types';
 

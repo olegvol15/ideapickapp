@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import { useResearchStore } from '@/stores/research.store';
-import { saveGeneration } from '@/services/db.service';
+import { saveGeneration } from '@/services/db/generation.db';
 
 interface AuthResult {
   error: string | null;

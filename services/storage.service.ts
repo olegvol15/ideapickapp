@@ -34,6 +34,7 @@ export interface RoadmapState {
   rmNodes: import('@/types/roadmap.types').RoadmapNode[];
   positions: Record<string, { x: number; y: number }>;
   expandedIds: string[];
+  collapsedIds?: string[];
 }
 
 export function saveRoadmapState(id: string, state: RoadmapState): void {

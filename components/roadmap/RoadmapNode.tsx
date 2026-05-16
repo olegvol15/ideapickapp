@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Loader2, Plus, Twitter, MessageSquare } from 'lucide-react';
+import { ChevronRight, Loader2, Minus, Plus, Twitter, MessageSquare } from 'lucide-react';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -18,10 +18,12 @@ export interface NodeData {
   status?: RoadmapNodeStatus;
   expanded: boolean;
   expanding: boolean;
+  collapsed: boolean;
   canExpand: boolean;
   actionType?: 'tweet' | 'reddit' | null;
   onExpand: () => void;
   onSelect: () => void;
+  onCollapse: () => void;
   onGenerateContent?: () => void;
   [key: string]: unknown;
 }
@@ -110,6 +112,7 @@ export function RoadmapNode({ id, data }: NodeProps) {
         )}
       </div>
 
+      {/* AI expand — node has no children yet */}
       {d.canExpand && !d.expanded && (
         <button
           onClick={(e) => {
@@ -131,6 +134,40 @@ export function RoadmapNode({ id, data }: NodeProps) {
           ) : (
             <Plus className="h-3 w-3" />
           )}
+        </button>
+      )}
+
+      {/* Re-expand from cache — children exist but are hidden */}
+      {d.canExpand && d.expanded && d.collapsed && (
+        <button
+          onClick={(e) => { e.stopPropagation(); d.onExpand(); }}
+          title="Show children"
+          className={cn(
+            'absolute -right-3.5 top-1/2 z-20 -translate-y-1/2',
+            'flex h-7 w-7 items-center justify-center rounded-full',
+            'border border-amber-500/40 bg-card text-amber-500 shadow-md',
+            'transition-all duration-150',
+            'hover:border-amber-500/70 hover:scale-110 active:scale-95'
+          )}
+        >
+          <ChevronRight className="h-3 w-3" />
+        </button>
+      )}
+
+      {/* Collapse — children are visible */}
+      {d.canExpand && d.expanded && !d.collapsed && (
+        <button
+          onClick={(e) => { e.stopPropagation(); d.onCollapse(); }}
+          title="Hide children"
+          className={cn(
+            'absolute -right-3.5 top-1/2 z-20 -translate-y-1/2',
+            'flex h-7 w-7 items-center justify-center rounded-full',
+            'border border-border/60 bg-card text-muted-foreground shadow-md',
+            'transition-all duration-150',
+            'hover:border-destructive/50 hover:text-destructive hover:scale-110 active:scale-95'
+          )}
+        >
+          <Minus className="h-3 w-3" />
         </button>
       )}
 

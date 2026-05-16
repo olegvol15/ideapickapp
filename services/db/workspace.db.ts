@@ -61,6 +61,16 @@ export async function listWorkspacesFromDB(userId: string): Promise<WorkspaceRow
   return (data ?? []) as WorkspaceRow[];
 }
 
+export async function renameWorkspaceInDB(userId: string, slug: string, title: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('workspaces')
+    .update({ title, updated_at: new Date().toISOString() })
+    .eq('user_id', userId)
+    .eq('idea_slug', slug);
+  if (error) throw new Error('Failed to rename workspace', { cause: error });
+}
+
 export async function deleteWorkspaceFromDB(userId: string, slug: string): Promise<void> {
   const supabase = createClient();
   const { error } = await supabase

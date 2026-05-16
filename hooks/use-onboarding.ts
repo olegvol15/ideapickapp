@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/context/auth';
 import { useResearchStore } from '@/stores/research.store';
 import { useOnboardingStore } from '@/stores/onboarding.store';
-import { saveIdeaToDB } from '@/services/db.service';
+import { saveIdeaToDB } from '@/services/db/saved-idea.db';
 import type { ExploreIdea } from '@/types';
 import { LOADING_MESSAGES } from '@/constants/onboarding';
 import { exploreIdeaToIdea, quickValidateApi, exploreIdeasApi } from '@/lib/onboarding';

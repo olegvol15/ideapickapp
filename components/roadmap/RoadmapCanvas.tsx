@@ -9,6 +9,7 @@ import {
   addEdge,
   BackgroundVariant,
   type Node,
+  type Edge,
   type Connection,
 } from '@xyflow/react';
 import { Loader2, SquarePlus } from 'lucide-react';
@@ -27,7 +28,7 @@ import {
   listPlans,
   type RoadmapState,
 } from '@/services/storage.service';
-import { useRoadmapStore } from '@/stores/roadmap.store';
+import { useRoadmapStore, type StoreSnapshot } from '@/stores/roadmap.store';
 import { useGetRoadmap, useUpsertRoadmap } from '@/hooks/use-roadmaps';
 import { RoadmapNode as RoadmapNodeCmp, NODE_W } from './RoadmapNode';
 import {
@@ -38,6 +39,7 @@ import {
   buildFlowEdges,
   buildFlowNodes,
   buildNodeData,
+  computeHiddenIds,
   type NodeCallbacks,
 } from './roadmap-layout';
 import { NodeDetailSheet } from './NodeDetailSheet';
@@ -66,8 +68,9 @@ export function RoadmapCanvas({
 
   const expandNodeRef = useRef<(nodeId: string, nodeLabel: string) => void>(() => {});
   const selectNodeRef = useRef<(id: string) => void>(() => {});
+  const collapseNodeRef = useRef<(nodeId: string) => void>(() => {});
 
-  const callbacks: NodeCallbacks = { expandNodeRef, selectNodeRef, onGenerateContent };
+  const callbacks: NodeCallbacks = { expandNodeRef, selectNodeRef, collapseNodeRef, onGenerateContent };
 
   const cachedState = useMemo(() => loadRoadmapState(ideaId), [ideaId]);
 
@@ -83,10 +86,10 @@ export function RoadmapCanvas({
   });
 
   const persistState = useCallback(() => {
-    const { rfNodes, rmNodes, expandedIds } = useRoadmapStore.getState();
-    const positions: RoadmapState['positions'] = {};
+    const { rfNodes, rmNodes, expandedIds, collapsedIds, savedPositions } = useRoadmapStore.getState();
+    const positions: RoadmapState['positions'] = { ...savedPositions };
     for (const n of rfNodes) positions[n.id] = n.position;
-    const state: RoadmapState = { rmNodes, positions, expandedIds };
+    const state: RoadmapState = { rmNodes, positions, expandedIds, collapsedIds };
     saveRoadmapState(ideaId, state);
     upsertRoadmap.mutate({ slug: ideaId, idea, state, bumpTimestamp: true });
     useRoadmapStore.getState().setLocalPlans(listPlans());
@@ -94,8 +97,36 @@ export function RoadmapCanvas({
 
   const expandNode = useCallback(
     async (nodeId: string, nodeLabel: string) => {
-      const { expandedIds, busyNodeId, rmNodes, rfNodes } = useRoadmapStore.getState();
-      if (expandedIds.includes(nodeId) || busyNodeId !== null) return;
+      const { expandedIds, collapsedIds, savedPositions, busyNodeId, rmNodes, rfNodes } = useRoadmapStore.getState();
+      if (expandedIds.includes(nodeId) && !collapsedIds.includes(nodeId)) return;
+      if (busyNodeId !== null) return;
+
+      // Re-expand from cache — children already in rmNodes, no AI call needed
+      if (collapsedIds.includes(nodeId)) {
+        const newFlowNodes: Node[] = [];
+        const newEdges: Edge[] = [];
+        const queue = [nodeId];
+        while (queue.length) {
+          const cur = queue.shift()!;
+          rmNodes.filter((n) => n.parent === cur).forEach((child) => {
+            newFlowNodes.push({
+              id: child.id,
+              type: 'roadmapNode',
+              position: savedPositions[child.id] ?? { x: 0, y: 0 },
+              data: buildNodeData(child, expandedIds.includes(child.id), callbacks, {
+                collapsed: collapsedIds.includes(child.id),
+              }),
+            });
+            newEdges.push(mkEdge(child.parent!, child.id));
+            if (expandedIds.includes(child.id) && !collapsedIds.includes(child.id)) {
+              queue.push(child.id);
+            }
+          });
+        }
+        store.uncollapseNode(nodeId, newFlowNodes, newEdges);
+        persistState();
+        return;
+      }
 
       store.setBusy(nodeId);
       store.patchNode(nodeId, { expanding: true });
@@ -147,8 +178,17 @@ export function RoadmapCanvas({
     [idea.title, idea.pitch, store, persistState, onGenerateContent]
   );
 
+  const handleCollapseNode = useCallback(
+    (nodeId: string) => {
+      store.collapseNode(nodeId);
+      persistState();
+    },
+    [store, persistState]
+  );
+
   useEffect(() => { expandNodeRef.current = expandNode; }, [expandNode]);
   useEffect(() => { selectNodeRef.current = store.setSelectedNode; }, [store.setSelectedNode]);
+  useEffect(() => { collapseNodeRef.current = handleCollapseNode; }, [handleCollapseNode]);
 
   const handleUpdateNode = useCallback(
     (nodeId: string, patch: { label: string; description: string }) => {
@@ -163,8 +203,28 @@ export function RoadmapCanvas({
 
   const handleDeleteNode = useCallback(
     (nodeId: string) => {
+      const { rfNodes, rfEdges, rmNodes, expandedIds, collapsedIds, savedPositions } =
+        useRoadmapStore.getState();
+      const snapshot: StoreSnapshot = {
+        rfNodes: [...rfNodes],
+        rfEdges: [...rfEdges],
+        rmNodes: [...rmNodes],
+        expandedIds: [...expandedIds],
+        collapsedIds: [...collapsedIds],
+        savedPositions: { ...savedPositions },
+      };
       store.deleteNode(nodeId);
       persistState();
+      toast('Step deleted', {
+        action: {
+          label: 'Undo',
+          onClick: () => {
+            store.restoreSubtree(snapshot);
+            persistState();
+          },
+        },
+        duration: 5000,
+      });
     },
     [store, persistState]
   );
@@ -212,12 +272,22 @@ export function RoadmapCanvas({
   // Init from session cache
   useEffect(() => {
     if (!cachedState) return;
+    const collapsedIds = cachedState.collapsedIds ?? [];
+    const hiddenIds = computeHiddenIds(cachedState.rmNodes, collapsedIds);
+    const savedPositions: RoadmapState['positions'] = {};
+    for (const rn of cachedState.rmNodes) {
+      if (hiddenIds.has(rn.id) && cachedState.positions[rn.id]) {
+        savedPositions[rn.id] = cachedState.positions[rn.id];
+      }
+    }
     store.initCanvas({
       ideaId,
-      nodes: buildFlowNodes(cachedState.rmNodes, cachedState.positions, cachedState.expandedIds, callbacks),
-      edges: buildFlowEdges(cachedState.rmNodes),
+      nodes: buildFlowNodes(cachedState.rmNodes, cachedState.positions, cachedState.expandedIds, collapsedIds, callbacks),
+      edges: buildFlowEdges(cachedState.rmNodes, hiddenIds),
       rmNodes: cachedState.rmNodes,
       expandedIds: cachedState.expandedIds,
+      collapsedIds,
+      savedPositions,
     });
     store.setLocalPlans(listPlans());
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -232,12 +302,22 @@ export function RoadmapCanvas({
     if (dbRoadmap) {
       const { state } = dbRoadmap;
       saveRoadmapState(ideaId, state);
+      const collapsedIds = state.collapsedIds ?? [];
+      const hiddenIds = computeHiddenIds(state.rmNodes, collapsedIds);
+      const savedPositions: RoadmapState['positions'] = {};
+      for (const rn of state.rmNodes) {
+        if (hiddenIds.has(rn.id) && state.positions[rn.id]) {
+          savedPositions[rn.id] = state.positions[rn.id];
+        }
+      }
       store.initCanvas({
         ideaId,
-        nodes: buildFlowNodes(state.rmNodes, state.positions, state.expandedIds, callbacks),
-        edges: buildFlowEdges(state.rmNodes),
+        nodes: buildFlowNodes(state.rmNodes, state.positions, state.expandedIds, collapsedIds, callbacks),
+        edges: buildFlowEdges(state.rmNodes, hiddenIds),
         rmNodes: state.rmNodes,
         expandedIds: state.expandedIds,
+        collapsedIds,
+        savedPositions,
       });
       setLoading(false);
       return;
@@ -264,7 +344,7 @@ export function RoadmapCanvas({
         };
 
         saveRoadmapState(ideaId, initialState);
-        store.initCanvas({ ideaId, nodes: laid, edges: flowEdges, rmNodes: nodes, expandedIds: [] });
+        store.initCanvas({ ideaId, nodes: laid, edges: flowEdges, rmNodes: nodes, expandedIds: [], collapsedIds: [], savedPositions: {} });
         store.setLocalPlans(listPlans());
         upsertRoadmap.mutate({ slug: ideaId, idea, state: initialState, bumpTimestamp: true });
       } catch {
@@ -278,13 +358,13 @@ export function RoadmapCanvas({
 
   // DB sync after auth resolves
   useEffect(() => {
-    const { rmNodes, rfNodes, expandedIds } = useRoadmapStore.getState();
+    const { rmNodes, rfNodes, expandedIds, collapsedIds, savedPositions } = useRoadmapStore.getState();
     if (!userId || authLoading || loading || rmNodes.length === 0) return;
     if (dbSyncedRef.current || cachedState) return;
     dbSyncedRef.current = true;
-    const positions: RoadmapState['positions'] = {};
+    const positions: RoadmapState['positions'] = { ...savedPositions };
     for (const n of rfNodes) positions[n.id] = n.position;
-    upsertRoadmap.mutate({ slug: ideaId, idea, state: { rmNodes, positions, expandedIds }, bumpTimestamp: false });
+    upsertRoadmap.mutate({ slug: ideaId, idea, state: { rmNodes, positions, expandedIds, collapsedIds }, bumpTimestamp: false });
   }, [userId, authLoading, loading, ideaId, idea, cachedState, upsertRoadmap]);
 
   // Reset store on unmount
@@ -297,6 +377,13 @@ export function RoadmapCanvas({
       useRoadmapStore.setState((state) => ({ rfEdges: addEdge(params, state.rfEdges) })),
     []
   );
+
+  const progressStats = useMemo(() => {
+    const total = store.rmNodes.length;
+    const done = store.rmNodes.filter((n) => n.status === 'done').length;
+    const inProgress = store.rmNodes.filter((n) => n.status === 'in-progress').length;
+    return { total, done, inProgress };
+  }, [store.rmNodes]);
 
   if (loading)
     return (
@@ -328,7 +415,7 @@ export function RoadmapCanvas({
         onNodeClick={(_e, node) => store.setSelectedNode(node.id)}
         nodeTypes={NODE_TYPES}
         fitView
-        fitViewOptions={{ padding: 0.22 }}
+        fitViewOptions={{ padding: 0.3, maxZoom: 0.65 }}
         minZoom={0.2}
         maxZoom={2}
         proOptions={{ hideAttribution: true }}
@@ -338,6 +425,27 @@ export function RoadmapCanvas({
           showInteractive={false}
           className="[&>button]:border-border [&>button]:bg-card [&>button]:text-foreground [&>button:hover]:bg-muted"
         />
+        {progressStats.total > 0 && (
+          <Panel position="top-left" className="m-3">
+            <div className="flex min-w-[148px] flex-col gap-1.5 rounded-xl border border-border/50 bg-card/80 px-3 py-2 shadow-sm backdrop-blur-sm">
+              <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                <span>{progressStats.done} / {progressStats.total} done</span>
+                {progressStats.inProgress > 0 && (
+                  <span className="flex items-center gap-1">
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
+                    {progressStats.inProgress}
+                  </span>
+                )}
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-emerald-500 transition-all duration-300"
+                  style={{ width: `${(progressStats.done / progressStats.total) * 100}%` }}
+                />
+              </div>
+            </div>
+          </Panel>
+        )}
         <Panel position="top-right" className="m-3">
           <Button
             size="sm"
