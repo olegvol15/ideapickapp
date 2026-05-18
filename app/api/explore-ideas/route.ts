@@ -4,6 +4,7 @@ import { checkRateLimit } from '@/lib/supabase/auth';
 import { exploreIdeasLimiter } from '@/lib/rate-limit';
 import { runExploreIdeas } from '@/services/explore-ideas.service';
 import { AppError } from '@/lib/errors/app-error';
+import { ExploreIdeasRequestSchema } from '@/lib/schemas';
 import { logger } from '@/lib/logger';
 
 export const POST = async (req: NextRequest): Promise<Response> => {
@@ -23,26 +24,12 @@ export const POST = async (req: NextRequest): Promise<Response> => {
       throw AppError.validation('Invalid request body');
     }
 
-    const { interest, constraints, previousIdeas } = body as Record<string, unknown>;
+    const parsed = ExploreIdeasRequestSchema.safeParse(body);
+    if (!parsed.success) throw AppError.validation(parsed.error.issues[0]?.message ?? 'Invalid input');
 
-    if (typeof interest !== 'string' || !interest.trim())
-      throw AppError.validation('interest is required');
-    if (interest.length > 100)
-      throw AppError.validation('interest must be 100 characters or fewer');
+    const { interest, constraints, previousIdeas } = parsed.data;
 
-    if (!Array.isArray(constraints))
-      throw AppError.validation('constraints must be an array');
-    if (constraints.length > 10)
-      throw AppError.validation('constraints must have 10 items or fewer');
-    if (constraints.some((c) => typeof c !== 'string' || c.length > 200))
-      throw AppError.validation('each constraint must be a string of 200 characters or fewer');
-
-    const prevIdeas =
-      Array.isArray(previousIdeas) && previousIdeas.every((p) => typeof p === 'string')
-        ? (previousIdeas as string[]).slice(0, 20).map((p) => p.slice(0, 200))
-        : undefined;
-
-    const ideas = await runExploreIdeas(interest.trim(), constraints as string[], prevIdeas);
+    const ideas = await runExploreIdeas(interest.trim(), constraints, previousIdeas);
 
     return NextResponse.json({ ideas });
   } catch (err) {

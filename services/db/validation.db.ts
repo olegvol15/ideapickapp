@@ -18,6 +18,7 @@ export async function saveValidation(params: {
   result: EnhancedValidationResult;
   competitors: Competitor[];
 }): Promise<string> {
+  if (!params.userId) throw new Error('userId required');
   const supabase = createClient();
   const { data, error } = await supabase
     .from('validations')
@@ -35,6 +36,7 @@ export async function saveValidation(params: {
 }
 
 export async function renameValidation(userId: string, id: string, description: string): Promise<void> {
+  if (!userId) throw new Error('userId required');
   const supabase = createClient();
   const { error } = await supabase
     .from('validations')
@@ -51,6 +53,7 @@ export async function updateValidation(
   result: EnhancedValidationResult,
   competitors: Competitor[]
 ): Promise<void> {
+  if (!userId) throw new Error('userId required');
   const supabase = createClient();
   const { error } = await supabase
     .from('validations')
@@ -61,6 +64,7 @@ export async function updateValidation(
 }
 
 export async function deleteValidation(userId: string, id: string): Promise<void> {
+  if (!userId) throw new Error('userId required');
   const supabase = createClient();
   const { error } = await supabase
     .from('validations')
@@ -71,6 +75,7 @@ export async function deleteValidation(userId: string, id: string): Promise<void
 }
 
 export async function getValidations(userId: string): Promise<ValidationRow[]> {
+  if (!userId) throw new Error('userId required');
   const supabase = createClient();
   const { data, error } = await supabase
     .from('validations')
@@ -83,6 +88,7 @@ export async function getValidations(userId: string): Promise<ValidationRow[]> {
 }
 
 export async function getValidation(userId: string, id: string): Promise<ValidationRow | null> {
+  if (!userId) throw new Error('userId required');
   const supabase = createClient();
   const { data, error } = await supabase
     .from('validations')

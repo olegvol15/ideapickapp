@@ -1,4 +1,5 @@
 import type { Competitor } from '@/types';
+import type { AppStoreReview } from '@/lib/discovery/mobile';
 import type {
   MobileMetrics,
   MobileScores,
@@ -27,12 +28,14 @@ export function buildValidationQueryMessages(
   description: string,
   productType: string,
   audience?: string,
-  problem?: string
+  problem?: string,
+  monetization?: string
 ): ChatMessage[] {
   const context = [
     `Product type: ${productType}`,
     audience ? `Target audience: ${audience}` : null,
     problem ? `Problem it solves: ${problem}` : null,
+    monetization ? `Monetization model: ${monetization}` : null,
   ]
     .filter(Boolean)
     .join('\n');
@@ -64,12 +67,14 @@ export function buildCompetitorMessages(
   description: string,
   productType: string,
   audience?: string,
-  problem?: string
+  problem?: string,
+  monetization?: string
 ): ChatMessage[] {
   const context = [
     `Product type: ${productType}`,
     audience ? `Target audience: ${audience}` : null,
     problem ? `Problem it solves: ${problem}` : null,
+    monetization ? `Monetization model: ${monetization}` : null,
   ]
     .filter(Boolean)
     .join('\n');
@@ -114,12 +119,14 @@ export function buildValidationAnalysisMessages(
   productType: string,
   audience: string | undefined,
   problem: string | undefined,
-  competitors: Competitor[]
+  competitors: Competitor[],
+  monetization?: string
 ): ChatMessage[] {
   const context = [
     `Product type: ${productType}`,
     audience ? `Target audience: ${audience}` : null,
     problem ? `Problem it solves: ${problem}` : null,
+    monetization ? `Monetization model: ${monetization}` : null,
   ]
     .filter(Boolean)
     .join('\n');
@@ -168,7 +175,7 @@ Analyze the idea and evidence, then return a JSON report with this exact shape:
   "willingnessToPay": {
     "level": <"low" | "medium" | "high">,
     "freeSubstitutes": "<are there strong free alternatives? name them>",
-    "paidAlternatives": "<do paid alternatives exist? what do they charge?>"
+    "paidAlternatives": "<do paid alternatives exist? what do they charge? If a monetization model is provided, use it to ground your assessment>"
   },
   "signals": ["<positive signal 1>", "<positive signal 2>", "<positive signal 3>"],
   "evidencedSignals": [
@@ -229,6 +236,32 @@ ${competitorBlock}`,
   ];
 }
 
+function buildReviewBlock(
+  competitorReviews: Map<string, AppStoreReview[]>
+): string {
+  const sections: string[] = [];
+  for (const [appName, reviews] of competitorReviews) {
+    if (reviews.length === 0) continue;
+    const complaints = reviews
+      .filter((r) => r.rating <= 3)
+      .slice(0, 5)
+      .map((r) => `  • "${r.title}: ${r.body.slice(0, 120)}"`)
+      .join('\n');
+    const positives = reviews
+      .filter((r) => r.rating >= 4)
+      .slice(0, 3)
+      .map((r) => `  • "${r.title}: ${r.body.slice(0, 120)}"`)
+      .join('\n');
+    if (!complaints && !positives) continue;
+    const lines = [`${appName} — real App Store reviews:`];
+    if (complaints) lines.push(`  Complaints (★1–3):\n${complaints}`);
+    if (positives) lines.push(`  Positives (★4–5):\n${positives}`);
+    sections.push(lines.join('\n'));
+  }
+  if (sections.length === 0) return '';
+  return `\n--- Real App Store Reviews (ground competitorInsights in these) ---\n${sections.join('\n\n')}`;
+}
+
 export function buildMobileAnalysisMessages(
   description: string,
   productType: string,
@@ -249,12 +282,15 @@ export function buildMobileAnalysisMessages(
   marketInsights: string[],
   opportunityInsights: string[],
   winAngles: WinAngle[],
-  confidenceScore: number
+  confidenceScore: number,
+  monetization?: string,
+  competitorReviews?: Map<string, AppStoreReview[]>
 ): ChatMessage[] {
   const context = [
     `Product type: ${productType}`,
     audience ? `Target audience: ${audience}` : null,
     problem ? `Problem it solves: ${problem}` : null,
+    monetization ? `Monetization model: ${monetization}` : null,
   ]
     .filter(Boolean)
     .join('\n');
@@ -356,7 +392,7 @@ Return a JSON object with exactly this shape:
   "failureReasons": ["<max 6 words, direct, from metrics>", "<reason 2>"],
   "marketHardness": "<1 sentence naming the specific structural barrier from the data>",
   "competitorInsights": [
-    { "name": "<app name>", "whyChosen": "<1 short phrase: what users get>", "weakness": "<1 short phrase: the gap>" }
+    { "name": "<app name>", "whyChosen": "<1 short phrase: what users get — use real review positives if provided>", "weakness": "<1 short phrase: the gap — if real App Store reviews are provided, derive this from actual complaint text, not general knowledge>" }
   ],
   "whereToWin": [
     {
@@ -388,7 +424,7 @@ Every insight you write must reference THIS specific idea — not the market in 
 ${metricsBlock}
 
 --- App Store & Signal Evidence ---
-${competitorBlock}`,
+${competitorBlock}${competitorReviews ? buildReviewBlock(competitorReviews) : ''}`,
     },
   ];
 }

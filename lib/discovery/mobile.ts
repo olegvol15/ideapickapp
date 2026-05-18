@@ -11,6 +11,7 @@ function coreSearchTerm(query: string): string {
 }
 
 export interface AppStoreApp {
+  trackId?: number;
   trackName: string;
   trackViewUrl: string;
   averageUserRating?: number;
@@ -21,6 +22,46 @@ export interface AppStoreApp {
   releaseDate?: string;
   currentVersionReleaseDate?: string;
   trackSubtitle?: string;
+}
+
+export interface AppStoreReview {
+  rating: number;
+  title: string;
+  body: string;
+}
+
+export function extractTrackId(trackViewUrl: string): number | null {
+  const m = /\/id(\d+)/.exec(trackViewUrl);
+  return m ? parseInt(m[1], 10) : null;
+}
+
+export async function fetchAppStoreReviews(
+  trackId: number,
+  limit = 20
+): Promise<AppStoreReview[]> {
+  try {
+    const res = await fetch(
+      `https://itunes.apple.com/us/rss/customerreviews/id=${trackId}/sortBy=mostHelpful/json`
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    const entries: unknown[] = data?.feed?.entry ?? [];
+    // First entry is app metadata, not a review — skip it
+    return entries
+      .slice(1)
+      .map((e: unknown) => {
+        const entry = e as Record<string, Record<string, string>>;
+        const rating = Number(entry['im:rating']?.label);
+        const title = entry['title']?.label ?? '';
+        const body = entry['content']?.label ?? '';
+        if (!rating || !body) return null;
+        return { rating, title, body };
+      })
+      .filter((r): r is AppStoreReview => r !== null)
+      .slice(0, limit);
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchAppStoreApps(

@@ -12,7 +12,10 @@ import {
   shouldShowStartBuilding,
   STEP_LABEL,
 } from '@/lib/validate/next-move';
+import { getConfidenceDisclaimer } from '@/lib/validate/confidence-disclaimer';
+import { buildActionTemplate } from '@/lib/validate/action-templates';
 import { SectionHeading } from './SectionHeading';
+import { ValidationActionTemplate } from './ValidationActionTemplate';
 import type { EnhancedValidationResult } from '@/lib/schemas';
 import type { IdeaContext } from '@/types/validate.types';
 
@@ -44,6 +47,8 @@ export function ValidationNextMoveBlock({
   const displayNextStep = getDisplayNextStep(result);
   const showPrimaryAction = shouldShowPrimaryAction(result);
   const showStartBuilding = shouldShowStartBuilding(result);
+  const disclaimer = getConfidenceDisclaimer(result.confidence);
+  const actionTemplate = buildActionTemplate(result, ideaContext);
 
   async function copyNextStep() {
     if (!result.nextStep) return;
@@ -59,6 +64,11 @@ export function ValidationNextMoveBlock({
     <div className="rounded-xl border border-border bg-card px-6 py-5 flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <SectionHeading>Next move</SectionHeading>
+        {disclaimer && (
+          <p className="text-[11px] text-muted-foreground/55 leading-snug italic border-l-2 border-border/60 pl-2.5">
+            {disclaimer}
+          </p>
+        )}
         <p className="text-sm font-semibold text-foreground leading-snug">
           {displayNextStep}
         </p>
@@ -144,6 +154,9 @@ export function ValidationNextMoveBlock({
           </div>
         )}
       </div>
+      {actionTemplate && !isDrop && (
+        <ValidationActionTemplate template={actionTemplate} />
+      )}
     </div>
   );
 }

@@ -19,6 +19,7 @@ export async function upsertRoadmapToDB(params: {
   state: RoadmapState;
   bumpTimestamp?: boolean;
 }): Promise<void> {
+  if (!params.userId) throw new Error('userId required');
   const supabase = createClient();
   const row: Record<string, unknown> = {
     user_id: params.userId,
@@ -37,6 +38,7 @@ export async function loadRoadmapFromDB(params: {
   userId: string;
   slug: string;
 }): Promise<LoadedRoadmap | null> {
+  if (!params.userId) throw new Error('userId required');
   const supabase = createClient();
   const { data, error } = await supabase
     .from('roadmaps')
@@ -52,6 +54,7 @@ export async function loadRoadmapFromDB(params: {
 }
 
 export async function getRoadmapsFromDB(userId: string): Promise<RoadmapRow[]> {
+  if (!userId) throw new Error('userId required');
   const supabase = createClient();
   const { data, error } = await supabase
     .from('roadmaps')

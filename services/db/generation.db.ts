@@ -17,6 +17,7 @@ export async function saveGeneration(params: {
   difficulty: Difficulty | '';
   result: GenerateResponse;
 }): Promise<string> {
+  if (!params.userId) throw new Error('userId required');
   const supabase = createClient();
   const { data, error } = await supabase
     .from('generations')
@@ -35,6 +36,7 @@ export async function saveGeneration(params: {
 }
 
 export async function deleteGeneration(userId: string, id: string): Promise<void> {
+  if (!userId) throw new Error('userId required');
   const supabase = createClient();
   const { error } = await supabase
     .from('generations')
@@ -45,6 +47,7 @@ export async function deleteGeneration(userId: string, id: string): Promise<void
 }
 
 export async function renameGeneration(userId: string, id: string, prompt: string): Promise<void> {
+  if (!userId) throw new Error('userId required');
   const supabase = createClient();
   const { error } = await supabase
     .from('generations')
@@ -55,6 +58,7 @@ export async function renameGeneration(userId: string, id: string, prompt: strin
 }
 
 export async function getGenerations(userId: string): Promise<GenerationRow[]> {
+  if (!userId) throw new Error('userId required');
   const supabase = createClient();
   const { data, error } = await supabase
     .from('generations')

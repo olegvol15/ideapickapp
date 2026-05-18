@@ -12,6 +12,7 @@ interface SaasValidationParams {
   productType: string;
   audience: string | undefined;
   problem: string | undefined;
+  monetization: string | undefined;
   signalQuery: string | undefined;
   llmCompetitors: Array<{
     name: string;
@@ -30,6 +31,7 @@ export async function runSaasValidation(
     productType,
     audience,
     problem,
+    monetization,
     signalQuery,
     llmCompetitors,
     onResearch,
@@ -55,7 +57,8 @@ export async function runSaasValidation(
       productType,
       audience,
       problem,
-      competitors
+      competitors,
+      monetization
     ),
     temperature: 0.4,
     max_tokens: 2000,

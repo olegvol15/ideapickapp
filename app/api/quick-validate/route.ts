@@ -4,6 +4,7 @@ import { checkRateLimit } from '@/lib/supabase/auth';
 import { quickValidateLimiter } from '@/lib/rate-limit';
 import { runQuickValidate } from '@/services/quick-validate.service';
 import { AppError } from '@/lib/errors/app-error';
+import { QuickValidateRequestSchema } from '@/lib/schemas';
 import { logger } from '@/lib/logger';
 
 export const POST = async (req: NextRequest): Promise<Response> => {
@@ -23,22 +24,10 @@ export const POST = async (req: NextRequest): Promise<Response> => {
       throw AppError.validation('Invalid request body');
     }
 
-    const { description, audience, problem } = body as Record<string, unknown>;
+    const parsed = QuickValidateRequestSchema.safeParse(body);
+    if (!parsed.success) throw AppError.validation(parsed.error.issues[0]?.message ?? 'Invalid input');
 
-    if (typeof description !== 'string' || !description.trim())
-      throw AppError.validation('description is required');
-    if (description.length > 600)
-      throw AppError.validation('description must be 600 characters or fewer');
-
-    if (typeof audience !== 'string' || !audience.trim())
-      throw AppError.validation('audience is required');
-    if (audience.length > 200)
-      throw AppError.validation('audience must be 200 characters or fewer');
-
-    if (typeof problem !== 'string' || !problem.trim())
-      throw AppError.validation('problem is required');
-    if (problem.length > 400)
-      throw AppError.validation('problem must be 400 characters or fewer');
+    const { description, audience, problem } = parsed.data;
 
     const result = await runQuickValidate(
       description.trim(),

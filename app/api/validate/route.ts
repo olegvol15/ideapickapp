@@ -28,8 +28,8 @@ export const POST = async (req: NextRequest): Promise<Response> => {
       throw AppError.validation('Invalid request body');
     }
 
-    const { description, productType, audience, problem } = body;
-    validateValidateInput(description, productType, audience, problem);
+    const { description, productType, audience, problem, monetization } = body;
+    validateValidateInput(description, productType, audience, problem, monetization);
   } catch (err) {
     if (err instanceof AppError) {
       return NextResponse.json(
@@ -54,7 +54,7 @@ export const POST = async (req: NextRequest): Promise<Response> => {
     );
   }
 
-  const { description, productType, audience, problem } = body!;
+  const { description, productType, audience, problem, monetization } = body!;
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
@@ -77,7 +77,8 @@ export const POST = async (req: NextRequest): Promise<Response> => {
                 description,
                 productType,
                 audience,
-                problem
+                problem,
+                monetization
               ),
               temperature: 0.3,
               max_tokens: 150,
@@ -89,7 +90,8 @@ export const POST = async (req: NextRequest): Promise<Response> => {
                 description,
                 productType,
                 audience,
-                problem
+                problem,
+                monetization
               ),
               temperature: 0.2,
               max_tokens: 600,
@@ -138,6 +140,7 @@ export const POST = async (req: NextRequest): Promise<Response> => {
             productType,
             audience,
             problem,
+            monetization,
             signalQuery,
             llmCompetitors,
             expansion,
@@ -151,6 +154,7 @@ export const POST = async (req: NextRequest): Promise<Response> => {
             productType,
             audience,
             problem,
+            monetization,
             signalQuery,
             llmCompetitors,
             onResearch: (c) =>

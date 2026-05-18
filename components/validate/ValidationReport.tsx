@@ -6,6 +6,7 @@ import { ValidationCompetitorsBlock } from './ValidationCompetitorsBlock';
 import { ValidationNextMoveBlock } from './ValidationNextMoveBlock';
 import { ValidationRefinementsBlock } from './ValidationRefinementsBlock';
 import { ValidationAdvancedBlock } from './ValidationAdvancedBlock';
+import { ValidationSummaryCard } from './ValidationSummaryCard';
 import type { EnhancedValidationResult } from '@/lib/schemas';
 import type { Competitor } from '@/types';
 import type { IdeaContext } from '@/types/validate.types';
@@ -25,6 +26,7 @@ export function ValidationReport({
 }: ValidationReportProps) {
   return (
     <div className="flex flex-col gap-4">
+      <ValidationSummaryCard result={result} ideaContext={ideaContext} />
       {previousResult && (
         <ValidationDeltaCard result={result} previousResult={previousResult} />
       )}

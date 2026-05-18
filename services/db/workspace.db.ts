@@ -21,6 +21,7 @@ export async function upsertWorkspaceToDB(params: {
   tasks: WorkspaceTask[];
   content: ContentItem[];
 }): Promise<void> {
+  if (!params.userId) throw new Error('userId required');
   const supabase = createClient();
   const { error } = await supabase.from('workspaces').upsert(
     {
@@ -38,6 +39,7 @@ export async function upsertWorkspaceToDB(params: {
 }
 
 export async function loadWorkspaceFromDB(userId: string, slug: string): Promise<WorkspaceRow | null> {
+  if (!userId) throw new Error('userId required');
   const supabase = createClient();
   const { data, error } = await supabase
     .from('workspaces')
@@ -50,6 +52,7 @@ export async function loadWorkspaceFromDB(userId: string, slug: string): Promise
 }
 
 export async function listWorkspacesFromDB(userId: string): Promise<WorkspaceRow[]> {
+  if (!userId) throw new Error('userId required');
   const supabase = createClient();
   const { data, error } = await supabase
     .from('workspaces')
@@ -62,6 +65,7 @@ export async function listWorkspacesFromDB(userId: string): Promise<WorkspaceRow
 }
 
 export async function renameWorkspaceInDB(userId: string, slug: string, title: string): Promise<void> {
+  if (!userId) throw new Error('userId required');
   const supabase = createClient();
   const { error } = await supabase
     .from('workspaces')
@@ -72,6 +76,7 @@ export async function renameWorkspaceInDB(userId: string, slug: string, title: s
 }
 
 export async function deleteWorkspaceFromDB(userId: string, slug: string): Promise<void> {
+  if (!userId) throw new Error('userId required');
   const supabase = createClient();
   const { error } = await supabase
     .from('workspaces')

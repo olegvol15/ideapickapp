@@ -26,6 +26,7 @@ export function ValidateForm() {
   const [productType, setProductType] = useState('');
   const [audience, setAudience] = useState('');
   const [problem, setProblem] = useState('');
+  const [monetization, setMonetization] = useState('');
 
   const { result, prevResult, competitors, version } = useValidateStore();
   const { phase, error, isActive, cancel, handleSubmit, resetSession } =
@@ -50,7 +51,7 @@ export function ValidateForm() {
     if (prob) setProblem(prob);
     router.replace('/validate');
     resetSession();
-    handleSubmit(desc, pt, aud, prob);
+    handleSubmit(desc, pt, aud, prob, undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -99,11 +100,17 @@ export function ValidateForm() {
             onChange={(e) => setProblem(e.target.value)}
             maxLength={300}
           />
+          <Input
+            placeholder="How do you plan to charge? (optional, e.g. $10/month, one-time $29, freemium)"
+            value={monetization}
+            onChange={(e) => setMonetization(e.target.value)}
+            maxLength={200}
+          />
           <Button
-            onClick={() => handleSubmit(description, productType, audience, problem)}
+            onClick={() => handleSubmit(description, productType, audience, problem, monetization || undefined)}
             disabled={!canSubmit}
           >
-            Validate Idea →
+            Validate Idea
           </Button>
         </>
       )}
@@ -145,6 +152,7 @@ export function ValidateForm() {
                 description,
                 audience: audience || undefined,
                 problem: problem || undefined,
+                monetization: monetization || undefined,
               }}
             />
             <RefinePanel
@@ -182,7 +190,7 @@ export function ValidateForm() {
             <Button
               variant="link"
               size="sm"
-              onClick={() => handleSubmit(description, productType, audience, problem)}
+              onClick={() => handleSubmit(description, productType, audience, problem, monetization || undefined)}
             >
               Try again →
             </Button>

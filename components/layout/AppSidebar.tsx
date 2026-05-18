@@ -111,13 +111,17 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     });
   }
 
+  function handleNewValidation() {
+    useValidateStore.getState().resetSession();
+    onNavigate?.();
+    setOpenMobile(false);
+    startTransition(() => {
+      router.push('/validate');
+      router.refresh();
+    });
+  }
+
   const navigation = [
-    {
-      href: '/validate',
-      label: 'Validate Idea',
-      icon: Gauge,
-      active: pathname === '/validate',
-    },
     {
       href: '/ideas',
       label: 'Saved ideas',
@@ -193,6 +197,28 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                 <Plus className="h-3.5 w-3.5" />
               </span>
               New Brainstorm
+            </button>
+
+            {/* New Validation */}
+            <button
+              type="button"
+              onClick={handleNewValidation}
+              className={cn(
+                'flex w-full items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm font-medium transition-colors',
+                pathname === '/validate'
+                  ? 'bg-white/8 text-foreground'
+                  : 'text-foreground/60 hover:bg-white/5 hover:text-foreground/90'
+              )}
+            >
+              <span
+                className={cn(
+                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors',
+                  pathname === '/validate' ? 'bg-white/10' : 'bg-white/6'
+                )}
+              >
+                <Gauge className="h-3.5 w-3.5" />
+              </span>
+              New Validation
             </button>
 
             {/* Nav items */}
@@ -443,6 +469,29 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           </div>
         ) : (
           <SidebarMenu className="space-y-2 px-0">
+            <SidebarMenuItem className="flex justify-center">
+              <SidebarMenuButton
+                isActive={pathname === '/validate'}
+                onClick={handleNewValidation}
+                className={cn(
+                  'justify-center rounded-2xl px-0 py-0',
+                  pathname === '/validate'
+                    ? 'bg-primary/14 text-primary shadow-[0_14px_34px_var(--brand-hi)]'
+                    : 'text-muted-foreground hover:bg-background/55 hover:text-foreground'
+                )}
+                aria-label="New Validation"
+                title="New Validation"
+              >
+                <span className="flex h-12 w-12 items-center justify-center">
+                  <Gauge
+                    className={cn(
+                      'h-4 w-4 transition-colors duration-300 ease-out',
+                      pathname === '/validate' ? 'text-primary' : 'text-muted-foreground'
+                    )}
+                  />
+                </span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             {navigation.map((item) => {
               const Icon = item.icon;
               return (

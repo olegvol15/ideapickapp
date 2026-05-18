@@ -6,8 +6,10 @@ import {
   fetchAppStoreApps,
   appToCompetitor,
   dedupeApps,
+  fetchAppStoreReviews,
+  extractTrackId,
 } from '@/lib/discovery/mobile';
-import type { AppStoreApp } from '@/lib/discovery/mobile';
+import type { AppStoreApp, AppStoreReview } from '@/lib/discovery/mobile';
 import {
   computeAppStoreMetrics,
   computeNicheMetrics,
@@ -35,6 +37,7 @@ interface MobileValidationParams {
   productType: string;
   audience: string | undefined;
   problem: string | undefined;
+  monetization: string | undefined;
   signalQuery: string | undefined;
   llmCompetitors: Array<{
     name: string;
@@ -54,6 +57,7 @@ export async function runMobileValidation(
     productType,
     audience,
     problem,
+    monetization,
     signalQuery,
     llmCompetitors,
     expansion,
@@ -96,12 +100,18 @@ export async function runMobileValidation(
   );
 
   const enrichedLlm = llmCompetitors.map((c) => {
-    const appData = appStoreByName.get(normName(c.name));
+    const normC = normName(c.name);
+    const appData =
+      appStoreByName.get(normC) ??
+      [...appStoreByName.entries()].find(
+        ([k]) => k.startsWith(normC) || normC.startsWith(k)
+      )?.[1];
     return {
       ...c,
       type: 'competitor' as const,
       ...(appData
         ? {
+            source: 'appstore' as const,
             rating: appData.rating,
             reviewCount: appData.reviewCount,
             revenueEstimate: appData.revenueEstimate,
@@ -118,6 +128,22 @@ export async function runMobileValidation(
   ]);
 
   onResearch(competitors);
+
+  // Fetch real App Store reviews for the top 3 apps by review count
+  const reviewTargets = [...broadApps, ...extraAppBatches.flat()]
+    .sort((a, b) => (b.userRatingCount ?? 0) - (a.userRatingCount ?? 0))
+    .slice(0, 3);
+
+  const reviewBatches = await Promise.all(
+    reviewTargets.map((app) => {
+      const id = app.trackId ?? extractTrackId(app.trackViewUrl);
+      return id ? fetchAppStoreReviews(id, 20) : Promise.resolve<AppStoreReview[]>([]);
+    })
+  );
+
+  const competitorReviews = new Map<string, AppStoreReview[]>(
+    reviewTargets.map((app, i) => [app.trackName, reviewBatches[i] ?? []])
+  );
 
   // Deterministic scoring — base market
   const onlySignals = signalResults.filter((r) => r.type === 'signal');
@@ -195,7 +221,9 @@ export async function runMobileValidation(
       marketInsights,
       opportunityInsights,
       winAngles,
-      confidenceScore
+      confidenceScore,
+      monetization,
+      competitorReviews
     ),
     temperature: 0.4,
     max_tokens: 1800,
