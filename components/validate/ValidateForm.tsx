@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/select';
 import { ValidationProgress } from './ValidationProgress';
 import { ValidationReport } from './ValidationReport';
-import { RefinePanel } from './RefinePanel';
 import { useValidateWorkflow } from '@/hooks/use-validate-workflow';
 import { useValidateStore } from '@/stores/validate.store';
 import { PRODUCT_TYPE_OPTIONS } from '@/constants/products';
@@ -27,6 +26,7 @@ export function ValidateForm() {
   const [audience, setAudience] = useState('');
   const [problem, setProblem] = useState('');
   const [monetization, setMonetization] = useState('');
+  const [differentiation, setDifferentiation] = useState('');
 
   const { result, prevResult, competitors, version } = useValidateStore();
   const { phase, error, isActive, cancel, handleSubmit, resetSession } =
@@ -37,8 +37,6 @@ export function ValidateForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // Auto-submit when arriving from the idea modal via query params (runs once on mount).
-  // Immediately strips params from URL so a page refresh doesn't re-trigger.
   useEffect(() => {
     const desc = searchParams.get('description');
     const pt = searchParams.get('productType');
@@ -54,6 +52,19 @@ export function ValidateForm() {
     handleSubmit(desc, pt, aud, prob, undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  function handleRefine(newDesc: string) {
+    setDescription(newDesc);
+    resetSession();
+    handleSubmit(
+      newDesc,
+      productType,
+      audience || undefined,
+      problem || undefined,
+      monetization || undefined,
+      differentiation || undefined
+    );
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -106,8 +117,19 @@ export function ValidateForm() {
             onChange={(e) => setMonetization(e.target.value)}
             maxLength={200}
           />
+          <Textarea
+            rows={2}
+            placeholder="What specifically will you do differently from apps that already exist? (optional)"
+            value={differentiation}
+            onChange={(e) => setDifferentiation(e.target.value)}
+            className="min-h-[72px]"
+            maxLength={300}
+          />
+          <p className="text-xs text-muted-foreground/55 -mt-2">
+            The more context you provide, the more specific and actionable your validation will be.
+          </p>
           <Button
-            onClick={() => handleSubmit(description, productType, audience, problem, monetization || undefined)}
+            onClick={() => handleSubmit(description, productType, audience, problem, monetization || undefined, differentiation || undefined)}
             disabled={!canSubmit}
           >
             Validate Idea
@@ -153,16 +175,9 @@ export function ValidateForm() {
                 audience: audience || undefined,
                 problem: problem || undefined,
                 monetization: monetization || undefined,
+                differentiation: differentiation || undefined,
               }}
-            />
-            <RefinePanel
-              description={description}
-              result={result}
-              version={version}
-              isLoading={isActive}
-              onRevalidate={(newDesc) =>
-                handleSubmit(newDesc, productType, audience, problem)
-              }
+              onRefine={handleRefine}
             />
           </motion.div>
         )}
@@ -190,7 +205,7 @@ export function ValidateForm() {
             <Button
               variant="link"
               size="sm"
-              onClick={() => handleSubmit(description, productType, audience, problem, monetization || undefined)}
+              onClick={() => handleSubmit(description, productType, audience, problem, monetization || undefined, differentiation || undefined)}
             >
               Try again →
             </Button>

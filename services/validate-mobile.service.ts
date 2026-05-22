@@ -8,6 +8,7 @@ import {
   dedupeApps,
   fetchAppStoreReviews,
   extractTrackId,
+  searchGooglePlay,
 } from '@/lib/discovery/mobile';
 import type { AppStoreApp, AppStoreReview } from '@/lib/discovery/mobile';
 import {
@@ -16,6 +17,9 @@ import {
   computePainAnalysis,
   computeMobileScores,
   computeDecision,
+  computeDimensionScores,
+  computeFinalDecision,
+  computeFinalScore,
   computeConfidenceScore,
   computeMarketInsights,
   computeOpportunityInsights,
@@ -24,6 +28,7 @@ import {
   mapDecisionToUI,
   confidenceLabel,
 } from '@/lib/scoring/mobile';
+import type { DimensionScores } from '@/lib/scoring/mobile';
 import { selectBestNiche } from '@/lib/scoring/selectBestNiche';
 import type { KeywordMarketAnalysis } from '@/lib/scoring/selectBestNiche';
 import { dedupeCompetitors } from '@/lib/validate/competitors';
@@ -38,6 +43,7 @@ interface MobileValidationParams {
   audience: string | undefined;
   problem: string | undefined;
   monetization: string | undefined;
+  differentiation: string | undefined;
   signalQuery: string | undefined;
   llmCompetitors: Array<{
     name: string;
@@ -58,6 +64,7 @@ export async function runMobileValidation(
     audience,
     problem,
     monetization,
+    differentiation,
     signalQuery,
     llmCompetitors,
     expansion,
@@ -72,11 +79,12 @@ export async function runMobileValidation(
   ].slice(0, 6);
   const [broadKeyword, ...extraKeywords] = allKeywords;
 
-  // Fetch signals + App Store results in parallel
-  const [signalResults, broadApps, ...extraAppBatches] = await Promise.all([
+  // Fetch signals, App Store, and Google Play results in parallel
+  const [signalResults, googlePlayApps, broadApps, ...extraAppBatches] = await Promise.all([
     signalQuery
       ? searchAll([{ query: signalQuery, type: 'signal' }])
       : Promise.resolve([]),
+    searchGooglePlay(broadKeyword),
     fetchAppStoreApps(broadKeyword, 50),
     ...extraKeywords.map((q) => fetchAppStoreApps(q, 30)),
   ]);
@@ -116,14 +124,20 @@ export async function runMobileValidation(
             reviewCount: appData.reviewCount,
             revenueEstimate: appData.revenueEstimate,
             platform: appData.platform,
+            iconUrl: appData.iconUrl,
           }
         : {}),
     };
   });
 
+  // Only keep LLM competitors that were confirmed by the App Store search.
+  // Unmatched entries are web-platform guesses with no real App Store data.
+  const confirmedLlm = enrichedLlm.filter((c) => c.source === 'appstore');
+
   const competitors = dedupeCompetitors([
-    ...enrichedLlm,
+    ...confirmedLlm,
     ...appStoreCompetitors.map((c) => ({ ...c, type: 'competitor' as const })),
+    ...googlePlayApps.map((c) => ({ ...c, type: 'competitor' as const })),
     ...signalResults,
   ]);
 
@@ -132,7 +146,7 @@ export async function runMobileValidation(
   // Fetch real App Store reviews for the top 3 apps by review count
   const reviewTargets = [...broadApps, ...extraAppBatches.flat()]
     .sort((a, b) => (b.userRatingCount ?? 0) - (a.userRatingCount ?? 0))
-    .slice(0, 3);
+    .slice(0, 5);
 
   const reviewBatches = await Promise.all(
     reviewTargets.map((app) => {
@@ -164,18 +178,15 @@ export async function runMobileValidation(
     .sort((a, b) => a.top5ReviewShare - b.top5ReviewShare)[0];
 
   const scores = computeMobileScores(metrics, pain, bestNicheLegacy);
-  const { verdict: rawDecision, reason: rawReason } = computeDecision(
-    scores,
-    metrics
-  );
-  const uiScores = mapToUIScores(scores, pain.weightedScore);
-  const decision = mapDecisionToUI(rawDecision);
   const confidenceScore = computeConfidenceScore(metrics, onlySignals.length);
   const marketInsights = computeMarketInsights(metrics);
 
+  // Preliminary broad decision (no niche awareness yet — used to seed selectBestNiche)
+  const { verdict: broadDecision } = computeDecision(scores, metrics);
+
   // Multi-keyword market analysis — score every keyword independently
   const keywordAnalyses: KeywordMarketAnalysis[] = [
-    { keyword: broadKeyword, metrics, scores, decision: rawDecision },
+    { keyword: broadKeyword, metrics, scores, decision: broadDecision },
     ...[...expansion.variations, ...expansion.niches]
       .filter((kw) => keywordAppMap.has(kw))
       .map((keyword) => {
@@ -188,6 +199,23 @@ export async function runMobileValidation(
   ];
   const nicheSelection = selectBestNiche(keywordAnalyses, broadKeyword);
   const bestEntryStrategy = nicheSelection.entryStrategy;
+
+  // Initial deterministic decision — includes NICHE_ONLY detection
+  const { verdict: rawDecision, reason: rawReason } = computeDecision(
+    scores,
+    metrics,
+    nicheSelection.entryStrategy
+  );
+
+  // Deterministic dimension scores (partial — LLM dims added after LLM call)
+  const deterministicDims = computeDimensionScores(
+    metrics,
+    pain,
+    nicheSelection.entryStrategy,
+    nicheSelection.bestKeywordScores.opportunityScore
+  );
+
+  const uiScores = mapToUIScores(scores, pain.weightedScore);
 
   const bestNicheForInsights =
     nicheSelection.entryStrategy === 'ENTER_VIA_NICHE'
@@ -203,7 +231,7 @@ export async function runMobileValidation(
   );
   const winAngles = computeWinAngles(pain, bestNicheForInsights, metrics);
 
-  // LLM narrates the pre-computed result
+  // LLM narrates the pre-computed result and assesses LLM-only dimensions
   const analysisCompletion = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
     messages: buildMobileAnalysisMessages(
@@ -223,10 +251,12 @@ export async function runMobileValidation(
       winAngles,
       confidenceScore,
       monetization,
-      competitorReviews
+      competitorReviews,
+      differentiation,
+      deterministicDims
     ),
     temperature: 0.4,
-    max_tokens: 1800,
+    max_tokens: 2800,
     response_format: { type: 'json_object' },
   });
 
@@ -244,9 +274,27 @@ export async function runMobileValidation(
     throw AppError.invalidAiResponse('Validation failed. Please try again.');
   }
 
+  // Merge deterministic + LLM-assessed dimension scores
+  const mergedDims: DimensionScores = {
+    ...deterministicDims,
+    mvpSimplicity: explanationParsed.data.llmDimensionScores?.mvpSimplicity ?? 5,
+    distributionAccess:
+      explanationParsed.data.llmDimensionScores?.distributionAccess ?? 5,
+    monetizationPotential:
+      explanationParsed.data.llmDimensionScores?.monetizationPotential ?? 5,
+    coldStartRisk:
+      explanationParsed.data.llmDimensionScores?.coldStartRisk ?? 5,
+  };
+
+  // Final decision and score using merged dimensions
+  const finalRawDecision = computeFinalDecision(mergedDims, rawDecision);
+  const decision = mapDecisionToUI(finalRawDecision);
+  const newScore = computeFinalScore(mergedDims);
+
   const result: EnhancedValidationResult = {
     ...explanationParsed.data,
     ...uiScores,
+    score: newScore,
     decision,
     decisionReason: rawReason,
     confidence: confidenceLabel(confidenceScore),
@@ -258,6 +306,7 @@ export async function runMobileValidation(
     marketInsights,
     opportunityInsights,
     confidenceScore,
+    dimensionScores: mergedDims,
     nicheAnalysis: {
       evaluatedKeywords: nicheSelection.evaluatedKeywords,
       bestKeyword: nicheSelection.bestKeyword,
@@ -269,5 +318,34 @@ export async function runMobileValidation(
     bestEntryStrategy,
   };
 
-  return { result, competitors };
+  // Attach real review snippets to competitors so the UI can display them
+  const reviewsByNorm = new Map(
+    [...competitorReviews.entries()].map(([name, reviews]) => [normName(name), reviews])
+  );
+
+  const enrichedCompetitors = competitors.map((c) => {
+    const normC = normName(c.name);
+    const appReviews =
+      reviewsByNorm.get(normC) ??
+      [...reviewsByNorm.entries()].find(
+        ([k]) => k.startsWith(normC) || normC.startsWith(k)
+      )?.[1];
+
+    if (!appReviews || appReviews.length === 0) return c;
+
+    const complaint = appReviews
+      .filter((r) => r.rating <= 3 && r.body.trim().length > 20)
+      .slice(0, 1)
+      .map((r) => ({ rating: r.rating, body: r.body.trim().slice(0, 140), sentiment: 'complaint' as const }));
+
+    const positive = appReviews
+      .filter((r) => r.rating >= 4 && r.body.trim().length > 20)
+      .slice(0, 1)
+      .map((r) => ({ rating: r.rating, body: r.body.trim().slice(0, 140), sentiment: 'positive' as const }));
+
+    const snippets = [...complaint, ...positive];
+    return snippets.length > 0 ? { ...c, reviews: snippets } : c;
+  });
+
+  return { result, competitors: enrichedCompetitors };
 }

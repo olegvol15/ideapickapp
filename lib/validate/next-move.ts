@@ -17,10 +17,15 @@ export const STEP_LABEL: Record<string, string> = {
 };
 
 const DECISION_FALLBACK: Record<string, string> = {
+  build: 'Talk to 5 potential users this week — validate the problem before writing code',
   proceed:
     'Talk to 5 potential users this week — validate the problem before writing code',
   'test-first':
     'Post this problem in a relevant community and measure engagement before building',
+  'niche-only':
+    'Validate the niche angle — post in a focused community and confirm the pain is real',
+  'pivot-angle':
+    'Test one of the stronger angles — post the pivoted concept in a community and measure genuine interest',
   drop: 'Pivot to a narrower segment or a problem space with weaker existing competition',
 };
 
@@ -39,7 +44,7 @@ export function shouldShowPrimaryAction(
 ): boolean {
   const { decision, nextStepType, nicheAnalysis, bestEntryStrategy } = result;
   const isDrop = decision === 'drop';
-  const isProceed = decision === 'proceed';
+  const isProceed = decision === 'proceed' || decision === 'build';
   const isTest = decision === 'test-first';
   const hasNiche = !!(nicheAnalysis && bestEntryStrategy === 'ENTER_VIA_NICHE');
   if (isDrop && !hasNiche) return false;
@@ -55,5 +60,9 @@ export function shouldShowPrimaryAction(
 export function shouldShowStartBuilding(
   result: EnhancedValidationResult
 ): boolean {
-  return result.decision === 'proceed' || !result.decision;
+  return (
+    result.decision === 'proceed' ||
+    result.decision === 'build' ||
+    !result.decision
+  );
 }

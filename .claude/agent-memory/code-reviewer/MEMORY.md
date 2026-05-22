@@ -1,0 +1,1 @@
+- [Project Patterns](project-patterns.md) — Recurring anti-patterns and conventions in the validate feature area observed during code review

@@ -38,7 +38,12 @@ export function ValidationNextMoveBlock({
   } = result;
 
   const isDrop = decision === 'drop';
-  const hasNiche = !!(nicheAnalysis && bestEntryStrategy === 'ENTER_VIA_NICHE');
+  const isNicheOnly = decision === 'niche-only';
+  const isPivot = decision === 'pivot-angle';
+  const hasNiche = !!(
+    nicheAnalysis &&
+    (bestEntryStrategy === 'ENTER_VIA_NICHE' || isNicheOnly)
+  );
 
   const quantifiedWinSignals = buildQuantifiedWinSignals(result, ideaContext);
   const nextMoveContext =
@@ -61,7 +66,7 @@ export function ValidationNextMoveBlock({
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card px-6 py-5 flex flex-col gap-4">
+    <div className="border-t border-border/30 pt-8 pb-8 flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <SectionHeading>Next move</SectionHeading>
         {disclaimer && (
@@ -123,6 +128,42 @@ export function ValidationNextMoveBlock({
               onClick={() => router.push('/validate')}
             >
               Try Another Angle
+            </Button>
+          </div>
+        ) : isNicheOnly ? (
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              className="flex-1 justify-between"
+              onClick={copyNextStep}
+            >
+              Copy Niche Strategy <Copy className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => router.push('/validate')}
+            >
+              Try Broad Angle
+            </Button>
+          </div>
+        ) : isPivot ? (
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              className="flex-1 justify-between"
+              onClick={copyNextStep}
+            >
+              Copy Pivot Plan <Copy className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => router.push('/validate')}
+            >
+              Try New Angle
             </Button>
           </div>
         ) : (

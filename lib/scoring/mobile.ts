@@ -17,10 +17,14 @@ const TOP5_SHARE_DOMINANT = 0.6;
 const TOP10_SHARE_STRONG = 0.6;
 const TOP10_SHARE_HIGH = 0.4;
 const RATING_ABOVE_45 = 4.5;
-const MARKET_LOCKED_RATING = 4.6;
-const MARKET_LOCKED_SKEW = 0.7;
+// A market is only "locked" when incumbents are genuinely exceptional (4.75+),
+// reviews are extremely concentrated (Gini > 0.80), AND there is real review
+// volume proving the dominance — small niches with few total reviews are not locked.
+const MARKET_LOCKED_RATING = 4.75;
+const MARKET_LOCKED_SKEW = 0.80;
+const MARKET_LOCKED_MIN_REVIEWS = 50_000;
 const TOP1_DOMINANT = 0.4;
-const PAIN_SCORE_CEILING = 6; // practical weighted-hit ceiling per snippet
+const PAIN_SCORE_CEILING = 4; // practical weighted-hit ceiling for truncated Tavily snippets
 
 // ─── Pain patterns ────────────────────────────────────────────────────────────
 
@@ -133,7 +137,26 @@ export interface MobileScores {
   opportunityScore: number;
 }
 
-export type MobileDecision = 'BUILD' | 'RISKY' | 'DO_NOT_BUILD';
+export type MobileDecision =
+  | 'BUILD'
+  | 'RISKY'        // kept for initial deterministic pass compat
+  | 'TEST_FIRST'
+  | 'NICHE_ONLY'
+  | 'PIVOT_ANGLE'
+  | 'DO_NOT_BUILD';
+
+export interface DimensionScores {
+  // Deterministic — computed from real App Store + Tavily data
+  painEvidence: number;       // 0–10
+  wedgeClarity: number;       // 0–10
+  differentiationGap: number; // 0–10
+  competitionPenalty: number; // 0–20
+  // LLM-assessed — set to defaults until LLM provides them
+  mvpSimplicity: number;         // 0–10
+  distributionAccess: number;    // 0–10
+  monetizationPotential: number; // 0–10
+  coldStartRisk: number;         // 0–10 (higher = riskier penalty)
+}
 
 // ─── Distribution helpers ─────────────────────────────────────────────────────
 
@@ -249,7 +272,8 @@ export function computeAppStoreMetrics(apps: AppStoreApp[]): MobileMetrics {
   const marketDominance = dominanceLabel(top5ReviewShare, top1ReviewShare);
   const marketLocked =
     top10AvgRating > MARKET_LOCKED_RATING &&
-    reviewDistributionSkew > MARKET_LOCKED_SKEW;
+    reviewDistributionSkew > MARKET_LOCKED_SKEW &&
+    totalReviews >= MARKET_LOCKED_MIN_REVIEWS;
 
   return {
     totalApps,
@@ -446,15 +470,29 @@ export function computeMobileScores(
 
 export function computeDecision(
   scores: MobileScores,
-  metrics: MobileMetrics
+  metrics: MobileMetrics,
+  nicheEntryStrategy?: 'ENTER_VIA_NICHE' | 'BROAD_MARKET' | 'NO_VIABLE_ENTRY'
 ): { verdict: MobileDecision; reason: string } {
-  if (metrics.marketLocked && scores.opportunityScore < 4) {
+  // NICHE_ONLY: broad market is blocked but a focused niche is viable
+  if (
+    nicheEntryStrategy === 'ENTER_VIA_NICHE' &&
+    (metrics.marketLocked || metrics.marketDominance === 'HIGH') &&
+    scores.opportunityScore >= 2
+  ) {
+    return {
+      verdict: 'NICHE_ONLY',
+      reason:
+        'Broad market is dominated by incumbents, but a focused niche entry is viable.',
+    };
+  }
+
+  if (metrics.marketLocked && scores.opportunityScore < 3) {
     return {
       verdict: 'DO_NOT_BUILD',
       reason: 'Market is locked by incumbents with no viable entry angle.',
     };
   }
-  if (scores.competitionScore >= 8 && scores.opportunityScore < 4) {
+  if (scores.competitionScore >= 8 && scores.opportunityScore < 3) {
     return {
       verdict: 'DO_NOT_BUILD',
       reason:
@@ -478,6 +516,84 @@ export function computeDecision(
     verdict: 'RISKY',
     reason: 'Competitive market with limited differentiation signals.',
   };
+}
+
+// ─── New dimension scoring ────────────────────────────────────────────────────
+
+export function computeDimensionScores(
+  metrics: MobileMetrics,
+  pain: PainAnalysis,
+  nicheEntryStrategy: 'ENTER_VIA_NICHE' | 'BROAD_MARKET' | 'NO_VIABLE_ENTRY',
+  nicheOpportunityScore: number
+): Pick<
+  DimensionScores,
+  'painEvidence' | 'wedgeClarity' | 'differentiationGap' | 'competitionPenalty'
+> {
+  const painEvidence = Math.min(10, pain.weightedScore * 2.5);
+
+  const wedgeClarity =
+    nicheEntryStrategy === 'ENTER_VIA_NICHE'
+      ? Math.min(10, nicheOpportunityScore * 10)
+      : Math.max(0, Math.min(10, (1 - metrics.top5ReviewShare) * 10 * 0.8));
+
+  // Higher differentiationGap when weaker competitors exist and ratings spread
+  const differentiationGap = Math.min(
+    10,
+    Math.max(
+      0,
+      (5 - (metrics.bottom40AvgRating > 0 ? metrics.bottom40AvgRating : 3.5)) +
+        metrics.ratingVariance * 2
+    )
+  );
+
+  const competitionPenalty = metrics.marketLocked
+    ? 20
+    : metrics.marketDominance === 'HIGH'
+      ? 12
+      : metrics.marketDominance === 'MEDIUM'
+        ? 6
+        : 0;
+
+  return { painEvidence, wedgeClarity, differentiationGap, competitionPenalty };
+}
+
+export function computeFinalScore(dims: DimensionScores): number {
+  const base =
+    (dims.painEvidence * 0.22 +
+      dims.wedgeClarity * 0.25 +
+      dims.differentiationGap * 0.13 +
+      dims.mvpSimplicity * 0.15 +
+      dims.distributionAccess * 0.15 +
+      dims.monetizationPotential * 0.1) *
+    10;
+  return Math.round(
+    Math.max(0, Math.min(100, base - dims.competitionPenalty - dims.coldStartRisk))
+  );
+}
+
+export function computeFinalDecision(
+  dims: DimensionScores,
+  initialDecision: MobileDecision
+): MobileDecision {
+  // NICHE_ONLY is structural — determined by market concentration, not LLM scores
+  if (initialDecision === 'NICHE_ONLY') return 'NICHE_ONLY';
+
+  const finalScore = computeFinalScore(dims);
+
+  if (finalScore >= 65 && dims.wedgeClarity >= 6 && dims.distributionAccess >= 5) {
+    return 'BUILD';
+  }
+  // Real pain but wrong execution angle — the product concept needs pivoting
+  if (dims.painEvidence >= 6 && dims.wedgeClarity < 4 && dims.mvpSimplicity < 4) {
+    return 'PIVOT_ANGLE';
+  }
+  if (finalScore >= 40 && (dims.wedgeClarity >= 4 || dims.painEvidence >= 6)) {
+    return 'TEST_FIRST';
+  }
+  if (finalScore < 35 || dims.painEvidence < 3) {
+    return 'DO_NOT_BUILD';
+  }
+  return 'RISKY';
 }
 
 // ─── Confidence score ─────────────────────────────────────────────────────────
@@ -689,8 +805,10 @@ export function mapToUIScores(
 
 export function mapDecisionToUI(
   verdict: MobileDecision
-): 'proceed' | 'test-first' | 'drop' {
-  if (verdict === 'BUILD') return 'proceed';
-  if (verdict === 'RISKY') return 'test-first';
+): 'build' | 'proceed' | 'test-first' | 'niche-only' | 'pivot-angle' | 'drop' {
+  if (verdict === 'BUILD') return 'build';
+  if (verdict === 'RISKY' || verdict === 'TEST_FIRST') return 'test-first';
+  if (verdict === 'NICHE_ONLY') return 'niche-only';
+  if (verdict === 'PIVOT_ANGLE') return 'pivot-angle';
   return 'drop';
 }

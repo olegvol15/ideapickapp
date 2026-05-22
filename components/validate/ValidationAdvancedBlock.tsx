@@ -109,10 +109,10 @@ export function ValidationAdvancedBlock({
   if (!hasContent) return null;
 
   return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden">
+    <div className="border-t border-border/30 pt-8 pb-8">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-6 py-4 hover:bg-muted/30 transition-colors"
+        className="w-full flex items-center justify-between py-1 hover:opacity-70 transition-opacity"
       >
         <div className="flex items-center gap-3">
           <SectionHeading>Advanced analysis</SectionHeading>
@@ -128,7 +128,7 @@ export function ValidationAdvancedBlock({
       </button>
 
       {open && (
-        <div className="border-t border-border px-6 pb-6 pt-6 flex flex-col gap-6">
+        <div className="pt-6 flex flex-col gap-6">
           {detailedBreakdown && (
             <div className="flex flex-col gap-5">
               <SectionHeading>Score breakdown</SectionHeading>

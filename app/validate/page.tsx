@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { ValidateForm } from '@/components/validate/ValidateForm';
 
 export default function ValidatePage() {
@@ -15,7 +16,9 @@ export default function ValidatePage() {
         </p>
       </div>
 
-      <ValidateForm />
+      <Suspense fallback={null}>
+        <ValidateForm />
+      </Suspense>
     </main>
   );
 }

@@ -32,12 +32,48 @@ export function pct(n: number): string {
   return `${Math.round(n * 100)}%`;
 }
 
+export function getScoreTier(score: number): string {
+  if (score >= 85) return 'Exceptional';
+  if (score >= 70) return 'Strong';
+  if (score >= 55) return 'Viable';
+  if (score >= 40) return 'Developing';
+  return 'Weak';
+}
+
 export function getMarketReality(
   result: EnhancedValidationResult
 ): VerdictConfig {
   const locked = result.metrics?.marketLocked ?? false;
   const dominance = result.metrics?.marketDominance;
   const comp = result.rawScores?.competitionScore ?? 0;
+  const { decision, nicheAnalysis } = result;
+
+  // NICHE_ONLY: don't show "HIGHLY COMPETITIVE" — show the niche opportunity instead
+  if (decision === 'niche-only') {
+    const nicheKeyword = nicheAnalysis?.bestKeyword;
+    return {
+      label: 'NICHE ENTRY POSSIBLE',
+      sublabel: nicheKeyword
+        ? `Best wedge: "${nicheKeyword}"`
+        : 'Broad market blocked — focused niche viable',
+      color: 'amber',
+      Icon: AlertTriangle,
+      structureNote:
+        'The broad market is dominated by incumbents, but a focused niche keyword shows lower concentration. Enter through the niche — not broad.',
+    };
+  }
+
+  // PIVOT_ANGLE: real pain exists but this execution angle needs changing
+  if (decision === 'pivot-angle') {
+    return {
+      label: 'PIVOT THE ANGLE',
+      sublabel: 'Real pain — different execution needed',
+      color: 'purple' as Tone,
+      Icon: AlertTriangle,
+      structureNote:
+        'Strong pain evidence exists, but the current product concept doesn\'t have a clear wedge. The audience is right — the specific execution needs to change.',
+    };
+  }
 
   const isHighComp = comp >= 7;
   const isMedComp = comp >= 4;
@@ -133,10 +169,17 @@ export function getEntryPossibility(
       Icon: XCircle,
       show: true,
     };
-  if (bestEntryStrategy === 'ENTER_VIA_NICHE')
+  if (decision === 'niche-only' || bestEntryStrategy === 'ENTER_VIA_NICHE')
     return {
       label: 'Entry possible via niche',
       color: 'amber',
+      Icon: AlertTriangle,
+      show: true,
+    };
+  if (decision === 'pivot-angle')
+    return {
+      label: 'Real pain — different execution needed',
+      color: 'purple' as Tone,
       Icon: AlertTriangle,
       show: true,
     };
@@ -147,7 +190,7 @@ export function getEntryPossibility(
       Icon: AlertTriangle,
       show: true,
     };
-  if (decision === 'proceed')
+  if (decision === 'proceed' || decision === 'build')
     return {
       label: 'Direct entry possible',
       color: 'emerald',

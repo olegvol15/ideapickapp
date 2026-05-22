@@ -6,6 +6,7 @@ import {
   getMarketReality,
   getEntryPossibility,
   computeEntryDifficulty,
+  getScoreTier,
 } from '@/lib/validate/scores';
 import { getDecisionStatement } from '@/lib/validate/decision';
 import { buildScoreExplanation } from '@/lib/validate/narratives';
@@ -70,15 +71,7 @@ export function ValidationScoreBlock({
     : null;
 
   return (
-    <div
-      className={cn(
-        'rounded-xl border px-6 py-6',
-        marketColor === 'emerald' &&
-          'border-emerald-500/25 bg-emerald-500/[0.05]',
-        marketColor === 'amber' && 'border-amber-500/25   bg-amber-500/[0.05]',
-        marketColor === 'rose' && 'border-rose-500/25    bg-rose-500/[0.05]'
-      )}
-    >
+    <div className="border-t border-border/30 pt-8 pb-8">
       {/* Verdict label + score */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3">
@@ -120,6 +113,9 @@ export function ValidationScoreBlock({
           </span>
           <span className="text-[10px] text-muted-foreground/50 font-medium">
             / 100
+          </span>
+          <span className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/50 mt-0.5">
+            {getScoreTier(score)}
           </span>
         </div>
       </div>
@@ -168,66 +164,123 @@ export function ValidationScoreBlock({
 
       {/* Score breakdown */}
       <div className="mt-5 pt-4 border-t border-border/40 flex flex-col gap-4">
-        <MetricBar
-          label="Competition"
-          score={competitionScore}
-          invert
-          explanation={compExplanation}
-        />
-        <MetricBar
-          label="Demand (pain)"
-          score={painScore}
-          explanation={painExplanation}
-        />
-        <MetricBar
-          label="Market opportunity"
-          score={opportunityScore}
-          explanation={oppExplanation}
-        />
-        {nicheOpportunityScore != null &&
-          bestEntryStrategy === 'ENTER_VIA_NICHE' &&
-          nicheAnalysis && (
-            <div className="pt-2 border-t border-border/40">
-              <div className="grid grid-cols-[128px_minmax(60px,auto)_minmax(0,1fr)_32px] items-center gap-3">
-                <span className="text-sm font-semibold text-foreground/80">
-                  Niche opportunity
+        {result.dimensionScores ? (
+          <>
+            <MetricBar
+              label="Pain evidence"
+              score={Math.round(result.dimensionScores.painEvidence * 10)}
+              explanation={painExplanation}
+            />
+            <MetricBar
+              label="Wedge clarity"
+              score={Math.round(result.dimensionScores.wedgeClarity * 10)}
+              explanation="How clearly a focused entry point exists with lower incumbent concentration."
+            />
+            <MetricBar
+              label="Differentiation gap"
+              score={Math.round(result.dimensionScores.differentiationGap * 10)}
+              explanation="How much quality variance exists among competitors — higher means incumbents are not uniformly excellent."
+            />
+            <MetricBar
+              label="MVP simplicity"
+              score={Math.round(result.dimensionScores.mvpSimplicity * 10)}
+              explanation="How buildable the core loop is for a solo developer in ~30 days."
+            />
+            <MetricBar
+              label="Distribution access"
+              score={Math.round(result.dimensionScores.distributionAccess * 10)}
+              explanation="How reachable target users are via ASO and free communities without a marketing budget."
+            />
+            <MetricBar
+              label="Monetization potential"
+              score={Math.round(result.dimensionScores.monetizationPotential * 10)}
+              explanation="How likely users are to pay without an enterprise sales cycle."
+            />
+            {result.dimensionScores.competitionPenalty > 0 && (
+              <div className="pt-2 border-t border-border/40 flex items-center justify-between">
+                <span className="text-sm text-foreground/60">
+                  Competition penalty
                 </span>
-                <span
-                  className={cn(
-                    'text-[11px] font-bold tracking-wider',
-                    nicheOpportunityScore >= 60
-                      ? 'text-emerald-500'
-                      : 'text-amber-500'
-                  )}
-                >
-                  {nicheOpportunityScore >= 60
-                    ? 'STRONG'
-                    : nicheOpportunityScore >= 35
-                      ? 'VIABLE'
-                      : 'LIMITED'}
-                </span>
-                <div className="h-1.5 overflow-hidden rounded-full bg-border/80">
-                  <div
-                    className={cn(
-                      'h-full rounded-full transition-[width] duration-700',
-                      nicheOpportunityScore >= 60
-                        ? 'bg-emerald-500'
-                        : 'bg-amber-500'
-                    )}
-                    style={{
-                      width: `${Math.max(0, Math.min(100, nicheOpportunityScore))}%`,
-                    }}
-                  />
-                </div>
-                <span className="text-right text-xs font-semibold tabular-nums text-muted-foreground/50">
-                  {nicheOpportunityScore}
+                <span className="text-sm font-bold text-rose-500">
+                  −{result.dimensionScores.competitionPenalty}
                 </span>
               </div>
-              <p className="mt-1 text-[10px] text-muted-foreground/45 pl-[calc(128px+12px)]">
-                for &ldquo;{nicheAnalysis.bestKeyword}&rdquo;
-              </p>
-            </div>
-          )}
+            )}
+            {result.dimensionScores.coldStartRisk > 5 && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-foreground/60">
+                  Cold start risk
+                </span>
+                <span className="text-sm font-bold text-rose-500/80">
+                  −{result.dimensionScores.coldStartRisk}
+                </span>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <MetricBar
+              label="Competition"
+              score={competitionScore}
+              invert
+              explanation={compExplanation}
+            />
+            <MetricBar
+              label="Demand (pain)"
+              score={painScore}
+              explanation={painExplanation}
+            />
+            <MetricBar
+              label="Market opportunity"
+              score={opportunityScore}
+              explanation={oppExplanation}
+            />
+            {nicheOpportunityScore != null &&
+              bestEntryStrategy === 'ENTER_VIA_NICHE' &&
+              nicheAnalysis && (
+                <div className="pt-2 border-t border-border/40">
+                  <div className="grid grid-cols-[128px_minmax(60px,auto)_minmax(0,1fr)_32px] items-center gap-3">
+                    <span className="text-sm font-semibold text-foreground/80">
+                      Niche opportunity
+                    </span>
+                    <span
+                      className={cn(
+                        'text-[11px] font-bold tracking-wider',
+                        nicheOpportunityScore >= 60
+                          ? 'text-emerald-500'
+                          : 'text-amber-500'
+                      )}
+                    >
+                      {nicheOpportunityScore >= 60
+                        ? 'STRONG'
+                        : nicheOpportunityScore >= 35
+                          ? 'VIABLE'
+                          : 'LIMITED'}
+                    </span>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-border/80">
+                      <div
+                        className={cn(
+                          'h-full rounded-full transition-[width] duration-700',
+                          nicheOpportunityScore >= 60
+                            ? 'bg-emerald-500'
+                            : 'bg-amber-500'
+                        )}
+                        style={{
+                          width: `${Math.max(0, Math.min(100, nicheOpportunityScore))}%`,
+                        }}
+                      />
+                    </div>
+                    <span className="text-right text-xs font-semibold tabular-nums text-muted-foreground/50">
+                      {nicheOpportunityScore}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[10px] text-muted-foreground/45 pl-[calc(128px+12px)]">
+                    for &ldquo;{nicheAnalysis.bestKeyword}&rdquo;
+                  </p>
+                </div>
+              )}
+          </>
+        )}
       </div>
 
       {/* Opportunity insights */}

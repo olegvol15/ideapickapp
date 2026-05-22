@@ -4,6 +4,7 @@ export interface ValidateRequest {
   audience?: string;
   problem?: string;
   monetization?: string;
+  differentiation?: string;
 }
 
 export interface IdeaContext {
@@ -11,6 +12,7 @@ export interface IdeaContext {
   audience?: string;
   problem?: string;
   monetization?: string;
+  differentiation?: string;
 }
 
 export type { EnhancedValidationResult } from '@/lib/schemas';

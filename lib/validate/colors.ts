@@ -1,4 +1,4 @@
-export type Tone = 'emerald' | 'amber' | 'rose';
+export type Tone = 'emerald' | 'amber' | 'rose' | 'purple' | 'sky';
 
 export function scoreColor(n: number): Tone {
   return n >= 70 ? 'emerald' : n >= 40 ? 'amber' : 'rose';
@@ -34,6 +34,16 @@ export function colorClass(c: Tone, v: 'text' | 'bg' | 'border'): string {
       bg: 'bg-rose-500',
       border: 'border-rose-500',
     },
+    purple: {
+      text: 'text-purple-400',
+      bg: 'bg-purple-500',
+      border: 'border-purple-500',
+    },
+    sky: {
+      text: 'text-sky-400',
+      bg: 'bg-sky-500',
+      border: 'border-sky-500',
+    },
   }[c][v];
 }
 
@@ -52,7 +62,10 @@ export function scoreColorBadge(score: number): string {
 }
 
 export function decisionColorBadge(decision: string): string {
-  if (decision === 'proceed') return 'text-emerald-400 bg-emerald-400/10';
+  if (decision === 'proceed' || decision === 'build')
+    return 'text-emerald-400 bg-emerald-400/10';
   if (decision === 'test-first') return 'text-amber-400 bg-amber-400/10';
+  if (decision === 'niche-only') return 'text-amber-400 bg-amber-400/10';
+  if (decision === 'pivot-angle') return 'text-purple-400 bg-purple-400/10';
   return 'text-rose-400 bg-rose-400/10';
 }

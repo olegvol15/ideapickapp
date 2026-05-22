@@ -10,6 +10,8 @@ export interface Competitor {
   category?: string;
   pricingSignal?: string;
   revenueEstimate?: { low: number; high: number };
+  iconUrl?: string;
+  reviews?: Array<{ rating: number; body: string; sentiment: 'complaint' | 'positive' }>;
 }
 
 export interface CompetitorAnalysis {

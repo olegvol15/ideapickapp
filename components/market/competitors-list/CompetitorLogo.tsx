@@ -5,15 +5,14 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 export interface CompetitorLogoProps {
   domain: string;
   name: string;
+  iconUrl?: string;
 }
 
-export function CompetitorLogo({ domain, name }: CompetitorLogoProps) {
+export function CompetitorLogo({ domain, name, iconUrl }: CompetitorLogoProps) {
+  const src = iconUrl ?? `https://icons.duckduckgo.com/ip3/${domain}.ico`;
   return (
     <Avatar>
-      <AvatarImage
-        src={`https://icons.duckduckgo.com/ip3/${domain}.ico`}
-        alt={`${name} logo`}
-      />
+      <AvatarImage src={src} alt={`${name} logo`} />
       <AvatarFallback>{name[0]?.toUpperCase() ?? '?'}</AvatarFallback>
     </Avatar>
   );

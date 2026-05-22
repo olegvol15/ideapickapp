@@ -393,7 +393,7 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                       recentsOpen && 'rotate-180'
                     )}
                   />
-                  Recents
+                  Brainstorms
                 </button>
 
                 <AnimatePresence initial={false}>

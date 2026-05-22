@@ -28,8 +28,8 @@ export const POST = async (req: NextRequest): Promise<Response> => {
       throw AppError.validation('Invalid request body');
     }
 
-    const { description, productType, audience, problem, monetization } = body;
-    validateValidateInput(description, productType, audience, problem, monetization);
+    const { description, productType, audience, problem, monetization, differentiation } = body;
+    validateValidateInput(description, productType, audience, problem, monetization, differentiation);
   } catch (err) {
     if (err instanceof AppError) {
       return NextResponse.json(
@@ -54,7 +54,7 @@ export const POST = async (req: NextRequest): Promise<Response> => {
     );
   }
 
-  const { description, productType, audience, problem, monetization } = body!;
+  const { description, productType, audience, problem, monetization, differentiation } = body!;
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
@@ -78,7 +78,8 @@ export const POST = async (req: NextRequest): Promise<Response> => {
                 productType,
                 audience,
                 problem,
-                monetization
+                monetization,
+                differentiation
               ),
               temperature: 0.3,
               max_tokens: 150,
@@ -91,7 +92,8 @@ export const POST = async (req: NextRequest): Promise<Response> => {
                 productType,
                 audience,
                 problem,
-                monetization
+                monetization,
+                differentiation
               ),
               temperature: 0.2,
               max_tokens: 600,
@@ -141,6 +143,7 @@ export const POST = async (req: NextRequest): Promise<Response> => {
             audience,
             problem,
             monetization,
+            differentiation,
             signalQuery,
             llmCompetitors,
             expansion,
@@ -155,6 +158,7 @@ export const POST = async (req: NextRequest): Promise<Response> => {
             audience,
             problem,
             monetization,
+            differentiation,
             signalQuery,
             llmCompetitors,
             onResearch: (c) =>

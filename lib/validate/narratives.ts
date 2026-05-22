@@ -133,7 +133,7 @@ export function buildWhatThisMeans(
     bullets.push(
       'No viable angle found across all evaluated keywords → consider an adjacent problem or different product type'
     );
-  else if (decision === 'proceed')
+  else if (decision === 'proceed' || decision === 'build')
     bullets.push(
       'Market has room → move fast to validate with real users before competition closes the window'
     );
@@ -144,7 +144,7 @@ export function buildWhatThisMeans(
   else if (bestEntryStrategy === 'NO_VIABLE_ENTRY')
     strategy =
       'Consider pivoting to an adjacent problem with weaker incumbent presence, or a different product type entirely.';
-  else if (decision === 'proceed')
+  else if (decision === 'proceed' || decision === 'build')
     strategy =
       'Move quickly — validate with 10 real users before writing any code to confirm the pain is acute enough.';
   else if (decision === 'test-first')
@@ -168,7 +168,7 @@ export function buildActionableSteps(
     positioning = audience
       ? `Target "${nicheAnalysis.bestKeyword}" — specifically for ${audience} who find existing broad solutions poorly fit`
       : `Target "${nicheAnalysis.bestKeyword}" — avoid competing with the broad market`;
-  else if (decision === 'proceed')
+  else if (decision === 'proceed' || decision === 'build')
     positioning = audience
       ? `Enter as the clearer, more focused option for ${audience} — avoid copying the broad market playbook`
       : 'Enter as the simpler, more accessible option for underserved users';
@@ -300,7 +300,7 @@ export function buildScoreExplanation(
   return 'Limited opportunity in broad market — niche or pivot required';
 }
 
-interface Refinement {
+export interface Refinement {
   type: 'Positioning' | 'Audience' | 'Feature';
   title: string;
   reason: string;

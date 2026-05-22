@@ -22,6 +22,7 @@ export interface AppStoreApp {
   releaseDate?: string;
   currentVersionReleaseDate?: string;
   trackSubtitle?: string;
+  artworkUrl60?: string;
 }
 
 export interface AppStoreReview {
@@ -158,6 +159,7 @@ export function appToCompetitor(r: AppStoreApp): Competitor {
     reviewCount: r.userRatingCount,
     category: r.primaryGenreName,
     revenueEstimate: rev.low > 0 || rev.high > 0 ? rev : undefined,
+    iconUrl: r.artworkUrl60,
   };
 }
 
@@ -176,7 +178,7 @@ export async function searchAppStore(query: string): Promise<Competitor[]> {
   return apps.map(appToCompetitor);
 }
 
-async function searchGooglePlay(query: string): Promise<Competitor[]> {
+export async function searchGooglePlay(query: string): Promise<Competitor[]> {
   const key = process.env.TAVILY_API_KEY;
   if (!key) return [];
 

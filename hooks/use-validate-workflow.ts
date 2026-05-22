@@ -31,7 +31,7 @@ export function useValidateWorkflow() {
   const validateMutation = useMutation<
     { result: EnhancedValidationResult; competitors: Competitor[] },
     Error,
-    { desc: string; pt: string; aud: string | undefined; prob: string | undefined; mon: string | undefined; signal: AbortSignal }
+    { desc: string; pt: string; aud: string | undefined; prob: string | undefined; mon: string | undefined; diff: string | undefined; signal: AbortSignal }
   >({
     mutationFn: async (vars) => {
       await wait(800);
@@ -44,6 +44,7 @@ export function useValidateWorkflow() {
           audience: vars.aud,
           problem: vars.prob,
           monetization: vars.mon,
+          differentiation: vars.diff,
         },
         {
           signal: vars.signal,
@@ -112,7 +113,7 @@ export function useValidateWorkflow() {
     retry: false,
   });
 
-  function handleSubmit(desc: string, pt: string, aud?: string, prob?: string, mon?: string) {
+  function handleSubmit(desc: string, pt: string, aud?: string, prob?: string, mon?: string, diff?: string) {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -129,6 +130,7 @@ export function useValidateWorkflow() {
       aud: aud?.trim() || undefined,
       prob: prob?.trim() || undefined,
       mon: mon?.trim() || undefined,
+      diff: diff?.trim() || undefined,
       signal: controller.signal,
     });
   }

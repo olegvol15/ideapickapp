@@ -10,9 +10,19 @@ interface ValidationSummaryCardProps {
 }
 
 const DECISION_BADGE: Record<
-  'proceed' | 'test-first' | 'drop',
+  | 'proceed'
+  | 'build'
+  | 'test-first'
+  | 'drop'
+  | 'niche-only'
+  | 'pivot-angle',
   { label: string; className: string }
 > = {
+  build: {
+    label: 'Build It',
+    className:
+      'bg-emerald-500/15 text-emerald-600 border border-emerald-500/30',
+  },
   proceed: {
     label: 'Proceed',
     className:
@@ -21,6 +31,15 @@ const DECISION_BADGE: Record<
   'test-first': {
     label: 'Validate First',
     className: 'bg-amber-500/15 text-amber-600 border border-amber-500/30',
+  },
+  'niche-only': {
+    label: 'Niche Entry Only',
+    className: 'bg-amber-500/15 text-amber-600 border border-amber-500/30',
+  },
+  'pivot-angle': {
+    label: 'Pivot the Angle',
+    className:
+      'bg-purple-500/15 text-purple-500 border border-purple-500/30',
   },
   drop: {
     label: "Don't Build This",
@@ -34,7 +53,11 @@ export function ValidationSummaryCard({
 }: ValidationSummaryCardProps) {
   const { decision, decisionReason, verdict, keyInsights } = result;
 
-  const badge = decision ? DECISION_BADGE[decision] : null;
+  const badge = decision
+    ? (DECISION_BADGE as Record<string, { label: string; className: string }>)[
+        decision
+      ] ?? null
+    : null;
   const headline = decisionReason ?? getDecisionStatement(result);
 
   const insightBullets =
@@ -48,7 +71,7 @@ export function ValidationSummaryCard({
   const hasSteps = steps.length > 0;
 
   return (
-    <div className="rounded-xl border border-border bg-card px-6 py-5 flex flex-col gap-5">
+    <div className="flex flex-col gap-5 pb-8">
       <div className="flex flex-col gap-2">
         {badge && (
           <span
@@ -69,7 +92,6 @@ export function ValidationSummaryCard({
 
       {hasInsights && (
         <>
-          <div className="border-t border-border/60" />
           <div className="flex flex-col gap-3">
             <SectionHeading>Key insights</SectionHeading>
             <ul className="flex flex-col gap-2">
@@ -89,7 +111,6 @@ export function ValidationSummaryCard({
 
       {hasSteps && (
         <>
-          <div className="border-t border-border/60" />
           <div className="flex flex-col gap-3">
             <SectionHeading>Your angle</SectionHeading>
             <div className="flex flex-col gap-2.5">

@@ -26,11 +26,13 @@ export function ValidationDeltaCard({
           <span
             className={cn(
               'text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border',
-              result.decision === 'proceed'
+              result.decision === 'proceed' || result.decision === 'build'
                 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                 : result.decision === 'drop'
                   ? 'bg-rose-500/10    text-rose-400    border-rose-500/20'
-                  : 'bg-amber-500/10   text-amber-400   border-amber-500/20'
+                  : result.decision === 'pivot-angle'
+                    ? 'bg-purple-500/10  text-purple-400  border-purple-500/20'
+                    : 'bg-amber-500/10   text-amber-400   border-amber-500/20'
             )}
           >
             Decision changed
