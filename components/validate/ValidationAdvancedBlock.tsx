@@ -35,6 +35,8 @@ export function ValidationAdvancedBlock({
     metrics,
     bestEntryStrategy,
     marketInsights,
+    evidenceQuality,
+    keywordMarkets,
   } = result;
 
   const signalItems = competitors
@@ -104,6 +106,8 @@ export function ValidationAdvancedBlock({
     detailedBreakdown ||
     willingnessToPay ||
     allEvidence.length ||
+    evidenceQuality ||
+    (keywordMarkets && keywordMarkets.length > 0) ||
     (marketInsights && marketInsights.length > 0)
   );
   if (!hasContent) return null;
@@ -257,6 +261,65 @@ export function ValidationAdvancedBlock({
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+
+          {(evidenceQuality || (keywordMarkets && keywordMarkets.length > 0)) && (
+            <div className="border-t border-border pt-5 flex flex-col gap-3">
+              <SectionHeading>Evidence quality</SectionHeading>
+              {evidenceQuality && (
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {[
+                    { label: 'Relevant apps', value: evidenceQuality.relevantApps },
+                    { label: 'Raw apps', value: evidenceQuality.rawApps },
+                    { label: 'Reviews read', value: evidenceQuality.reviewsAnalyzed },
+                    { label: 'Keyword fit', value: `${evidenceQuality.keywordRelevance}%` },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="rounded-lg border border-border bg-muted/10 px-3 py-2"
+                    >
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
+                        {item.label}
+                      </p>
+                      <p className="mt-1 text-sm font-bold text-foreground/85">
+                        {item.value}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {keywordMarkets && keywordMarkets.length > 0 && (
+                <div className="flex flex-col gap-1.5">
+                  {keywordMarkets.slice(0, 5).map((market) => (
+                    <div
+                      key={market.keyword}
+                      className="grid grid-cols-[minmax(0,1fr)_56px_56px] gap-2 text-xs text-foreground/70"
+                    >
+                      <span className="truncate">&ldquo;{market.keyword}&rdquo;</span>
+                      <span className="text-right tabular-nums">
+                        {market.relevantAppCount}/{market.rawAppCount} apps
+                      </span>
+                      <span className="text-right tabular-nums">
+                        {market.relevanceScore}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {evidenceQuality && evidenceQuality.limitations.length > 0 && (
+                <ul className="flex flex-col gap-1">
+                  {evidenceQuality.limitations.map((limitation) => (
+                    <li
+                      key={limitation}
+                      className="flex items-start gap-2 text-xs text-amber-500/85 leading-snug"
+                    >
+                      <span className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500/70" />
+                      {limitation}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           )}
 

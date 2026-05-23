@@ -65,6 +65,25 @@ export const NicheResultSchema = z.object({
     .optional(),
 });
 
+export const KeywordMarketSnapshotSchema = z.object({
+  keyword: z.string(),
+  relevanceScore: z.number(),
+  rawAppCount: z.number(),
+  relevantAppCount: z.number(),
+  metrics: MobileMetricsSchema,
+  scores: MobileScoresSchema,
+  entryScore: z.number(),
+});
+
+export const EvidenceQualitySchema = z.object({
+  relevantApps: z.number(),
+  rawApps: z.number(),
+  reviewsAnalyzed: z.number(),
+  keywordRelevance: z.number(),
+  discardedKeywords: z.array(z.string()),
+  limitations: z.array(z.string()),
+});
+
 export const MobileExplanationSchema = z.object({
   signals: z.array(z.string()),
   risks: z.array(z.string()),

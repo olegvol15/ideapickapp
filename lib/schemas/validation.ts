@@ -1,6 +1,8 @@
 import { z } from 'zod';
 
 import {
+  EvidenceQualitySchema,
+  KeywordMarketSnapshotSchema,
   MobileMetricsSchema,
   MobileScoresSchema,
   NicheResultSchema,
@@ -87,6 +89,8 @@ export const EnhancedValidationResultSchema = z.object({
     })
     .optional(),
   niches: z.array(NicheResultSchema).optional(),
+  evidenceQuality: EvidenceQualitySchema.optional(),
+  keywordMarkets: z.array(KeywordMarketSnapshotSchema).optional(),
   marketInsights: z.array(z.string()).optional(),
   opportunityInsights: z.array(z.string()).optional(),
   confidenceScore: z.number().optional(),

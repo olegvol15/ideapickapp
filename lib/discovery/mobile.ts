@@ -163,7 +163,7 @@ export function appToCompetitor(r: AppStoreApp): Competitor {
   };
 }
 
-export function dedupeApps(apps: AppStoreApp[]): AppStoreApp[] {
+export function dedupeApps<T extends AppStoreApp>(apps: T[]): T[] {
   const seen = new Set<string>();
   return apps.filter((a) => {
     const key = a.trackViewUrl.split('?')[0];

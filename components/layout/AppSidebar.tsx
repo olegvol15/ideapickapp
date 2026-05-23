@@ -10,6 +10,7 @@ import {
   ChevronDown,
   Gauge,
   History,
+  LayoutGrid,
   LogIn,
   PanelLeftClose,
   Plus,
@@ -18,12 +19,10 @@ import { UserMenu } from '@/components/auth/UserMenu';
 import { GuestSignInCard } from '@/components/auth/GuestSignInCard';
 import { IdeaPickLogo } from '@/components/brand/IdeaPickLogo';
 import { BrainstormItem } from '@/components/layout/BrainstormItem';
-import { WorkspaceItem } from '@/components/workspace/WorkspaceItem';
 import { ValidationItem } from '@/components/validate/ValidationItem';
 import { useAuth } from '@/context/auth';
 import { useResearchStore } from '@/stores/research.store';
 import { useValidateStore } from '@/stores/validate.store';
-import { useWorkspaceStore } from '@/stores/workspace.store';
 import {
   useGetGenerations,
   useDeleteGeneration,
@@ -34,7 +33,6 @@ import {
   useRenameValidation,
   useGetValidations,
 } from '@/hooks/use-validations';
-import { useWorkspaces, useDeleteWorkspace, useRenameWorkspace } from '@/hooks/use-workspaces';
 import { cn } from '@/lib/utils';
 import {
   Sidebar,
@@ -55,25 +53,11 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { openDesktop, setOpenDesktop, setOpenMobile } = useSidebar();
   const [recentsOpen, setRecentsOpen] = useState(true);
   const [validationsOpen, setValidationsOpen] = useState(true);
-  const [workspacesOpen, setWorkspacesOpen] = useState(true);
 
   const deleteMutation = useDeleteGeneration(user?.id);
   const renameMutation = useRenameGeneration(user?.id);
   const deleteValidationMutation = useDeleteValidation(user?.id);
   const renameValidationMutation = useRenameValidation(user?.id);
-  const deleteWorkspaceMutation = useDeleteWorkspace(user?.id);
-  const renameWorkspaceMutation = useRenameWorkspace(user?.id);
-
-  // Workspace entries: signed-in users use DB, guests use local persistence.
-  const workspaceTitles = useWorkspaceStore((s) => s.workspaceTitles);
-  const { data: dbWorkspaces } = useWorkspaces(user?.id);
-  const recentWorkspaces = user
-    ? (dbWorkspaces ?? [])
-        .map((w) => ({ id: w.idea_slug, title: w.title }))
-        .slice(0, 5)
-    : Object.entries(workspaceTitles)
-        .map(([id, title]) => ({ id, title }))
-        .slice(0, 5);
 
   // Research recents — logged-in users use React Query, others use Zustand store
   const localHistory = useResearchStore((s) => s.localHistory);
@@ -122,6 +106,13 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   }
 
   const navigation = [
+    {
+      href: '/workspaces',
+      label: 'Workspaces',
+      icon: LayoutGrid,
+      active:
+        pathname === '/workspaces' || pathname.startsWith('/workspace/'),
+    },
     {
       href: '/ideas',
       label: 'Saved ideas',
@@ -251,60 +242,6 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                 </Link>
               );
             })}
-
-            {/* Workspaces */}
-            {recentWorkspaces.length > 0 && (
-              <>
-                <div className="mx-2 my-3 border-t border-white/8" />
-
-                <button
-                  type="button"
-                  onClick={() => setWorkspacesOpen((o) => !o)}
-                  className="flex w-full items-center gap-1.5 px-2.5 py-1 text-xs text-muted-foreground/60 transition-colors hover:text-muted-foreground"
-                >
-                  <ChevronDown
-                    className={cn(
-                      'h-3 w-3 transition-transform duration-200',
-                      workspacesOpen && 'rotate-180'
-                    )}
-                  />
-                  Workspaces
-                </button>
-
-                <AnimatePresence initial={false}>
-                  {workspacesOpen && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                      className="overflow-hidden"
-                    >
-                      {recentWorkspaces.map(({ id, title }) => (
-                        <WorkspaceItem
-                          key={id}
-                          id={id}
-                          title={title}
-                          onNavigate={() => {
-                            onNavigate?.();
-                            setOpenMobile(false);
-                          }}
-                          onRename={(newTitle) =>
-                            renameWorkspaceMutation.mutate({ slug: id, title: newTitle })
-                          }
-                          onDelete={() => {
-                            deleteWorkspaceMutation.mutate(id);
-                            if (pathname === `/workspace/${id}`) {
-                              startTransition(() => router.push('/'));
-                            }
-                          }}
-                        />
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </>
-            )}
 
             {/* Validations */}
             {recentValidations.length > 0 && (

@@ -20,7 +20,6 @@ import {
   computeDimensionScores,
   computeFinalDecision,
   computeFinalScore,
-  computeConfidenceScore,
   computeMarketInsights,
   computeOpportunityInsights,
   computeWinAngles,
@@ -29,6 +28,14 @@ import {
   confidenceLabel,
 } from '@/lib/scoring/mobile';
 import type { DimensionScores } from '@/lib/scoring/mobile';
+import {
+  buildEvidenceQuality,
+  buildReviewPainSnippets,
+  computeEvidenceConfidenceScore,
+  entryScore,
+  extractReviewThemes,
+  filterRelevantApps,
+} from '@/lib/scoring/mobile-evidence';
 import { selectBestNiche } from '@/lib/scoring/selectBestNiche';
 import type { KeywordMarketAnalysis } from '@/lib/scoring/selectBestNiche';
 import { dedupeCompetitors } from '@/lib/validate/competitors';
@@ -89,17 +96,34 @@ export async function runMobileValidation(
     ...extraKeywords.map((q) => fetchAppStoreApps(q, 30)),
   ]);
 
-  // Build keyword→apps map (eliminates positional indexing)
+  const evidenceContext = { description, audience, problem };
+
+  // Build keyword→apps maps (raw + relevance-filtered)
   const keywordAppMap = new Map<string, AppStoreApp[]>([
     [broadKeyword, broadApps],
     ...extraKeywords.map(
       (kw, i) => [kw, extraAppBatches[i] ?? []] as [string, AppStoreApp[]]
     ),
   ]);
+  const relevantKeywordAppMap = new Map(
+    [...keywordAppMap.entries()].map(([keyword, apps]) => [
+      keyword,
+      filterRelevantApps(apps, keyword, evidenceContext),
+    ])
+  );
 
-  // Deduplicated competitor list for UI
-  const allApps = dedupeApps([...broadApps, ...extraAppBatches.flat()]);
-  const appStoreCompetitors = allApps.slice(0, 10).map(appToCompetitor);
+  // Deduplicated competitor list for UI — relevance first, review volume second.
+  const rawAllApps = dedupeApps([...broadApps, ...extraAppBatches.flat()]);
+  const relevantAllApps = dedupeApps(
+    [...relevantKeywordAppMap.values()]
+      .flat()
+      .sort(
+        (a, b) =>
+          b.relevanceScore - a.relevanceScore ||
+          (b.userRatingCount ?? 0) - (a.userRatingCount ?? 0)
+      )
+  );
+  const appStoreCompetitors = relevantAllApps.slice(0, 10).map(appToCompetitor);
 
   // Build name→App Store data lookup to enrich LLM competitors
   const normName = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -143,10 +167,22 @@ export async function runMobileValidation(
 
   onResearch(competitors);
 
-  // Fetch real App Store reviews for the top 3 apps by review count
-  const reviewTargets = [...broadApps, ...extraAppBatches.flat()]
+  // Fetch real App Store reviews for top relevant incumbents and weak entrants.
+  const topByReviews = [...relevantAllApps]
     .sort((a, b) => (b.userRatingCount ?? 0) - (a.userRatingCount ?? 0))
-    .slice(0, 5);
+    .slice(0, 3);
+  const weakerEntrants = [...relevantAllApps]
+    .filter((a) => (a.averageUserRating ?? 5) < 4.2)
+    .sort(
+      (a, b) =>
+        (a.averageUserRating ?? 5) - (b.averageUserRating ?? 5) ||
+        (b.relevanceScore ?? 0) - (a.relevanceScore ?? 0)
+    )
+    .slice(0, 2);
+  const reviewTargets = dedupeApps([...topByReviews, ...weakerEntrants]).slice(
+    0,
+    5
+  );
 
   const reviewBatches = await Promise.all(
     reviewTargets.map((app) => {
@@ -158,45 +194,87 @@ export async function runMobileValidation(
   const competitorReviews = new Map<string, AppStoreReview[]>(
     reviewTargets.map((app, i) => [app.trackName, reviewBatches[i] ?? []])
   );
+  const deterministicReviewThemes = extractReviewThemes(reviewBatches);
+  const reviewPainSignals: Competitor[] = buildReviewPainSnippets(
+    deterministicReviewThemes
+  ).map((item, i) => ({
+    name: `App Store review theme ${i + 1}`,
+    url: `appstore-review-theme:${i + 1}`,
+    source: 'appstore-reviews',
+    snippet: item.snippet,
+    type: 'signal' as const,
+  }));
 
-  // Deterministic scoring — base market
+  // Deterministic scoring — base market, using relevance-filtered apps only.
   const onlySignals = signalResults.filter((r) => r.type === 'signal');
-  const pain = computePainAnalysis(onlySignals);
-  const metrics = computeAppStoreMetrics(broadApps);
+  const pain = computePainAnalysis([...onlySignals, ...reviewPainSignals]);
+  const broadRelevantApps = relevantKeywordAppMap.get(broadKeyword) ?? [];
+  const metrics = computeAppStoreMetrics(broadRelevantApps);
 
-  // Niche metrics for bestNiche bonus — look up by keyword name
+  // Niche metrics for bestNiche bonus — relevance-filtered by keyword.
   const nicheKeywords = expansion.niches.filter((kw) => keywordAppMap.has(kw));
-  const niche0Apps = nicheKeywords[0]
-    ? (keywordAppMap.get(nicheKeywords[0]) ?? [])
-    : [];
-  const legacyNicheResults =
-    niche0Apps.length > 0
-      ? [computeNicheMetrics(niche0Apps, nicheKeywords[0])]
-      : [];
+  const legacyNicheResults = nicheKeywords
+    .map((keyword) => {
+      const apps = relevantKeywordAppMap.get(keyword) ?? [];
+      return apps.length > 0 ? computeNicheMetrics(apps, keyword) : null;
+    })
+    .filter((n): n is NonNullable<typeof n> => n !== null);
   const bestNicheLegacy = legacyNicheResults
     .filter((n) => n.totalApps >= 5)
     .sort((a, b) => a.top5ReviewShare - b.top5ReviewShare)[0];
 
   const scores = computeMobileScores(metrics, pain, bestNicheLegacy);
-  const confidenceScore = computeConfidenceScore(metrics, onlySignals.length);
   const marketInsights = computeMarketInsights(metrics);
 
   // Preliminary broad decision (no niche awareness yet — used to seed selectBestNiche)
   const { verdict: broadDecision } = computeDecision(scores, metrics);
 
   // Multi-keyword market analysis — score every keyword independently
-  const keywordAnalyses: KeywordMarketAnalysis[] = [
-    { keyword: broadKeyword, metrics, scores, decision: broadDecision },
-    ...[...expansion.variations, ...expansion.niches]
-      .filter((kw) => keywordAppMap.has(kw))
-      .map((keyword) => {
-        const batch = keywordAppMap.get(keyword)!;
-        const km = computeAppStoreMetrics(batch);
-        const ks = computeMobileScores(km, pain);
-        const { verdict: kd } = computeDecision(ks, km);
-        return { keyword, metrics: km, scores: ks, decision: kd };
-      }),
-  ];
+  const keywordAnalyses: KeywordMarketAnalysis[] = allKeywords.map((keyword) => {
+    const batch = relevantKeywordAppMap.get(keyword) ?? [];
+    const km = keyword === broadKeyword ? metrics : computeAppStoreMetrics(batch);
+    const ks = keyword === broadKeyword ? scores : computeMobileScores(km, pain);
+    const { verdict } =
+      keyword === broadKeyword ? { verdict: broadDecision } : computeDecision(ks, km);
+    return { keyword, metrics: km, scores: ks, decision: verdict };
+  });
+  const keywordMarkets = keywordAnalyses.map((analysis) => {
+    const relevantApps = relevantKeywordAppMap.get(analysis.keyword) ?? [];
+    const avgRelevance =
+      relevantApps.length > 0
+        ? Math.round(
+            relevantApps.reduce((sum, app) => sum + app.relevanceScore, 0) /
+              relevantApps.length
+          )
+        : 0;
+    return {
+      keyword: analysis.keyword,
+      relevanceScore: avgRelevance,
+      rawAppCount: keywordAppMap.get(analysis.keyword)?.length ?? 0,
+      relevantAppCount: relevantApps.length,
+      metrics: analysis.metrics,
+      scores: analysis.scores,
+      entryScore: entryScore(analysis.scores),
+    };
+  });
+  const discardedKeywords = keywordMarkets
+    .filter((k) => k.rawAppCount > 0 && (k.relevantAppCount < 3 || k.relevanceScore < 30))
+    .map((k) => k.keyword);
+  const evidenceQuality = buildEvidenceQuality({
+    rawApps: rawAllApps.length,
+    relevantApps: relevantAllApps.length,
+    reviewsAnalyzed: reviewBatches.flat().length,
+    keywordMarkets,
+    discardedKeywords,
+    signalCount: onlySignals.length,
+  });
+  const confidenceScore = computeEvidenceConfidenceScore({
+    relevantApps: relevantAllApps.length,
+    totalReviews: metrics.totalReviews,
+    reviewsAnalyzed: evidenceQuality.reviewsAnalyzed,
+    keywordRelevance: evidenceQuality.keywordRelevance,
+    signalCount: onlySignals.length,
+  });
   const nicheSelection = selectBestNiche(keywordAnalyses, broadKeyword);
   const bestEntryStrategy = nicheSelection.entryStrategy;
 
@@ -303,6 +381,8 @@ export async function runMobileValidation(
     rawDecision,
     painAnalysis: pain,
     niches: legacyNicheResults,
+    evidenceQuality,
+    keywordMarkets,
     marketInsights,
     opportunityInsights,
     confidenceScore,
@@ -316,6 +396,10 @@ export async function runMobileValidation(
       comparisonNote: nicheSelection.comparisonNote || undefined,
     },
     bestEntryStrategy,
+    reviewThemes:
+      deterministicReviewThemes.length > 0
+        ? deterministicReviewThemes
+        : explanationParsed.data.reviewThemes,
   };
 
   // Attach real review snippets to competitors so the UI can display them
