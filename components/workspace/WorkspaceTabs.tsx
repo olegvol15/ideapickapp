@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { CheckSquare, FileText, GitBranch } from 'lucide-react';
+import { ArrowLeft, CheckSquare, FileText, GitBranch } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TodoBoard } from '@/components/workspace/todo/TodoBoard';
 import { ContentTab } from '@/components/workspace/content/ContentTab';
@@ -56,6 +57,15 @@ export function WorkspaceTabs({
     <div className="flex h-svh flex-col overflow-hidden">
       {/* ── Top bar ─────────────────────────────────────────────────────── */}
       <header className="relative z-10 flex shrink-0 items-stretch border-b border-border/50 bg-card/80 backdrop-blur-md">
+        {/* Back to all workspaces */}
+        <Link
+          href="/workspaces"
+          className="flex shrink-0 items-center gap-2 border-r border-border/40 px-4 py-3 text-xs font-semibold text-muted-foreground/70 transition-colors hover:bg-muted/30 hover:text-foreground"
+        >
+          <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
+          All workspaces
+        </Link>
+
         {/* Idea identity */}
         <div className="flex min-w-0 flex-col justify-center border-r border-border/40 px-5 py-3 pr-6">
           <span className="mb-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-muted-foreground/40">

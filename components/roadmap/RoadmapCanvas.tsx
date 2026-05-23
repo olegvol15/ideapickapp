@@ -421,10 +421,10 @@ export function RoadmapCanvas({
         proOptions={{ hideAttribution: true }}
       >
         <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="rgba(255,255,255,0.04)" />
-        <Controls
+        {/* <Controls
           showInteractive={false}
           className="[&>button]:border-border [&>button]:bg-card [&>button]:text-foreground [&>button:hover]:bg-muted"
-        />
+        /> */}
         {progressStats.total > 0 && (
           <Panel position="top-left" className="m-3">
             <div className="flex min-w-[148px] flex-col gap-1.5 rounded-xl border border-border/50 bg-card/80 px-3 py-2 shadow-sm backdrop-blur-sm">
