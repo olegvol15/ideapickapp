@@ -1,18 +1,12 @@
 'use client';
 
 import { ValidationSummaryCard } from './ValidationSummaryCard';
-import { ValidationNicheBlock } from './ValidationNicheBlock';
 import { ValidationScoreBlock } from './ValidationScoreBlock';
-import { ValidationWedgesBlock } from './ValidationWedgesBlock';
-import { ValidationReviewThemesBlock } from './ValidationReviewThemesBlock';
-import { ValidationPivotBlock } from './ValidationPivotBlock';
 import { ValidationCompetitorsBlock } from './ValidationCompetitorsBlock';
-import { ValidationDistributionBlock } from './ValidationDistributionBlock';
-import { ValidationPlanBlock } from './ValidationPlanBlock';
+import { ValidationNicheBlock } from './ValidationNicheBlock';
+import { ValidationWedgesBlock } from './ValidationWedgesBlock';
 import { ValidationNextMoveBlock } from './ValidationNextMoveBlock';
-import { ValidationCustomerReachBlock } from './ValidationCustomerReachBlock';
-import { ValidationRefinementsBlock } from './ValidationRefinementsBlock';
-import { ValidationAdvancedBlock } from './ValidationAdvancedBlock';
+import { ValidationPlanBlock } from './ValidationPlanBlock';
 import type { EnhancedValidationResult } from '@/lib/schemas';
 import type { Competitor } from '@/types';
 import type { IdeaContext } from '@/types/validate.types';
@@ -25,67 +19,43 @@ interface ValidationReportProps {
   onRefine?: (description: string) => void;
 }
 
-export function ValidationReport({ result, competitors, ideaContext, onRefine }: ValidationReportProps) {
-  const { nicheAnalysis, bestEntryStrategy, decision } = result;
-
+export function ValidationReport({ result, competitors, ideaContext }: ValidationReportProps) {
+  const { nicheAnalysis, bestEntryStrategy } = result;
   const showNiche = !!(nicheAnalysis && bestEntryStrategy);
-  const showRefinements = decision === 'test-first' || decision === 'drop' || decision === 'pivot-angle';
-  const showPivots = !!(
-    result.pivotAngles &&
-    result.pivotAngles.length > 0 &&
-    (decision === 'pivot-angle' || decision === 'test-first' || decision === 'drop')
-  );
+  const showWedges = !!(result.wedges && result.wedges.length > 0);
+  const showPlan = !!(result.validationPlan && result.validationPlan.length > 0);
 
   return (
     <div className="flex flex-col gap-0 w-full">
+      {/* 1. Summary */}
       <ValidationSummaryCard result={result} ideaContext={ideaContext} />
 
-      {showNiche && (
-        <ValidationNicheBlock
-          nicheAnalysis={nicheAnalysis!}
-          bestEntryStrategy={bestEntryStrategy!}
-        />
-      )}
-
+      {/* 2. Verdict + Score */}
       <ValidationScoreBlock result={result} ideaContext={ideaContext} />
 
-      {result.wedges && result.wedges.length > 0 && (
-        <ValidationWedgesBlock wedges={result.wedges} />
-      )}
-
-      {result.reviewThemes && result.reviewThemes.length > 0 && (
-        <ValidationReviewThemesBlock reviewThemes={result.reviewThemes} />
-      )}
-
-      {showPivots && (
-        <ValidationPivotBlock pivotAngles={result.pivotAngles!} />
-      )}
-
+      {/* 3. Competitors */}
       <ValidationCompetitorsBlock result={result} competitors={competitors} />
 
-      {result.distributionAnalysis && (
-        <ValidationDistributionBlock distributionAnalysis={result.distributionAnalysis} />
+      {/* 4. Best keywords to target */}
+      {(showNiche || showWedges) && (
+        <>
+          {showNiche && (
+            <ValidationNicheBlock
+              nicheAnalysis={nicheAnalysis!}
+              bestEntryStrategy={bestEntryStrategy!}
+            />
+          )}
+          {showWedges && (
+            <ValidationWedgesBlock wedges={result.wedges!} />
+          )}
+        </>
       )}
 
-      {result.validationPlan && result.validationPlan.length > 0 && (
-        <ValidationPlanBlock validationPlan={result.validationPlan} />
-      )}
-
+      {/* 5. Further Steps */}
       <ValidationNextMoveBlock result={result} ideaContext={ideaContext} />
-
-      {result.customerReach && (
-        <ValidationCustomerReachBlock customerReach={result.customerReach} />
+      {showPlan && (
+        <ValidationPlanBlock validationPlan={result.validationPlan!} />
       )}
-
-      {showRefinements && (
-        <ValidationRefinementsBlock
-          result={result}
-          ideaContext={ideaContext}
-          onApply={onRefine}
-        />
-      )}
-
-      <ValidationAdvancedBlock result={result} competitors={competitors} />
     </div>
   );
 }

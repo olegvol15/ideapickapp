@@ -39,6 +39,7 @@ export const EnhancedValidationResultSchema = z.object({
   signals: z.array(z.string()),
   risks: z.array(z.string()),
   verdict: z.string(),
+  summary: z.string().optional(),
   confidence: z.enum(['low', 'medium', 'high']).optional(),
   confidenceReason: z.string().optional(),
   keyInsights: z.array(z.string()).optional(),

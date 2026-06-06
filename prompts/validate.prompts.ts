@@ -154,7 +154,7 @@ Analyze the idea and evidence, then return a JSON report with this exact shape:
   "opportunityScore": <integer 0-100, differentiation gap and timing>,
   "confidence": <"low" | "medium" | "high" — how reliable is this validation based on evidence quality>,
   "confidenceReason": "<1 sentence: why confidence is this level>",
-  "keyInsights": ["<sharp specific insight 1>", "<sharp specific insight 2>", "<optional insight 3>"],
+  "keyInsights": ["<sharp specific insight 1>", "<insight 2>", "<insight 3>", "<optional insight 4>"],
   "decision": <"proceed" | "test-first" | "drop" — be opinionated, pick one>,
   "decisionReason": "<1-2 sentences: direct reasoning for this decision>",
   "nextStep": "<one concrete action the founder should take this week>",
@@ -194,6 +194,7 @@ Analyze the idea and evidence, then return a JSON report with this exact shape:
   "failureReasons": ["<specific reason this could fail 1>", "<reason 2>", "<reason 3>"],
   "marketHardness": "<1 sentence: what makes this market hard to enter>",
   "verdict": "<2-3 sentences: honest assessment of viability based on evidence>",
+  "summary": "<4-6 sentences: personalized analysis written directly to the founder about THIS specific idea. Sentence 1: what the market data reveals about real demand — name the category and evidence quality. Sentence 2: who the main competitors are and the gap they leave open. Sentence 3: the primary opportunity for this specific idea given its angle, audience, or stated problem. Sentence 4: the single biggest risk this founder will face. Sentence 5-6 (optional): a direct actionable recommendation. Reference the idea's concept, audience, competitors, and data — no sentence should be reusable for a different idea. Start with 'Your idea' or 'Based on the research'.>",
   "competitorInsights": [
     { "name": "<competitor name>", "whyChosen": "<why users pick them>", "weakness": "<their gap or weakness>" }
   ],
@@ -210,7 +211,7 @@ COPY RULES — follow exactly, no exceptions:
 - decision: pick one, no hedging. If uncertain, pick "test-first".
 - decisionReason: max 15 words. No "it's essential to", no "users are increasingly", no "in today's market". Write like a blunt investor. Example: "Crowded market. No clear moat. Differentiation is weak."
 - scoreBreakdown: always include exactly 3 sub-scores for pain, 3 for competition, and 3 for opportunity using the labels above. The average of each group should roughly match painScore, competitionScore, and opportunityScore.
-- keyInsights: max 1 sentence each. Must contain a specific claim (number, name, or direct observation). BAD: "There is growing demand for this type of solution." GOOD: "3 funded competitors exist — Notion, Coda, Outline — all targeting the same segment."
+- keyInsights: 3-4 items. Max 1-2 sentences each. Must contain a specific claim (number, name, or direct observation). BAD: "There is growing demand for this type of solution." GOOD: "3 funded competitors exist — Notion, Coda, Outline — all targeting the same segment, but none offer offline mode for the freelance use case this idea targets."
 - confidenceReason: 1 sentence, no filler. State the actual limitation or strength. BAD: "The evidence quality is moderate due to limited data." GOOD: "Only 2 search results matched — thin data."
 - nextStep: name a specific number or platform. BAD: "Talk to potential users." GOOD: "Post in r/productivity asking if people pay for X — target 20 upvotes in 48h."
 - competitorInsights.whyChosen: 1 short phrase — what users actually get. Examples: "free tier + integrations", "best-in-class UX", "cheapest option"
@@ -220,6 +221,7 @@ COPY RULES — follow exactly, no exceptions:
 - evidencedSignals: tag each with strength based on how direct the evidence is
 - marketHardness: 1 sentence, name the actual barrier (e.g. "CAC is high because Google Ads CPCs for this keyword are $8–15")
 - verdict: max 2 sentences. No fluff. State what the data says.
+- summary: 4-6 sentences. Every sentence specific to THIS idea — name its concept, audience, competitors, and data. Follow the structure: market reality → competitor gap → specific opportunity → main risk → recommendation. The founder must feel this was written for their idea, not a generic market report. Start with "Your idea" or "Based on the research".
 - whereToWin: 2–3 items only. Each must describe a real, observable pattern from the competitor data — not generic advice. BANNED: "better UX", "add AI", "more features", "faster", "better personalization". title must be a gap type from the allowed list. pattern and gap must be factual and short (under 10 words each). opportunity must name a specific segment, channel, use-case, or behavior — not vague improvement.
 - nextStep: if whereToWin has insights, the nextStep must specifically test the angle in whereToWin[0].opportunity — not a generic validation step.
 IDEA-SPECIFIC RULES — every text field must feel specific to THIS idea, not reusable:
@@ -395,9 +397,10 @@ Return a JSON object with exactly this shape:
   "signals": ["<positive market signal from the data>", "<signal 2>", "<signal 3>"],
   "risks": ["<risk derived from the metrics>", "<risk 2>", "<risk 3>"],
   "verdict": "<2 sentences: what the App Store distribution data says about this idea's viability — cite specific numbers>",
+  "summary": "<4-6 sentences: personalized analysis written directly to the founder about THIS specific App Store idea. Sentence 1: what the App Store data reveals about the market — cite a key metric (review share, app count, ratings). Sentence 2: who the main competitors are and what gap they leave for this idea. Sentence 3: the primary opportunity for this idea given its specific angle, audience, or stated problem. Sentence 4: the single biggest risk based on the data. Sentence 5-6 (optional): a direct recommendation. Reference the idea's concept, audience, and specific App Store metrics throughout. Start with 'Your idea' or 'Based on App Store data'.>",
   "confidence": "${confidenceScore < 40 ? 'low' : confidenceScore < 70 ? 'medium' : 'high'}",
   "confidenceReason": "<1 sentence citing data coverage: ${metrics.totalApps} apps found, signal count>",
-  "keyInsights": ["<rephrase market insight 1 from the provided list>", "<rephrase insight 2>", "<insight 3>"],
+  "keyInsights": ["<rephrase market insight 1 from the provided list>", "<rephrase insight 2>", "<insight 3>", "<insight 4 — optional>"],
   "nextStep": "<one concrete action this week, naming a specific platform or number>",
   "nextStepType": <"reddit-post" | "landing-page" | "interviews" | "prototype" | "survey" | "other">,
   "validationEffort": { "time": "<e.g. 2 days>", "cost": "<e.g. $0–20>", "difficulty": <"easy" | "medium" | "hard"> },
@@ -489,6 +492,7 @@ Return a JSON object with exactly this shape:
 }
 COPY RULES:
 - verdict: cite specific numbers (review share %, ratings, app count)
+- summary: 4-6 sentences, every sentence specific to THIS idea. Cite actual App Store numbers. Name real competitors. State the opportunity and risk in terms of the founder's stated angle/audience. The founder must feel this was written for their idea, not a market overview.
 - keyInsights: MUST echo the pre-computed insights — do not substitute generic claims
 - whereToWin: MUST be formatted from the pre-computed angles provided — 2-3 items
 - failureReasons and risks: max 6 words each, blunt
