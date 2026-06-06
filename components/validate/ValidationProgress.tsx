@@ -1,11 +1,10 @@
 'use client';
 
-import { Search, BarChart2, FileText } from 'lucide-react';
+import { Search, BarChart2, FileText, Loader2, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { CompetitorLogo } from '@/components/market/competitors-list/CompetitorLogo';
-import { Pulse } from './Pulse';
-import { StepIcon } from './StepIcon';
 import { useCyclingLabel } from '@/hooks/use-cycling-label';
 import { SCORING_LABELS } from '@/constants/scoring';
 import { stepStatus, getSearchKeywords } from '@/lib/validate/progress';
@@ -22,6 +21,17 @@ interface ValidationProgressProps {
   onCancel: () => void;
 }
 
+const STAGGER = {
+  show: { transition: { staggerChildren: 0.07 } },
+};
+
+const ITEM = {
+  hidden: { opacity: 0, x: -6 },
+  show: { opacity: 1, x: 0, transition: { duration: 0.22 } },
+};
+
+const MAX_VISIBLE_SOURCES = 6;
+
 export function ValidationProgress({
   phase,
   competitors,
@@ -32,113 +42,152 @@ export function ValidationProgress({
   const scoringLabel = useCyclingLabel(phase === 'analyzing', SCORING_LABELS);
   const isMobile = productType === 'Mobile App';
   const searchKeywords = getSearchKeywords(description, isMobile);
-  const competitorItems = competitors
-    .filter((c) => c.type !== 'signal')
-    .slice(0, 5);
-  const signalItems = competitors
-    .filter((c) => c.type === 'signal')
-    .slice(0, 4);
+
+  const allSources = competitors.filter((c) => c.type !== 'signal').concat(competitors.filter((c) => c.type === 'signal'));
+  const visibleSources = allSources.slice(0, MAX_VISIBLE_SOURCES);
+  const hiddenCount = allSources.length - visibleSources.length;
   const totalFound = competitors.length;
 
+  const queriesStatus = stepStatus('queries', phase);
+  const researchStatus = stepStatus('research', phase);
+  const scoringStatus = stepStatus('scoring', phase);
+
   return (
-    <div className="mt-8 flex flex-col gap-8">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="flex flex-col"
+    >
+      {/* Description pill */}
+      <motion.div
+        initial={{ opacity: 0, y: -6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.3 }}
+        className="mb-10 inline-flex max-w-full self-start rounded-full border border-border/40 bg-muted/30 px-4 py-2"
+      >
+        <p className="truncate text-sm text-muted-foreground/60 leading-snug">
+          {description.trim().slice(0, 90)}{description.trim().length > 90 ? '…' : ''}
+        </p>
+      </motion.div>
+
+      {/* Steps */}
       <div className="flex flex-col">
         <Step
-          status={stepStatus('queries', phase)}
-          icon={Search}
+          status={queriesStatus}
+          Icon={Search}
           label="Preparing research queries"
           isLast={false}
+          delay={0.15}
         >
-          {stepStatus('queries', phase) === 'done' && (
-            <ul className="flex flex-col gap-1.5 mt-2">
-              {searchKeywords.map((kw) => (
-                <li
-                  key={kw}
-                  className="flex items-center gap-2 text-xs text-muted-foreground/55"
-                >
-                  <Search className="h-3 w-3 shrink-0 text-muted-foreground/35" />
-                  {kw}
-                </li>
-              ))}
-            </ul>
-          )}
+          <AnimatePresence>
+            {queriesStatus !== 'pending' && (
+              <motion.ul
+                key="queries-list"
+                variants={STAGGER}
+                initial="hidden"
+                animate="show"
+                className="mt-2.5 flex flex-col gap-1.5"
+              >
+                {searchKeywords.map((kw) => (
+                  <motion.li
+                    key={kw}
+                    variants={ITEM}
+                    className="flex items-center gap-2 text-xs text-muted-foreground/40"
+                  >
+                    <Search className="h-3 w-3 shrink-0 text-muted-foreground/25" />
+                    {kw}
+                  </motion.li>
+                ))}
+              </motion.ul>
+            )}
+          </AnimatePresence>
         </Step>
 
         <Step
-          status={stepStatus('research', phase)}
-          icon={FileText}
-          label={
-            isMobile
-              ? 'Searching App Store & web signals'
-              : 'Searching market & web signals'
-          }
+          status={researchStatus}
+          Icon={FileText}
+          label={isMobile ? 'Searching App Store & web signals' : 'Searching market & web signals'}
           isLast={false}
+          delay={0.22}
         >
-          {stepStatus('research', phase) === 'active' && (
-            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground/50">
-              <Pulse />
-              <span>
-                {isMobile
-                  ? 'Fetching App Store results…'
-                  : 'Scanning market signals…'}
-              </span>
-            </div>
-          )}
-          {stepStatus('research', phase) === 'done' && (
-            <div className="flex flex-col gap-2 mt-2">
-              <p className="text-[11px] text-muted-foreground/50">
-                Found {totalFound} source{totalFound !== 1 ? 's' : ''}
-              </p>
-              {competitorItems.length > 0 && (
-                <ul className="flex flex-col gap-1.5">
-                  {competitorItems.map((c) => (
-                    <li
-                      key={c.url}
-                      className="flex items-center gap-2 text-xs text-muted-foreground/60"
+          <AnimatePresence mode="wait">
+            {researchStatus === 'active' && (
+              <motion.div
+                key="research-active"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="mt-2.5 flex items-center gap-2 text-xs text-muted-foreground/40"
+              >
+                <Pulse />
+                {isMobile ? 'Fetching App Store results…' : 'Scanning market signals…'}
+              </motion.div>
+            )}
+            {researchStatus === 'done' && (
+              <motion.div
+                key="research-done"
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25 }}
+                className="mt-2.5 flex flex-col gap-2"
+              >
+                <p className="text-xs text-muted-foreground/30">
+                  Found {totalFound} source{totalFound !== 1 ? 's' : ''}
+                </p>
+                <motion.ul
+                  variants={STAGGER}
+                  initial="hidden"
+                  animate="show"
+                  className="flex flex-col gap-1.5"
+                >
+                  {visibleSources.map((c) => (
+                    <motion.li
+                      key={c.url ?? c.name}
+                      variants={ITEM}
+                      className="flex items-center gap-2 text-xs text-muted-foreground/50"
                     >
                       <CompetitorLogo domain={c.source} name={c.name} />
                       <span className="truncate">{c.name}</span>
                       {c.source && (
-                        <span className="text-muted-foreground/35 shrink-0">
+                        <span className="shrink-0 text-[11px] text-muted-foreground/25">
                           {c.source}
                         </span>
                       )}
-                    </li>
+                    </motion.li>
                   ))}
-                </ul>
-              )}
-              {signalItems.length > 0 && (
-                <ul className="flex flex-col gap-1.5">
-                  {signalItems.map((c) => (
-                    <li
-                      key={c.url}
-                      className="flex items-center gap-2 text-xs text-muted-foreground/60"
-                    >
-                      <CompetitorLogo domain={c.source} name={c.name} />
-                      <span className="truncate">{c.name}</span>
-                      <span className="text-muted-foreground/35 shrink-0">
-                        {c.source}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
+                  {hiddenCount > 0 && (
+                    <motion.li variants={ITEM} className="ml-6 text-xs text-muted-foreground/30">
+                      +{hiddenCount} more
+                    </motion.li>
+                  )}
+                </motion.ul>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </Step>
 
         <Step
-          status={stepStatus('scoring', phase)}
-          icon={BarChart2}
+          status={scoringStatus}
+          Icon={BarChart2}
           label="Scoring signals & generating report"
           isLast
+          delay={0.29}
         >
-          {stepStatus('scoring', phase) === 'active' && (
-            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground/50">
-              <Pulse />
-              <span>{scoringLabel}</span>
-            </div>
-          )}
+          <AnimatePresence>
+            {scoringStatus === 'active' && (
+              <motion.div
+                key="scoring-active"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="mt-2.5 flex items-center gap-2 text-xs text-muted-foreground/40"
+              >
+                <Pulse />
+                {scoringLabel}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </Step>
       </div>
 
@@ -146,53 +195,82 @@ export function ValidationProgress({
         variant="ghost"
         size="sm"
         onClick={onCancel}
-        className="mx-auto text-muted-foreground/40 hover:text-muted-foreground/70 hover:bg-transparent"
+        className="mt-8 mx-auto text-xs text-muted-foreground/30 hover:text-muted-foreground/60 hover:bg-transparent"
       >
         Cancel
       </Button>
-    </div>
+    </motion.div>
   );
 }
 
 interface StepProps {
   status: StepStatus;
-  icon: React.ElementType;
+  Icon: React.ElementType;
   label: string;
   isLast: boolean;
+  delay: number;
   children?: React.ReactNode;
 }
 
-function Step({ status, icon, label, isLast, children }: StepProps) {
+function Step({ status, Icon, label, isLast, delay, children }: StepProps) {
   return (
-    <div className="flex gap-4">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.3 }}
+      className="flex gap-4"
+    >
       <div className="flex flex-col items-center">
-        <div className="mt-0.5">
-          <StepIcon status={status} Icon={icon} />
+        <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center">
+          {status === 'done' && (
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/15"
+            >
+              <Check className="h-3.5 w-3.5 text-emerald-400" strokeWidth={2.5} />
+            </motion.div>
+          )}
+          {status === 'active' && (
+            <Loader2 className="h-5 w-5 animate-spin text-foreground/50" />
+          )}
+          {status === 'pending' && (
+            <div className="h-4 w-4 rounded-full border border-muted-foreground/20" />
+          )}
         </div>
         {!isLast && (
           <div
             className={cn(
-              'w-px flex-1 mt-2 mb-1 min-h-[20px]',
-              status === 'done' ? 'bg-emerald-500/25' : 'bg-border/60'
+              'mt-2 mb-1 min-h-[24px] w-px flex-1 transition-colors duration-700',
+              status === 'done' ? 'bg-emerald-500/20' : 'bg-border/25'
             )}
           />
         )}
       </div>
-      <div className={cn('pb-6 min-w-0 flex-1', isLast && 'pb-0')}>
+
+      <div className={cn('min-w-0 flex-1', isLast ? 'pb-0' : 'pb-6')}>
         <p
           className={cn(
-            'text-sm font-semibold leading-none',
-            status === 'done'
-              ? 'text-foreground/50'
-              : status === 'active'
-                ? 'text-foreground/90'
-                : 'text-muted-foreground/30'
+            'text-[15px] font-medium leading-none',
+            status === 'done' && 'text-foreground/35',
+            status === 'active' && 'text-foreground/90',
+            status === 'pending' && 'text-muted-foreground/25'
           )}
         >
           {label}
         </p>
         {children}
       </div>
-    </div>
+    </motion.div>
+  );
+}
+
+function Pulse() {
+  return (
+    <span className="relative flex h-1.5 w-1.5 shrink-0">
+      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-muted-foreground/50 opacity-75" />
+      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-muted-foreground/60" />
+    </span>
   );
 }

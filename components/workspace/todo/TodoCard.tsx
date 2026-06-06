@@ -59,7 +59,7 @@ export function TodoCard({ task, onEdit, onDelete, isOverlay }: TodoCardProps) {
         'group relative flex select-none overflow-hidden rounded-xl border bg-card shadow-sm',
         'transition-all duration-150',
         isDragging && !isOverlay && 'opacity-20 shadow-none',
-        isOverlay && 'rotate-[1.5deg] scale-[1.02] shadow-2xl ring-2 ring-primary/20 ring-offset-2 ring-offset-background',
+        isOverlay && 'shadow-2xl ring-2 ring-primary/20 ring-offset-2 ring-offset-background',
         !isDragging && !isOverlay && 'border-border/50 hover:border-border hover:shadow-md hover:bg-card/80'
       )}
     >

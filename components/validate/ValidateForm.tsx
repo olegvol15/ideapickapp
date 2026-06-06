@@ -66,8 +66,32 @@ export function ValidateForm() {
     );
   }
 
+  const showHeader = phase === 'idle' || phase === 'error';
+
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col">
+      <AnimatePresence>
+        {showHeader && (
+          <motion.div
+            key="header"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8, transition: { duration: 0.2 } }}
+            transition={{ duration: 0.3 }}
+            className="mx-auto mb-10 w-full max-w-xl text-center"
+          >
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Validate Your Idea
+            </h1>
+            <p className="mt-3 text-[1.0625rem] leading-[1.7] text-foreground/70">
+              Describe your idea and get a research-backed validation report with
+              real market signals.
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="flex flex-col gap-5">
       {(phase === 'idle' || phase === 'error') && (
         <>
           <Textarea
@@ -147,6 +171,7 @@ export function ValidateForm() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
+            className="mx-auto w-full max-w-xl"
           >
             <ValidationProgress
               phase={phase}
@@ -212,6 +237,7 @@ export function ValidateForm() {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 }
