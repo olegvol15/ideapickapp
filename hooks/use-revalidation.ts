@@ -7,8 +7,8 @@ import { useValidateStore } from '@/stores/validate.store';
 import { useAuth } from '@/context/auth';
 import { useUpdateValidation, UUID_RE } from '@/hooks/use-validations';
 import { toast } from 'sonner';
-import type { EnhancedValidationResult } from '@/lib/schemas';
-import type { Competitor } from '@/types';
+import type { PainEvidenceResult } from '@/lib/schemas';
+import type { EvidenceSource } from '@/types/validate.types';
 
 export function useRevalidation(id: string, productType: string) {
   const { user } = useAuth();
@@ -19,7 +19,7 @@ export function useRevalidation(id: string, productType: string) {
   const abortRef = useRef<AbortController | null>(null);
 
   const mutation = useMutation<
-    { result: EnhancedValidationResult; competitors: Competitor[] },
+    { result: PainEvidenceResult; sources: EvidenceSource[] },
     Error,
     string
   >({
@@ -37,14 +37,14 @@ export function useRevalidation(id: string, productType: string) {
       updateLocalValidation(id, {
         description: newDescription,
         result: data.result,
-        competitors: data.competitors,
+        sources: data.sources,
       });
       if (user && isUUID) {
         updateValidationMutation.mutate({
           id,
           description: newDescription,
           result: data.result,
-          competitors: data.competitors,
+          sources: data.sources,
         });
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });

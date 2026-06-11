@@ -3,16 +3,17 @@ export interface ValidateRequest {
   productType: string;
   audience?: string;
   problem?: string;
-  monetization?: string;
-  differentiation?: string;
 }
 
-export interface IdeaContext {
-  description: string;
-  audience?: string;
-  problem?: string;
-  monetization?: string;
-  differentiation?: string;
+export interface EvidenceSource {
+  name: string;
+  url: string;
+  source: string;
+  kind: 'web' | 'appstore';
 }
 
-export type { EnhancedValidationResult } from '@/lib/schemas';
+export type {
+  PainEvidenceResult,
+  PainTheme,
+  PainQuote,
+} from '@/lib/schemas';

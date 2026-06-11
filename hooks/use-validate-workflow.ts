@@ -8,8 +8,8 @@ import { useSaveValidation, useUpdateValidation } from '@/hooks/use-validations'
 import { useAuth } from '@/context/auth';
 import { wait } from '@/lib/utils';
 import { toast } from 'sonner';
-import type { EnhancedValidationResult } from '@/lib/schemas';
-import type { Competitor } from '@/types';
+import type { PainEvidenceResult } from '@/lib/schemas';
+import type { EvidenceSource } from '@/types/validate.types';
 
 export function useValidateWorkflow() {
   const { user } = useAuth();
@@ -29,9 +29,9 @@ export function useValidateWorkflow() {
   }
 
   const validateMutation = useMutation<
-    { result: EnhancedValidationResult; competitors: Competitor[] },
+    { result: PainEvidenceResult; sources: EvidenceSource[] },
     Error,
-    { desc: string; pt: string; aud: string | undefined; prob: string | undefined; mon: string | undefined; diff: string | undefined; signal: AbortSignal }
+    { desc: string; pt: string; aud: string | undefined; prob: string | undefined; signal: AbortSignal }
   >({
     mutationFn: async (vars) => {
       await wait(800);
@@ -43,13 +43,11 @@ export function useValidateWorkflow() {
           productType: vars.pt,
           audience: vars.aud,
           problem: vars.prob,
-          monetization: vars.mon,
-          differentiation: vars.diff,
         },
         {
           signal: vars.signal,
-          onResearch: (found) => {
-            store.setCompetitors(found);
+          onSources: (found) => {
+            store.setSources(found);
             store.setPhase('analyzing');
           },
         }
@@ -57,7 +55,7 @@ export function useValidateWorkflow() {
     },
     onSuccess: (data, vars) => {
       store.setResult(data.result);
-      store.setCompetitors(data.competitors);
+      store.setSources(data.sources);
       store.setPhase('done');
 
       const { currentId } = useValidateStore.getState();
@@ -68,13 +66,13 @@ export function useValidateWorkflow() {
         store.updateLocalValidation(currentId, {
           description: vars.desc,
           result: data.result,
-          competitors: data.competitors,
+          sources: data.sources,
         });
         updateValidationMutation.mutate({
           id: currentId,
           description: vars.desc,
           result: data.result,
-          competitors: data.competitors,
+          sources: data.sources,
         });
       } else {
         const localId = String(Date.now());
@@ -84,7 +82,7 @@ export function useValidateWorkflow() {
           description: vars.desc,
           productType: vars.pt,
           result: data.result,
-          competitors: data.competitors,
+          sources: data.sources,
           createdAt: Date.now(),
         });
         if (user) {
@@ -93,7 +91,7 @@ export function useValidateWorkflow() {
               description: vars.desc,
               productType: vars.pt,
               result: data.result,
-              competitors: data.competitors,
+              sources: data.sources,
             })
             .then((uuid) => {
               if (uuid) {
@@ -113,14 +111,14 @@ export function useValidateWorkflow() {
     retry: false,
   });
 
-  function handleSubmit(desc: string, pt: string, aud?: string, prob?: string, mon?: string, diff?: string) {
+  function handleSubmit(desc: string, pt: string, aud?: string, prob?: string) {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
 
     store.setPrevResult(store.result);
     store.setResult(null);
-    store.setCompetitors([]);
+    store.setSources([]);
     store.setError('');
     store.setPhase('thinking');
 
@@ -129,8 +127,6 @@ export function useValidateWorkflow() {
       pt,
       aud: aud?.trim() || undefined,
       prob: prob?.trim() || undefined,
-      mon: mon?.trim() || undefined,
-      diff: diff?.trim() || undefined,
       signal: controller.signal,
     });
   }

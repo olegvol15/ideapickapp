@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { EnhancedValidationResult } from '@/lib/schemas';
-import type { Competitor } from '@/types';
+import type { PainEvidenceResult } from '@/lib/schemas';
+import type { EvidenceSource } from '@/types/validate.types';
 
 export type ValidationPhase =
   | 'idle'
@@ -15,8 +15,8 @@ export interface PersistedValidation {
   id: string;
   description: string;
   productType: string;
-  result: EnhancedValidationResult;
-  competitors: Competitor[];
+  result: PainEvidenceResult;
+  sources: EvidenceSource[];
   createdAt: number;
 }
 
@@ -28,23 +28,23 @@ interface ValidateState {
   renameLocalValidation: (id: string, description: string) => void;
   updateLocalValidation: (
     id: string,
-    updates: Partial<Pick<PersistedValidation, 'description' | 'result' | 'competitors'>>
+    updates: Partial<Pick<PersistedValidation, 'description' | 'result' | 'sources'>>
   ) => void;
   updateLocalValidationId: (oldId: string, newId: string) => void;
 
   // session — active validation (not persisted)
   phase: ValidationPhase;
   error: string;
-  result: EnhancedValidationResult | null;
-  prevResult: EnhancedValidationResult | null;
-  competitors: Competitor[];
+  result: PainEvidenceResult | null;
+  prevResult: PainEvidenceResult | null;
+  sources: EvidenceSource[];
   currentId: string | null;
   version: number;
   setPhase: (phase: ValidationPhase) => void;
   setError: (error: string) => void;
-  setResult: (result: EnhancedValidationResult | null) => void;
-  setPrevResult: (result: EnhancedValidationResult | null) => void;
-  setCompetitors: (competitors: Competitor[]) => void;
+  setResult: (result: PainEvidenceResult | null) => void;
+  setPrevResult: (result: PainEvidenceResult | null) => void;
+  setSources: (sources: EvidenceSource[]) => void;
   setCurrentId: (id: string | null) => void;
   incrementVersion: () => void;
   resetSession: () => void;
@@ -90,7 +90,7 @@ export const useValidateStore = create<ValidateState>()(
       error: '',
       result: null,
       prevResult: null,
-      competitors: [],
+      sources: [],
       currentId: null,
       version: 1,
 
@@ -98,10 +98,10 @@ export const useValidateStore = create<ValidateState>()(
       setError: (error) => set({ error }),
       setResult: (result) => set({ result }),
       setPrevResult: (prevResult) => set({ prevResult }),
-      setCompetitors: (competitors) => set({ competitors }),
+      setSources: (sources) => set({ sources }),
       setCurrentId: (currentId) => set({ currentId }),
       incrementVersion: () => set((s) => ({ version: s.version + 1 })),
-      resetSession: () => set({ phase: 'idle', error: '', result: null, prevResult: null, competitors: [], currentId: null, version: 1 }),
+      resetSession: () => set({ phase: 'idle', error: '', result: null, prevResult: null, sources: [], currentId: null, version: 1 }),
     }),
     {
       name: 'ideapick:validations',

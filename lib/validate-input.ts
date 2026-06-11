@@ -16,8 +16,6 @@ const LIMITS = {
   validateDescription: 600,
   validateAudience: 200,
   validateProblem: 300,
-  validateMonetization: 200,
-  validateDifferentiation: 300,
 } as const;
 
 const VALID_PRODUCT_TYPES = new Set(PRODUCT_TYPE_OPTIONS.map((o) => o.value));
@@ -68,9 +66,7 @@ export function validateValidateInput(
   description: string,
   productType: string,
   audience?: string,
-  problem?: string,
-  monetization?: string,
-  differentiation?: string
+  problem?: string
 ): void {
   if (!description || !description.trim()) {
     throw AppError.validation('Description is required');
@@ -91,16 +87,6 @@ export function validateValidateInput(
   if (problem && tooLong(problem, LIMITS.validateProblem)) {
     throw AppError.validation(
       `Problem must be ${LIMITS.validateProblem} characters or fewer`
-    );
-  }
-  if (monetization && tooLong(monetization, LIMITS.validateMonetization)) {
-    throw AppError.validation(
-      `Monetization must be ${LIMITS.validateMonetization} characters or fewer`
-    );
-  }
-  if (differentiation && tooLong(differentiation, LIMITS.validateDifferentiation)) {
-    throw AppError.validation(
-      `Differentiation must be ${LIMITS.validateDifferentiation} characters or fewer`
     );
   }
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, BarChart2, FileText, Loader2, Check } from 'lucide-react';
+import { Search, Loader2, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -9,14 +9,13 @@ import { useCyclingLabel } from '@/hooks/use-cycling-label';
 import { SCORING_LABELS } from '@/constants/scoring';
 import { stepStatus, getSearchKeywords } from '@/lib/validate/progress';
 import type { StepStatus } from '@/lib/validate/progress';
-import type { Competitor } from '@/types';
+import type { EvidenceSource } from '@/types/validate.types';
 
 type Phase = 'thinking' | 'researching' | 'analyzing';
 
 interface ValidationProgressProps {
   phase: Phase;
-  competitors: Competitor[];
-  productType: string;
+  sources: EvidenceSource[];
   description: string;
   onCancel: () => void;
 }
@@ -34,19 +33,17 @@ const MAX_VISIBLE_SOURCES = 6;
 
 export function ValidationProgress({
   phase,
-  competitors,
-  productType,
+  sources,
   description,
   onCancel,
 }: ValidationProgressProps) {
   const scoringLabel = useCyclingLabel(phase === 'analyzing', SCORING_LABELS);
-  const isMobile = productType === 'Mobile App';
-  const searchKeywords = getSearchKeywords(description, isMobile);
+  const searchKeywords = getSearchKeywords(description);
 
-  const allSources = competitors.filter((c) => c.type !== 'signal').concat(competitors.filter((c) => c.type === 'signal'));
+  const allSources = sources.filter((s) => s.kind === 'web');
   const visibleSources = allSources.slice(0, MAX_VISIBLE_SOURCES);
   const hiddenCount = allSources.length - visibleSources.length;
-  const totalFound = competitors.length;
+  const totalFound = sources.length;
 
   const queriesStatus = stepStatus('queries', phase);
   const researchStatus = stepStatus('research', phase);
@@ -75,8 +72,7 @@ export function ValidationProgress({
       <div className="flex flex-col">
         <Step
           status={queriesStatus}
-          Icon={Search}
-          label="Preparing research queries"
+          label="Preparing complaint searches"
           isLast={false}
           delay={0.15}
         >
@@ -106,8 +102,7 @@ export function ValidationProgress({
 
         <Step
           status={researchStatus}
-          Icon={FileText}
-          label={isMobile ? 'Searching App Store & web signals' : 'Searching market & web signals'}
+          label="Searching Reddit, forums & communities"
           isLast={false}
           delay={0.22}
         >
@@ -121,7 +116,7 @@ export function ValidationProgress({
                 className="mt-2.5 flex items-center gap-2 text-xs text-muted-foreground/40"
               >
                 <Pulse />
-                {isMobile ? 'Fetching App Store results…' : 'Scanning market signals…'}
+                Scanning discussions and forum threads…
               </motion.div>
             )}
             {researchStatus === 'done' && (
@@ -143,7 +138,7 @@ export function ValidationProgress({
                 >
                   {visibleSources.map((c) => (
                     <motion.li
-                      key={c.url ?? c.name}
+                      key={c.url}
                       variants={ITEM}
                       className="flex items-center gap-2 text-xs text-muted-foreground/50"
                     >
@@ -169,8 +164,7 @@ export function ValidationProgress({
 
         <Step
           status={scoringStatus}
-          Icon={BarChart2}
-          label="Scoring signals & generating report"
+          label="Grouping complaints into themes"
           isLast
           delay={0.29}
         >
@@ -205,14 +199,13 @@ export function ValidationProgress({
 
 interface StepProps {
   status: StepStatus;
-  Icon: React.ElementType;
   label: string;
   isLast: boolean;
   delay: number;
   children?: React.ReactNode;
 }
 
-function Step({ status, Icon, label, isLast, delay, children }: StepProps) {
+function Step({ status, label, isLast, delay, children }: StepProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}

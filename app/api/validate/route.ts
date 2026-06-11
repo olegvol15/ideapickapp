@@ -1,15 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { openai } from '@/lib/openai';
-import {
-  buildValidationQueryMessages,
-  buildCompetitorMessages,
-} from '@/prompts/validate.prompts';
 import { requireAuth, checkRateLimit } from '@/lib/supabase/auth';
 import { validateLimiter, validateDailyLimiter } from '@/lib/rate-limit';
 import { validateValidateInput } from '@/lib/validate-input';
-import { runMobileValidation } from '@/services/validate-mobile.service';
-import { runSaasValidation } from '@/services/validate-saas.service';
-import { expandKeywords } from '@/lib/keywords/expandKeywords';
+import { runPainEvidenceValidation } from '@/services/validate-evidence.service';
 import { AppError } from '@/lib/errors/app-error';
 import { logger } from '@/lib/logger';
 import type { ValidateRequest } from '@/types/validate.types';
@@ -28,8 +21,8 @@ export const POST = async (req: NextRequest): Promise<Response> => {
       throw AppError.validation('Invalid request body');
     }
 
-    const { description, productType, audience, problem, monetization, differentiation } = body;
-    validateValidateInput(description, productType, audience, problem, monetization, differentiation);
+    const { description, productType, audience, problem } = body;
+    validateValidateInput(description, productType, audience, problem);
   } catch (err) {
     if (err instanceof AppError) {
       return NextResponse.json(
@@ -54,7 +47,7 @@ export const POST = async (req: NextRequest): Promise<Response> => {
     );
   }
 
-  const { description, productType, audience, problem, monetization, differentiation } = body!;
+  const { description, productType, audience, problem } = body!;
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
@@ -68,104 +61,14 @@ export const POST = async (req: NextRequest): Promise<Response> => {
       };
 
       try {
-        // Step 1: In parallel — signal query + LLM competitors + keyword expansion (mobile only)
-        const [queryCompletion, competitorCompletion, keywordExpansion] =
-          await Promise.all([
-            openai.chat.completions.create({
-              model: 'gpt-4o-mini',
-              messages: buildValidationQueryMessages(
-                description,
-                productType,
-                audience,
-                problem,
-                monetization,
-                differentiation
-              ),
-              temperature: 0.3,
-              max_tokens: 150,
-              response_format: { type: 'json_object' },
-            }),
-            openai.chat.completions.create({
-              model: 'gpt-4o-mini',
-              messages: buildCompetitorMessages(
-                description,
-                productType,
-                audience,
-                problem,
-                monetization,
-                differentiation
-              ),
-              temperature: 0.2,
-              max_tokens: 600,
-              response_format: { type: 'json_object' },
-            }),
-            productType === 'Mobile App'
-              ? expandKeywords({ description, productType })
-              : Promise.resolve(null),
-          ]);
-
-        const rawQuery = queryCompletion.choices[0]?.message?.content;
-        if (!rawQuery) throw AppError.ai('LLM returned empty response');
-        let signalQuery: string | undefined;
-        try {
-          const q = JSON.parse(rawQuery);
-          signalQuery = q.signalQuery;
-        } catch {
-          throw AppError.ai('LLM returned invalid JSON');
-        }
-
-        const rawCompetitors =
-          competitorCompletion.choices[0]?.message?.content;
-        if (!rawCompetitors) throw AppError.ai('LLM returned empty response');
-        let llmCompetitors: Array<{
-          name: string;
-          url: string;
-          source: string;
-          snippet: string;
-        }> = [];
-        try {
-          const c = JSON.parse(rawCompetitors);
-          llmCompetitors = Array.isArray(c.competitors) ? c.competitors : [];
-        } catch {
-          throw AppError.ai('LLM returned invalid JSON');
-        }
-
-        // Step 2+3: delegate to the appropriate pipeline service
-        if (productType === 'Mobile App') {
-          const expansion = keywordExpansion ?? {
-            base: description,
-            variations: [],
-            niches: [],
-          };
-          const { result, competitors } = await runMobileValidation({
-            description,
-            productType,
-            audience,
-            problem,
-            monetization,
-            differentiation,
-            signalQuery,
-            llmCompetitors,
-            expansion,
-            onResearch: (c) =>
-              emit({ type: 'research', data: { competitors: c } }),
-          });
-          emit({ type: 'done', data: { result, competitors } });
-        } else {
-          const { result, competitors } = await runSaasValidation({
-            description,
-            productType,
-            audience,
-            problem,
-            monetization,
-            differentiation,
-            signalQuery,
-            llmCompetitors,
-            onResearch: (c) =>
-              emit({ type: 'research', data: { competitors: c } }),
-          });
-          emit({ type: 'done', data: { result, competitors } });
-        }
+        const { result, sources } = await runPainEvidenceValidation({
+          description,
+          productType,
+          audience,
+          problem,
+          onSources: (s) => emit({ type: 'sources', data: { sources: s } }),
+        });
+        emit({ type: 'done', data: { result, sources } });
       } catch (err) {
         if (err instanceof AppError) {
           if (err.statusCode >= 500) logger.error({ err }, err.message);

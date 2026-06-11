@@ -12,8 +12,8 @@ import {
 import { useValidateStore } from '@/stores/validate.store';
 import { toast } from 'sonner';
 import { validationKeys } from '@/lib/api-keys';
-import type { EnhancedValidationResult } from '@/lib/schemas';
-import type { Competitor } from '@/types';
+import type { PainEvidenceResult } from '@/lib/schemas';
+import type { EvidenceSource } from '@/types/validate.types';
 
 export const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -24,8 +24,8 @@ export function useSaveValidation(userId: string | undefined) {
     mutationFn: (params: {
       description: string;
       productType: string;
-      result: EnhancedValidationResult;
-      competitors: Competitor[];
+      result: PainEvidenceResult;
+      sources: EvidenceSource[];
     }) => {
       if (!userId) return Promise.resolve('');
       return saveValidation({ userId, ...params });
@@ -72,15 +72,15 @@ export function useUpdateValidation(userId: string | undefined) {
       id,
       description,
       result,
-      competitors,
+      sources,
     }: {
       id: string;
       description: string;
-      result: EnhancedValidationResult;
-      competitors: Competitor[];
+      result: PainEvidenceResult;
+      sources: EvidenceSource[];
     }) => {
       if (!userId) return Promise.resolve();
-      return updateValidation(userId, id, description, result, competitors);
+      return updateValidation(userId, id, description, result, sources);
     },
     onSuccess: () => {
       if (userId)
@@ -114,7 +114,7 @@ export function useGetValidation(userId: string | undefined, id: string) {
             description: localEntry.description,
             product_type: localEntry.productType,
             result_json: localEntry.result,
-            competitors_json: localEntry.competitors,
+            competitors_json: localEntry.sources,
             created_at: new Date(localEntry.createdAt).toISOString(),
           }
         : undefined,

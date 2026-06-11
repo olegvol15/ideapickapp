@@ -1,13 +1,15 @@
 import { fetchNdjsonStream } from '@/lib/ndjson-stream';
-import type { ValidateRequest } from '@/types/validate.types';
-import type { EnhancedValidationResult } from '@/lib/schemas';
-import type { Competitor } from '@/types';
+import type {
+  EvidenceSource,
+  ValidateRequest,
+} from '@/types/validate.types';
+import type { PainEvidenceResult } from '@/lib/schemas';
 
 type StreamEvent =
-  | { type: 'research'; data: { competitors: Competitor[] } }
+  | { type: 'sources'; data: { sources: EvidenceSource[] } }
   | {
       type: 'done';
-      data: { result: EnhancedValidationResult; competitors: Competitor[] };
+      data: { result: PainEvidenceResult; sources: EvidenceSource[] };
     };
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? '';
@@ -15,17 +17,16 @@ const apiBase = process.env.NEXT_PUBLIC_API_URL ?? '';
 export async function validateIdeaStream(
   request: ValidateRequest,
   options: {
-    onResearch?: (competitors: Competitor[]) => void;
+    onSources?: (sources: EvidenceSource[]) => void;
     signal?: AbortSignal;
   } = {}
-): Promise<{ result: EnhancedValidationResult; competitors: Competitor[] }> {
+): Promise<{ result: PainEvidenceResult; sources: EvidenceSource[] }> {
   return fetchNdjsonStream(
     `${apiBase}/api/validate`,
     request,
     (raw) => {
       const event = raw as StreamEvent;
-      if (event.type === 'research')
-        options.onResearch?.(event.data.competitors);
+      if (event.type === 'sources') options.onSources?.(event.data.sources);
       if (event.type === 'done') return event.data;
     },
     options.signal

@@ -5,17 +5,20 @@ import { MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { scoreColorBadge, decisionColorBadge } from '@/lib/validate/colors';
 import { ValidationContextMenu } from './ValidationContextMenu';
 import { useEditableValidation } from '@/hooks/use-editable-validation';
 import { relativeDate } from '@/lib/validate/format';
-import type { EnhancedValidationResult } from '@/lib/schemas';
+import { isPainEvidenceResult } from '@/lib/validate/legacy';
+import {
+  evidenceTypeCounts,
+  matchedQuoteCount,
+} from '@/lib/evidence/quote-pool';
 
 interface ValidationHistoryCardProps {
   id: string;
   description: string;
   productType: string | null;
-  result: EnhancedValidationResult;
+  result: unknown;
   createdAt: string | number;
   onDelete: () => void;
   onRename: (description: string) => void;
@@ -54,24 +57,29 @@ export function ValidationHistoryCard({
       className="group relative flex cursor-pointer flex-col gap-3 rounded-xl border border-border bg-card/60 p-4 transition-colors hover:border-border/80 hover:bg-card/90"
       onClick={() => !editing && router.push(`/validate/${id}`)}
     >
-      {/* Score + decision badges */}
+      {/* Evidence badges */}
       <div className="flex items-center gap-2">
-        <span
-          className={cn(
-            'rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums',
-            scoreColorBadge(result.score)
-          )}
-        >
-          {result.score}/100
-        </span>
-        {result.decision && (
-          <span
-            className={cn(
-              'rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize',
-              decisionColorBadge(result.decision)
+        {isPainEvidenceResult(result) ? (
+          <>
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold tabular-nums text-primary">
+              {matchedQuoteCount(result)} matched
+            </span>
+            {evidenceTypeCounts(result).related > 0 && (
+              <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground">
+                {evidenceTypeCounts(result).related} related
+              </span>
             )}
-          >
-            {result.decision.replace('-', ' ')}
+            <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground">
+              {result.totalQuotes} reviewed
+            </span>
+            <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground">
+              {result.themes.length} theme
+              {result.themes.length !== 1 ? 's' : ''}
+            </span>
+          </>
+        ) : (
+          <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground/60">
+            legacy report
           </span>
         )}
       </div>

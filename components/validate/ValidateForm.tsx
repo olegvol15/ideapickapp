@@ -25,10 +25,8 @@ export function ValidateForm() {
   const [productType, setProductType] = useState('');
   const [audience, setAudience] = useState('');
   const [problem, setProblem] = useState('');
-  const [monetization, setMonetization] = useState('');
-  const [differentiation, setDifferentiation] = useState('');
 
-  const { result, prevResult, competitors, version } = useValidateStore();
+  const { result, sources } = useValidateStore();
   const { phase, error, isActive, cancel, handleSubmit, resetSession } =
     useValidateWorkflow();
 
@@ -49,22 +47,9 @@ export function ValidateForm() {
     if (prob) setProblem(prob);
     router.replace('/validate');
     resetSession();
-    handleSubmit(desc, pt, aud, prob, undefined);
+    handleSubmit(desc, pt, aud, prob);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  function handleRefine(newDesc: string) {
-    setDescription(newDesc);
-    resetSession();
-    handleSubmit(
-      newDesc,
-      productType,
-      audience || undefined,
-      problem || undefined,
-      monetization || undefined,
-      differentiation || undefined
-    );
-  }
 
   const showHeader = phase === 'idle' || phase === 'error';
 
@@ -84,8 +69,8 @@ export function ValidateForm() {
               Validate Your Idea
             </h1>
             <p className="mt-3 text-[1.0625rem] leading-[1.7] text-foreground/70">
-              Describe your idea and get a research-backed validation report with
-              real market signals.
+              We search Reddit, forums, Q&A sites, and support communities for
+              people discussing the problem your idea solves.
             </p>
           </motion.div>
         )}
@@ -101,6 +86,12 @@ export function ValidateForm() {
             onChange={(e) => setDescription(e.target.value)}
             className="min-h-[120px]"
             maxLength={600}
+          />
+          <Input
+            placeholder="What pain does it solve? — we search for real complaints about this (optional)"
+            value={problem}
+            onChange={(e) => setProblem(e.target.value)}
+            maxLength={300}
           />
           <div className="flex flex-col gap-3 sm:flex-row">
             <div className="flex-1">
@@ -129,31 +120,12 @@ export function ValidateForm() {
               />
             </div>
           </div>
-          <Input
-            placeholder="What pain does it solve? (optional)"
-            value={problem}
-            onChange={(e) => setProblem(e.target.value)}
-            maxLength={300}
-          />
-          <Input
-            placeholder="How do you plan to charge? (optional, e.g. $10/month, one-time $29, freemium)"
-            value={monetization}
-            onChange={(e) => setMonetization(e.target.value)}
-            maxLength={200}
-          />
-          <Textarea
-            rows={2}
-            placeholder="What specifically will you do differently from apps that already exist? (optional)"
-            value={differentiation}
-            onChange={(e) => setDifferentiation(e.target.value)}
-            className="min-h-[72px]"
-            maxLength={300}
-          />
           <p className="text-xs text-muted-foreground/55 -mt-2">
-            The more context you provide, the more specific and actionable your validation will be.
+            The report is built only from real comments and complaints found
+            online — the clearer the problem, the better the evidence.
           </p>
           <Button
-            onClick={() => handleSubmit(description, productType, audience, problem, monetization || undefined, differentiation || undefined)}
+            onClick={() => handleSubmit(description, productType, audience, problem)}
             disabled={!canSubmit}
           >
             Validate Idea
@@ -175,8 +147,7 @@ export function ValidateForm() {
           >
             <ValidationProgress
               phase={phase}
-              competitors={competitors}
-              productType={productType}
+              sources={sources}
               description={description}
               onCancel={cancel}
             />
@@ -191,19 +162,7 @@ export function ValidateForm() {
             transition={{ duration: 0.3 }}
             className="mt-8 flex flex-col"
           >
-            <ValidationReport
-              result={result}
-              competitors={competitors}
-              previousResult={prevResult ?? undefined}
-              ideaContext={{
-                description,
-                audience: audience || undefined,
-                problem: problem || undefined,
-                monetization: monetization || undefined,
-                differentiation: differentiation || undefined,
-              }}
-              onRefine={handleRefine}
-            />
+            <ValidationReport result={result} title={description} />
           </motion.div>
         )}
 
@@ -230,7 +189,7 @@ export function ValidateForm() {
             <Button
               variant="link"
               size="sm"
-              onClick={() => handleSubmit(description, productType, audience, problem, monetization || undefined, differentiation || undefined)}
+              onClick={() => handleSubmit(description, productType, audience, problem)}
             >
               Try again →
             </Button>

@@ -29,6 +29,7 @@ export interface AppStoreReview {
   rating: number;
   title: string;
   body: string;
+  author?: string;
 }
 
 export function extractTrackId(trackViewUrl: string): number | null {
@@ -50,13 +51,18 @@ export async function fetchAppStoreReviews(
     // First entry is app metadata, not a review — skip it
     return entries
       .slice(1)
-      .map((e: unknown) => {
-        const entry = e as Record<string, Record<string, string>>;
+      .map((e: unknown): AppStoreReview | null => {
+        const entry = e as {
+          'im:rating'?: { label?: string };
+          title?: { label?: string };
+          content?: { label?: string };
+          author?: { name?: { label?: string } };
+        };
         const rating = Number(entry['im:rating']?.label);
-        const title = entry['title']?.label ?? '';
-        const body = entry['content']?.label ?? '';
+        const title = entry.title?.label ?? '';
+        const body = entry.content?.label ?? '';
         if (!rating || !body) return null;
-        return { rating, title, body };
+        return { rating, title, body, author: entry.author?.name?.label };
       })
       .filter((r): r is AppStoreReview => r !== null)
       .slice(0, limit);

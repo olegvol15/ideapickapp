@@ -66,15 +66,13 @@ export default function HistoryPage() {
         description: v.description,
         productType: v.product_type,
         result: v.result_json,
-        competitors: v.competitors_json,
         createdAt: v.created_at,
       }))
     : localValidations.map((v) => ({
         id: v.id,
         description: v.description,
         productType: v.productType,
-        result: v.result,
-        competitors: v.competitors,
+        result: v.result as unknown,
         createdAt: v.createdAt,
       }));
 

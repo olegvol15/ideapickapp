@@ -18,12 +18,11 @@ export function stepStatus(id: StepId, phase: Phase): StepStatus {
   return 'pending';
 }
 
-export function getSearchKeywords(
-  description: string,
-  isMobile: boolean
-): string[] {
+export function getSearchKeywords(description: string): string[] {
   const base = description.trim().slice(0, 40);
-  if (!isMobile)
-    return [`${base} competitors`, `${base} market`, `${base} user problems`];
-  return [`${base}`, `${base} alternatives`, `${base} reviews`];
+  return [
+    `${base} problems reddit`,
+    `${base} complaints`,
+    `${base} forum discussions`,
+  ];
 }
