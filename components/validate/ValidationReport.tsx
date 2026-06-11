@@ -28,7 +28,7 @@ export function ValidationReport({ result, competitors, ideaContext }: Validatio
   return (
     <div className="flex flex-col gap-0 w-full">
       {/* 1. Summary */}
-      <ValidationSummaryCard result={result} ideaContext={ideaContext} />
+      <ValidationSummaryCard result={result} />
 
       {/* 2. Verdict + Score */}
       <ValidationScoreBlock result={result} ideaContext={ideaContext} />

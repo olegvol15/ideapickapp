@@ -194,7 +194,7 @@ Analyze the idea and evidence, then return a JSON report with this exact shape:
   "failureReasons": ["<specific reason this could fail 1>", "<reason 2>", "<reason 3>"],
   "marketHardness": "<1 sentence: what makes this market hard to enter>",
   "verdict": "<2-3 sentences: honest assessment of viability based on evidence>",
-  "summary": "<4-6 sentences: personalized analysis written directly to the founder about THIS specific idea. Sentence 1: what the market data reveals about real demand — name the category and evidence quality. Sentence 2: who the main competitors are and the gap they leave open. Sentence 3: the primary opportunity for this specific idea given its angle, audience, or stated problem. Sentence 4: the single biggest risk this founder will face. Sentence 5-6 (optional): a direct actionable recommendation. Reference the idea's concept, audience, competitors, and data — no sentence should be reusable for a different idea. Start with 'Your idea' or 'Based on the research'.>",
+  "summary": "<4-5 sentences. SOURCE: write from the idea description in <user_input> and the competitor data below — NOT from any pre-computed market insights. Sentence 1: name the specific product promise and audience from the idea, and whether the real-world need fits or mismatches what this product is offering. Sentence 2: name the core product tension — the biggest ambiguity or assumption in how the idea is framed (quote the idea's own terminology if it reveals the problem). Sentence 3: name the key competitors by name, describe what they actually do for users, then state the gap they leave. Sentence 4: the clearest opening for this idea, framed as a specific user or use case those competitors ignore. Sentence 5 (optional): one concrete question the founder must answer before building. BANNED: 'review share', '% of reviews', 'average rating', 'app count', 'market entry window', 'top 5 apps control'. Every sentence names something from THIS idea specifically.>",
   "competitorInsights": [
     { "name": "<competitor name>", "whyChosen": "<why users pick them>", "weakness": "<their gap or weakness>" }
   ],
@@ -221,7 +221,7 @@ COPY RULES — follow exactly, no exceptions:
 - evidencedSignals: tag each with strength based on how direct the evidence is
 - marketHardness: 1 sentence, name the actual barrier (e.g. "CAC is high because Google Ads CPCs for this keyword are $8–15")
 - verdict: max 2 sentences. No fluff. State what the data says.
-- summary: 4-6 sentences. Every sentence specific to THIS idea — name its concept, audience, competitors, and data. Follow the structure: market reality → competitor gap → specific opportunity → main risk → recommendation. The founder must feel this was written for their idea, not a generic market report. Start with "Your idea" or "Based on the research".
+- summary: 4-5 sentences about the IDEA, not the market. Source: <user_input> description + competitor product data + real evidence. NEVER use pre-computed market insights as summary source. BAD: "The app idea for a happiness tool enters a highly competitive market where the top 5 apps control all reviews." GOOD: "Your happiness app faces a definition problem before a competition problem — 'happiness' can mean mood tracking, gratitude journaling, habit-building, or cognitive reframing, and each is a different product for a different person. Calm and Headspace dominate the meditation/mindfulness angle, Daylio owns mood logging, but none of them frames happiness as something you actively build through daily structured practice. The opening is the 'how to feel better' user who doesn't want to meditate — they want a clear sequence of things to do. Before building, nail down which of these four mechanisms is the core of your app, because trying to cover all of them is what makes wellness apps fail."
 - whereToWin: 2–3 items only. Each must describe a real, observable pattern from the competitor data — not generic advice. BANNED: "better UX", "add AI", "more features", "faster", "better personalization". title must be a gap type from the allowed list. pattern and gap must be factual and short (under 10 words each). opportunity must name a specific segment, channel, use-case, or behavior — not vague improvement.
 - nextStep: if whereToWin has insights, the nextStep must specifically test the angle in whereToWin[0].opportunity — not a generic validation step.
 IDEA-SPECIFIC RULES — every text field must feel specific to THIS idea, not reusable:
@@ -349,7 +349,7 @@ Final decision: ${rawDecision} — ${decisionReason}
 Confidence score: ${confidenceScore}/100
 UI scores (0–100): score=${uiScores.score}, painScore=${uiScores.painScore}, competitionScore=${uiScores.competitionScore}, opportunityScore=${uiScores.opportunityScore}
 
-Pre-computed market insights (use these — do not rephrase differently):
+Pre-computed market insights (use these for "keyInsights" only — do not use in "summary"):
 ${marketInsights.map((s) => `• ${s}`).join('\n') || '• Insufficient data for market insights'}
 
 Pre-computed opportunity insights:
@@ -385,6 +385,7 @@ STRICT RULES:
 - keyInsights MUST be drawn from the pre-computed market and opportunity insights provided — rephrase each in terms of what it means for THIS specific idea, not just what the market data shows
 - whereToWin MUST be formatted from the pre-computed win angles — format each into the JSON shape, do not add new angles
 - confidence MUST reflect the provided confidence score (${confidenceScore < 40 ? 'low' : confidenceScore < 70 ? 'medium' : 'high'})
+- summary MUST be written from the <user_input> idea description and competitor product data only — never cite pre-computed market insight numbers (review shares, ratings, app counts) in summary
 IDEA-SPECIFIC RULES:
 - signals, risks, failureReasons, marketHardness: explain what the data means for THIS specific idea — not the market in isolation. Reference the idea's use case, audience, or core feature in each bullet.
 - keyInsights: add what each pre-computed insight means for THIS idea (e.g. not "top 5 apps control 88%" but "top 5 apps control 88% — this idea enters with no brand recognition against incumbents with 10x more reviews")
@@ -397,7 +398,7 @@ Return a JSON object with exactly this shape:
   "signals": ["<positive market signal from the data>", "<signal 2>", "<signal 3>"],
   "risks": ["<risk derived from the metrics>", "<risk 2>", "<risk 3>"],
   "verdict": "<2 sentences: what the App Store distribution data says about this idea's viability — cite specific numbers>",
-  "summary": "<4-6 sentences: personalized analysis written directly to the founder about THIS specific App Store idea. Sentence 1: what the App Store data reveals about the market — cite a key metric (review share, app count, ratings). Sentence 2: who the main competitors are and what gap they leave for this idea. Sentence 3: the primary opportunity for this idea given its specific angle, audience, or stated problem. Sentence 4: the single biggest risk based on the data. Sentence 5-6 (optional): a direct recommendation. Reference the idea's concept, audience, and specific App Store metrics throughout. Start with 'Your idea' or 'Based on App Store data'.>",
+  "summary": "<4-5 sentences. SOURCE: write from the idea description in <user_input> and the competitor product data below — NOT from the pre-computed market insights section. Sentence 1: name the specific product promise and audience from the idea, and whether the real-world need fits or mismatches what this app is offering. Sentence 2: name the core product tension — the biggest ambiguity or assumption in how the idea is framed (quote the idea's own terminology if it reveals the problem). Sentence 3: name the key competitors by name, describe what they actually do for users, then state the gap they leave. Sentence 4: the clearest opening for this idea, framed as a specific user or use case those competitors ignore. Sentence 5 (optional): one concrete question the founder must answer before building. BANNED: 'review share', '% of reviews', 'average rating', 'app count', 'market entry window', 'top 5 apps control', 'The App Store data indicates'. Every sentence names something from THIS idea specifically.>",
   "confidence": "${confidenceScore < 40 ? 'low' : confidenceScore < 70 ? 'medium' : 'high'}",
   "confidenceReason": "<1 sentence citing data coverage: ${metrics.totalApps} apps found, signal count>",
   "keyInsights": ["<rephrase market insight 1 from the provided list>", "<rephrase insight 2>", "<insight 3>", "<insight 4 — optional>"],
@@ -492,7 +493,7 @@ Return a JSON object with exactly this shape:
 }
 COPY RULES:
 - verdict: cite specific numbers (review share %, ratings, app count)
-- summary: 4-6 sentences, every sentence specific to THIS idea. Cite actual App Store numbers. Name real competitors. State the opportunity and risk in terms of the founder's stated angle/audience. The founder must feel this was written for their idea, not a market overview.
+- summary: 4-5 sentences about the IDEA, not the market. Source: <user_input> description + competitor product data + real review complaints. NEVER use pre-computed market insights as summary source. BAD: "The app idea for a happiness tool enters a highly competitive market where the top 5 apps control all reviews." GOOD: "Your happiness app faces a definition problem before a competition problem — 'happiness' can mean mood tracking, gratitude journaling, habit-building, or cognitive reframing, and each is a different product for a different person. Calm and Headspace dominate the meditation/mindfulness angle, Daylio owns mood logging, but none of them frames happiness as something you actively build through daily structured practice. The opening is the 'how to feel better' user who doesn't want to meditate — they want a clear sequence of things to do. Before building, nail down which of these four mechanisms is the core of your app, because trying to cover all of them is what makes wellness apps fail."
 - keyInsights: MUST echo the pre-computed insights — do not substitute generic claims
 - whereToWin: MUST be formatted from the pre-computed angles provided — 2-3 items
 - failureReasons and risks: max 6 words each, blunt
@@ -521,6 +522,8 @@ ${context}
 </user_context>
 
 Every insight you write must reference THIS specific idea — not the market in general. Name the idea's use case, audience, or core feature in signals, risks, failureReasons, and verdict.
+
+SUMMARY SOURCE: Write the "summary" field using only the idea description in <user_input>, what the competitors below actually do and who they serve, and what users complain about in real reviews. Do NOT draw summary content from the Deterministic Engine Output section below — that section is for keyInsights, scoreBreakdown, and verdict only.
 
 --- Deterministic Engine Output ---
 ${metricsBlock}
