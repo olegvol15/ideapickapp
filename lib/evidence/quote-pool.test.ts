@@ -17,12 +17,15 @@ const completeClusters: ThemeClusterLLM = {
     {
       label: 'Sync keeps breaking',
       evidenceType: 'complaint',
-      quoteIds: [0, 1],
+      quotes: [
+        { id: 0, severity: 3 },
+        { id: 1, severity: 2 },
+      ],
     },
     {
       label: 'Tracking workarounds',
       evidenceType: 'related',
-      quoteIds: [2],
+      quotes: [{ id: 2, severity: 1 }],
     },
   ],
   excluded: [
@@ -44,7 +47,11 @@ describe('quote accounting', () => {
         {
           label: 'Theme',
           evidenceType: 'complaint',
-          quoteIds: [0, 0, 8],
+          quotes: [
+            { id: 0, severity: 2 },
+            { id: 0, severity: 2 },
+            { id: 8, severity: 2 },
+          ],
         },
       ],
       excluded: [{ id: 1, category: 'off_topic' }],
@@ -72,6 +79,7 @@ describe('result assembly', () => {
     const result = assembleResult(pool, completeClusters, 'A test problem');
 
     expect(result.themes[0].quotes[0].author).toBe('user0');
+    expect(result.themes[0].quotes[0].intensity).toBe(3);
     expect(result.totalQuotes).toBe(5);
     expect(matchedQuoteCount(result)).toBe(3);
     expect(evidenceTypeCounts(result)).toEqual({
@@ -105,7 +113,7 @@ describe('result assembly', () => {
           {
             label: 'Logging is unreliable',
             evidenceType: 'complaint',
-            quoteIds: [0],
+            quotes: [{ id: 0, severity: 2 }],
           },
         ],
         excluded: [],

@@ -21,6 +21,7 @@ import {
   hasQuoteAccountingIssues,
   validateQuoteAccounting,
 } from '@/lib/evidence/quote-pool';
+import { computeIdeaScore } from '@/lib/evidence/score';
 import { AppError } from '@/lib/errors/app-error';
 import type { EvidenceSource } from '@/types/validate.types';
 
@@ -66,7 +67,7 @@ async function clusterPainQuoteBatch(
     let clusters = await clusterPainQuotes(problemStatement, batch);
     let correction =
       clusters === null
-        ? 'The response did not match the required JSON schema. Include summary, themes, evidenceType, and excluded.'
+        ? 'The response did not match the required JSON schema. Include summary, themes (each with quotes as {id, severity} pairs and evidenceType), and excluded.'
         : '';
     let accounting = clusters
       ? validateQuoteAccounting(batch.length, clusters)
@@ -96,7 +97,7 @@ async function clusterPainQuoteBatch(
       {
         label: 'Related evidence, unclassified',
         evidenceType: 'related',
-        quoteIds: batch.map((quote) => quote.id),
+        quotes: batch.map((quote) => ({ id: quote.id, severity: 1 })),
       },
     ],
     excluded: [],
@@ -117,12 +118,15 @@ function mergeClusterBatches(
     const offset = offsets[index];
     batch.themes.forEach((theme) => {
       const key = `${theme.evidenceType}:${theme.label.trim().toLowerCase()}`;
-      const ids = theme.quoteIds.map((id) => id + offset);
+      const quotes = theme.quotes.map((quote) => ({
+        ...quote,
+        id: quote.id + offset,
+      }));
       const existing = themes.get(key);
       if (existing) {
-        existing.quoteIds.push(...ids);
+        existing.quotes.push(...quotes);
       } else {
-        themes.set(key, { ...theme, quoteIds: ids });
+        themes.set(key, { ...theme, quotes });
       }
     });
     excluded.push(
@@ -134,14 +138,14 @@ function mergeClusterBatches(
     if (a.evidenceType !== b.evidenceType) {
       return a.evidenceType === 'complaint' ? -1 : 1;
     }
-    return b.quoteIds.length - a.quoteIds.length;
+    return b.quotes.length - a.quotes.length;
   });
   const complaintCount = mergedThemes
     .filter((theme) => theme.evidenceType === 'complaint')
-    .reduce((sum, theme) => sum + theme.quoteIds.length, 0);
+    .reduce((sum, theme) => sum + theme.quotes.length, 0);
   const relatedCount = mergedThemes
     .filter((theme) => theme.evidenceType === 'related')
-    .reduce((sum, theme) => sum + theme.quoteIds.length, 0);
+    .reduce((sum, theme) => sum + theme.quotes.length, 0);
 
   return {
     summary: `Found ${complaintCount} direct complaint excerpts and ${relatedCount} related discussions across the collected evidence.`,
@@ -215,8 +219,14 @@ export async function runPainEvidenceValidation(
   }
   const clusters = mergeClusterBatches(clusteredBatches, offsets);
 
+  const assembled = assembleResult(pool, clusters, queries.problemStatement);
+  const { score, scoreBreakdown } = computeIdeaScore(
+    assembled,
+    Boolean(params.audience?.trim())
+  );
+
   return {
-    result: assembleResult(pool, clusters, queries.problemStatement),
+    result: { ...assembled, score, scoreBreakdown },
     sources,
   };
 }

@@ -13,6 +13,7 @@ import {
   evidenceTypeCounts,
   matchedQuoteCount,
 } from '@/lib/evidence/quote-pool';
+import { scoreColor } from './PainScoreBlock';
 
 interface ValidationHistoryCardProps {
   id: string;
@@ -61,6 +62,16 @@ export function ValidationHistoryCard({
       <div className="flex items-center gap-2">
         {isPainEvidenceResult(result) ? (
           <>
+            {result.score != null && (
+              <span
+                className={cn(
+                  'rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums',
+                  scoreColor(result.score)
+                )}
+              >
+                {result.score}/100
+              </span>
+            )}
             <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold tabular-nums text-primary">
               {matchedQuoteCount(result)} matched
             </span>

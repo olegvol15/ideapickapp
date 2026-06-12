@@ -14,7 +14,7 @@ const TOP_APPS = 6;
 const REVIEWS_PER_APP = 30;
 const MAX_COMPLAINT_RATING = 3;
 const MIN_REVIEW_LENGTH = 40;
-const MAX_QUOTE_LENGTH = 300;
+const MAX_QUOTE_LENGTH = 1000;
 
 async function collectAppQuotes(app: AppStoreApp): Promise<PainQuote[]> {
   const trackId = app.trackId ?? extractTrackId(app.trackViewUrl);

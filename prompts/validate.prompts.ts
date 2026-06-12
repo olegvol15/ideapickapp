@@ -1,3 +1,5 @@
+import { truncateAtWord } from '@/lib/evidence/quote-pool';
+
 type ChatMessage = { role: 'system' | 'user'; content: string };
 
 export function buildPainQueryMessages(
@@ -68,6 +70,10 @@ export interface ClusterQuoteInput {
   author?: string;
 }
 
+// Stored quotes can be up to ~1000 chars for display; the prompt only
+// needs enough text to classify, so cap each line to keep tokens bounded.
+const PROMPT_QUOTE_LENGTH = 280;
+
 export function buildThemeClusterMessages(
   problemStatement: string,
   quotes: ClusterQuoteInput[],
@@ -78,7 +84,7 @@ export function buildThemeClusterMessages(
       const origin = q.author
         ? `${q.sourceLabel}, authored by ${q.author}`
         : `${q.sourceLabel}, page excerpt without an author`;
-      return `[${q.id}] (${origin}) "${q.text}"`;
+      return `[${q.id}] (${origin}) "${truncateAtWord(q.text, PROMPT_QUOTE_LENGTH)}"`;
     })
     .join('\n');
 
@@ -94,7 +100,7 @@ Return a JSON object with exactly this shape:
     {
       "label": "<short theme label, max 8 words>",
       "evidenceType": <"complaint" | "related">,
-      "quoteIds": [<id>, <id>]
+      "quotes": [{ "id": <id>, "severity": <1 | 2 | 3> }]
     }
   ],
   "excluded": [
@@ -104,7 +110,8 @@ Return a JSON object with exactly this shape:
 
 RULES:
 - Group quotes that describe the same underlying complaint about THIS problem: "${problemStatement}"
-- EVERY numeric quote ID must appear exactly once: either in one theme's quoteIds or once in excluded.
+- EVERY numeric quote ID must appear exactly once: either in one theme's quotes or once in excluded.
+- severity rates how intense the pain expressed in THAT excerpt is: 1 = mild gripe or passing annoyance; 2 = real recurring pain that affects their work or life; 3 = severe — they built their own workaround, mention paying or money, or use desperate language. Quotes in "related" themes are not complaints: always give them severity 1.
 - Never duplicate an ID, omit an ID, or invent an ID.
 - Use evidenceType "complaint" when excerpts explicitly express difficulty, frustration, failed attempts, unmet needs, or negative consequences.
 - Use evidenceType "related" for relevant advice, workarounds, neutral experiences, existing workflows, tool usage, questions, or discussion of the same problem.

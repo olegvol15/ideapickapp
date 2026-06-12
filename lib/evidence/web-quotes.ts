@@ -6,43 +6,29 @@ import {
 } from './reddit-comments';
 import type { RedditComment } from './reddit-comments';
 import { truncateAtWord } from './quote-pool';
+import {
+  BLOCKED_DOMAINS,
+  EDITORIAL_DOMAINS,
+  matchesDomainSuffix,
+} from './domains';
 
 const TAVILY_URL = 'https://api.tavily.com/search';
 const MAX_RESULTS_PER_QUERY = 10;
 const MIN_SNIPPET_LENGTH = 60;
-const MAX_QUOTE_LENGTH = 280;
+// Stored/displayed quote length. The LLM prompt truncates separately
+// (buildThemeClusterMessages), so longer storage costs no tokens.
+const MAX_QUOTE_LENGTH = 1000;
 const MAX_REDDIT_THREADS = 12;
 const MAX_REDDIT_COMMENT_QUOTES = 35;
 
-// Video/social platforms and APK mirrors — no quotable complaint text.
-// Reddit, Quora, HN, and Stack Exchange are deliberately allowed: they
-// are exactly where people complain.
-const BLOCKED_DOMAINS = new Set([
-  'youtube.com',
-  'youtu.be',
-  'twitter.com',
-  'x.com',
-  'linkedin.com',
-  'facebook.com',
-  'instagram.com',
-  'tiktok.com',
-  'apkpure.com',
-  'apkmirror.com',
-  'apk-dl.com',
-  'grandviewresearch.com',
-  'mordorintelligence.com',
-  'marketsandmarkets.com',
-  'technavio.com',
-  'statista.com',
-  'ibisworld.com',
-  'globenewswire.com',
-  'prnewswire.com',
-  'businessresearchinsights.com',
-  'verifiedmarketresearch.com',
-  'alliedmarketresearch.com',
-  'precedenceresearch.com',
-  'straitsresearch.com',
-]);
+// Blog-style paths on arbitrary domains are vendor/editorial content
+// (dragonflyai.co/blog/…), not people complaining.
+const BLOG_PATH_RE =
+  /\/(blog|blogs|article|articles|post|posts|news|insights|resources|guide|guides|review|reviews)\b/i;
+
+// Titles shaped like articles or listicles rather than discussions.
+const EDITORIAL_TITLE_RE =
+  /^(the\s+)?(\d+\s+)?(best|top\s+\d+|pitfalls?\s+of|ultimate|complete|essential|definitive)\b|(\bguide\s+to\b)|(\d+\s+ways\s+to\b)|(\bwhy\s+you(r)?\s+should\b)|(\bhow\s+to\s+choose\b)|(^review:)|(\bvs\.?\s)/i;
 
 // Snippets dominated by sales copy are marketing pages, not complaints.
 const PROMO_SIGNALS = [
@@ -80,7 +66,7 @@ interface CleanedResult extends TavilyResult {
 }
 
 const LEADING_NAV_JUNK =
-  /^(?:skip to (?:main )?content|open menu|close menu|menu|navigation|search)\b[\s.:|–-]*/i;
+  /^(?:skip to (?:main )?content|open menu|close menu|menu|navigation|search|summary|tl;dr)\b[\s.:|–-]*/i;
 
 function normalizedTitle(title: string): string {
   return title
@@ -141,17 +127,32 @@ function buildSourceLabel(url: string): string {
   return host;
 }
 
-function isQuotable(result: CleanedResult): boolean {
+function urlPath(url: string): string {
+  try {
+    return new URL(url).pathname;
+  } catch {
+    return '';
+  }
+}
+
+export function isQuotable(result: CleanedResult): boolean {
   const host = hostname(result.url);
-  if (BLOCKED_DOMAINS.has(host)) return false;
+  if (matchesDomainSuffix(host, BLOCKED_DOMAINS)) return false;
   if (result.cleaned.length < MIN_SNIPPET_LENGTH) return false;
   const lower = result.cleaned.toLowerCase();
   if (PROMO_SIGNALS.some((s) => lower.includes(s))) return false;
+
+  const isReddit = host.endsWith('reddit.com');
   if (
-    host.endsWith('reddit.com') &&
+    isReddit &&
     REDDIT_SHELL_SIGNALS.filter((s) => lower.includes(s)).length >= 2
   ) {
     return false;
+  }
+  if (!isReddit) {
+    if (matchesDomainSuffix(host, EDITORIAL_DOMAINS)) return false;
+    if (BLOG_PATH_RE.test(urlPath(result.url))) return false;
+    if (EDITORIAL_TITLE_RE.test(normalizedTitle(result.title))) return false;
   }
   return true;
 }

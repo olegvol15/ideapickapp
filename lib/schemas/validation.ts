@@ -8,6 +8,7 @@ export const PainQuoteSchema = z.object({
   url: z.string().optional(),
   rating: z.number().min(1).max(5).optional(),
   appName: z.string().optional(),
+  intensity: z.number().int().min(1).max(3).optional(),
 });
 export type PainQuote = z.infer<typeof PainQuoteSchema>;
 
@@ -19,11 +20,20 @@ export const PainThemeSchema = z.object({
 });
 export type PainTheme = z.infer<typeof PainThemeSchema>;
 
+export const ScoreBreakdownSchema = z.object({
+  problemStrength: z.number().min(0).max(100),
+  complaintFrequency: z.number().min(0).max(100),
+  audienceReachability: z.number().min(0).max(100),
+});
+export type ScoreBreakdown = z.infer<typeof ScoreBreakdownSchema>;
+
 export const PainEvidenceResultSchema = z.object({
   problem: z.string(),
   summary: z.string(),
   totalQuotes: z.number().int().min(0),
   themes: z.array(PainThemeSchema),
+  score: z.number().min(0).max(100).optional(),
+  scoreBreakdown: ScoreBreakdownSchema.optional(),
 });
 export type PainEvidenceResult = z.infer<typeof PainEvidenceResultSchema>;
 
@@ -41,7 +51,14 @@ export const ThemeClusterLLMSchema = z.object({
       z.object({
         label: z.string().min(3).max(90),
         evidenceType: z.enum(['complaint', 'related']).default('complaint'),
-        quoteIds: z.array(z.number().int().min(0)).min(1),
+        quotes: z
+          .array(
+            z.object({
+              id: z.number().int().min(0),
+              severity: z.number().int().min(1).max(3).default(2),
+            })
+          )
+          .min(1),
       })
     )
     .max(16),

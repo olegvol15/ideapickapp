@@ -32,7 +32,9 @@ export function validateQuoteAccounting(
     counts.set(id, (counts.get(id) ?? 0) + 1);
   };
 
-  clusters.themes.forEach((theme) => theme.quoteIds.forEach(record));
+  clusters.themes.forEach((theme) =>
+    theme.quotes.forEach(({ id }) => record(id))
+  );
   clusters.excluded.forEach(({ id }) => record(id));
 
   const missingIds: number[] = [];
@@ -166,7 +168,7 @@ export function assembleResult(
 
   for (const cluster of clusters.themes) {
     const quotes: PainQuote[] = [];
-    for (const id of cluster.quoteIds) {
+    for (const { id, severity } of cluster.quotes) {
       if (usedIds.has(id)) continue;
       const pooled = pool[id];
       if (!pooled || pooled.id !== id) continue;
@@ -179,6 +181,7 @@ export function assembleResult(
         url: pooled.url,
         rating: pooled.rating,
         appName: pooled.appName,
+        intensity: severity,
       });
     }
     if (quotes.length < MIN_QUOTES_PER_THEME) continue;
@@ -212,5 +215,11 @@ export function emptyResult(problemStatement: string): PainEvidenceResult {
       'No public complaints found for this problem — either the pain is rare or people describe it differently.',
     totalQuotes: 0,
     themes: [],
+    score: 0,
+    scoreBreakdown: {
+      problemStrength: 0,
+      complaintFrequency: 0,
+      audienceReachability: 0,
+    },
   };
 }

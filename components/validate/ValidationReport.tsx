@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { PainScoreBlock } from './PainScoreBlock';
 import { PainThemeBlock } from './PainThemeBlock';
 import { SectionHeading } from './SectionHeading';
 import {
@@ -47,6 +48,12 @@ export function ValidationReport({ result, title }: ValidationReportProps) {
           <h1 className="text-2xl font-bold leading-snug tracking-tight text-foreground">
             {title}
           </h1>
+        )}
+        {result.score != null && (
+          <PainScoreBlock
+            score={result.score}
+            breakdown={result.scoreBreakdown}
+          />
         )}
         <p className="text-[15px] leading-relaxed text-foreground/85">
           {result.summary}
