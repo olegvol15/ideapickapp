@@ -22,7 +22,17 @@ import {
   validateQuoteAccounting,
 } from '@/lib/evidence/quote-pool';
 import { computeIdeaScore } from '@/lib/evidence/score';
-import { analyzeCompetitors } from '@/services/validate-competitors.service';
+import {
+  mergeCompetitorCandidates,
+  pickCompetitorCandidates,
+  searchCompetitorCandidates,
+  verifyCompetitorCandidates,
+} from '@/lib/evidence/competitor-candidates';
+import {
+  buildCompetitorInsights,
+  extractMentionedProducts,
+  identifyKnownCompetitors,
+} from '@/services/validate-competitors.service';
 import { AppError } from '@/lib/errors/app-error';
 import type { EvidenceSource } from '@/types/validate.types';
 
@@ -188,10 +198,15 @@ async function generatePainQueries(
 export async function runPainEvidenceValidation(
   params: PainEvidenceParams
 ): Promise<{ result: PainEvidenceResult; sources: EvidenceSource[] }> {
-  // Independent of the evidence flow — runs alongside it.
-  const competitorsPromise = analyzeCompetitors(params);
+  // Competitor lanes that don't need the quote pool start immediately.
+  const knownPromise = identifyKnownCompetitors(params);
 
   const queries = await generatePainQueries(params);
+  const searchPromise = searchCompetitorCandidates(
+    queries.competitorQuery,
+    params.productType
+  );
+
   const web = await searchPainQuotes(
     queries.webQueries,
     queries.commentQuery
@@ -202,7 +217,20 @@ export async function runPainEvidenceValidation(
   params.onSources(sources);
 
   if (pool.length === 0) {
-    const competitors = await competitorsPromise;
+    const candidates = mergeCompetitorCandidates({
+      mentioned: [],
+      searched: await searchPromise,
+      known: await knownPromise,
+    });
+    const verified = await verifyCompetitorCandidates(
+      candidates,
+      params.productType
+    );
+    const competitors = await buildCompetitorInsights(
+      pickCompetitorCandidates(verified),
+      params,
+      pool
+    );
     return {
       result: {
         ...emptyResult(queries.problemStatement),
@@ -222,20 +250,44 @@ export async function runPainEvidenceValidation(
         .map((quote, id) => ({ ...quote, id }))
     );
   }
-  const clusteredBatches: ThemeClusterLLM[] = [];
-  for (const batch of batches) {
-    clusteredBatches.push(
-      await clusterPainQuoteBatch(queries.problemStatement, batch)
+  // Clustering and the competitor flow both depend on the pool and run
+  // in parallel — the competitor path finishes well inside cluster time.
+  const clustersPromise = (async () => {
+    const clusteredBatches: ThemeClusterLLM[] = [];
+    for (const batch of batches) {
+      clusteredBatches.push(
+        await clusterPainQuoteBatch(queries.problemStatement, batch)
+      );
+    }
+    return mergeClusterBatches(clusteredBatches, offsets);
+  })();
+  const competitorsPromise = (async () => {
+    const mentioned = await extractMentionedProducts(pool);
+    const candidates = mergeCompetitorCandidates({
+      mentioned,
+      searched: await searchPromise,
+      known: await knownPromise,
+    });
+    const verified = await verifyCompetitorCandidates(
+      candidates,
+      params.productType
     );
-  }
-  const clusters = mergeClusterBatches(clusteredBatches, offsets);
+    return buildCompetitorInsights(
+      pickCompetitorCandidates(verified),
+      params,
+      pool
+    );
+  })();
+  const [clusters, competitors] = await Promise.all([
+    clustersPromise,
+    competitorsPromise,
+  ]);
 
   const assembled = assembleResult(pool, clusters, queries.problemStatement);
   const { score, scoreBreakdown } = computeIdeaScore(
     assembled,
     Boolean(params.audience?.trim())
   );
-  const competitors = await competitorsPromise;
 
   return {
     result: {

@@ -32,6 +32,12 @@ export function CompetitorInsightBlock({
 }: CompetitorInsightBlockProps) {
   const [expandedBullet, setExpandedBullet] = useState<string | null>(null);
   const domain = competitorDomain(competitor.url);
+  const mentionBadge =
+    competitor.mentionCount != null
+      ? `Named in ${competitor.mentionCount} complaint${competitor.mentionCount !== 1 ? 's' : ''}`
+      : competitor.origin === 'mentioned'
+        ? 'Named in complaints'
+        : null;
 
   const lists: BulletListConfig[] = [
     {
@@ -81,6 +87,12 @@ export function CompetitorInsightBlock({
           </a>
         )}
       </div>
+
+      {mentionBadge && (
+        <span className="self-start rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold tabular-nums text-amber-400">
+          {mentionBadge}
+        </span>
+      )}
 
       <p className="text-sm leading-relaxed text-foreground/75">
         {competitor.description}

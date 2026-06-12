@@ -69,10 +69,16 @@ export function splitReviewMaterials(
 }
 
 async function collectAppStoreOpinions(
-  name: string
+  target: OpinionTarget
 ): Promise<OpinionMaterial[]> {
-  const apps = await fetchAppStoreApps(name, 3);
-  const app = pickBestAppMatch(apps, name);
+  // A verified candidate already carries its App Store match.
+  if (target.trackId) {
+    const reviews = await fetchAppStoreReviews(target.trackId, REVIEWS_PER_APP);
+    return splitReviewMaterials(reviews, target.url);
+  }
+
+  const apps = await fetchAppStoreApps(target.name, 3);
+  const app = pickBestAppMatch(apps, target.name);
   const trackId = app
     ? (app.trackId ?? extractTrackId(app.trackViewUrl))
     : null;
@@ -135,14 +141,20 @@ async function collectWebOpinions(name: string): Promise<OpinionMaterial[]> {
   }
 }
 
+export interface OpinionTarget {
+  name: string;
+  trackId?: number;
+  url?: string;
+}
+
 export async function collectOpinionMaterials(
-  name: string,
+  target: OpinionTarget,
   productType: string
 ): Promise<OpinionMaterial[]> {
   try {
     return productType === 'Mobile App'
-      ? await collectAppStoreOpinions(name)
-      : await collectWebOpinions(name);
+      ? await collectAppStoreOpinions(target)
+      : await collectWebOpinions(target.name);
   } catch {
     return [];
   }

@@ -49,6 +49,8 @@ export const CompetitorInsightSchema = z.object({
   likes: z.array(CompetitorBulletSchema),
   dislikes: z.array(CompetitorBulletSchema),
   edge: z.string().optional(),
+  origin: z.enum(['market', 'mentioned']).optional(),
+  mentionCount: z.number().int().min(1).optional(),
 });
 export type CompetitorInsight = z.infer<typeof CompetitorInsightSchema>;
 
@@ -67,6 +69,7 @@ export const PainQueryResponseSchema = z.object({
   problemStatement: z.string().min(3),
   webQueries: z.array(z.string().min(3)).min(1).max(6),
   commentQuery: z.string().min(3),
+  competitorQuery: z.string().min(3),
 });
 export type PainQueryResponse = z.infer<typeof PainQueryResponseSchema>;
 
@@ -119,5 +122,18 @@ export const CompetitorOpinionLLMSchema = z.object({
   likes: z.array(OpinionBulletLLMSchema).max(4),
   dislikes: z.array(OpinionBulletLLMSchema).max(4),
   edge: z.string().min(3),
+  description: z.string().optional(),
 });
 export type CompetitorOpinionLLM = z.infer<typeof CompetitorOpinionLLMSchema>;
+
+export const MentionedProductsLLMSchema = z.object({
+  products: z
+    .array(
+      z.object({
+        name: z.string().min(2),
+        quoteIds: z.array(z.number().int().min(0)).min(1).max(5),
+      })
+    )
+    .max(6),
+});
+export type MentionedProductsLLM = z.infer<typeof MentionedProductsLLMSchema>;

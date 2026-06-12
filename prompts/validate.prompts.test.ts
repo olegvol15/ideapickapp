@@ -26,6 +26,7 @@ describe('validation query contract', () => {
           'remember water consumption discussion -site:reddit.com',
         ],
         commentQuery: 'track water intake',
+        competitorQuery: 'water intake tracker',
       }).success
     ).toBe(true);
   });

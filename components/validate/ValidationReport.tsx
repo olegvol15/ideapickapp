@@ -41,6 +41,7 @@ export function ValidationReport({ result, title }: ValidationReportProps) {
     (sum, theme) => sum + theme.quotes.length,
     0
   );
+  const competitors = result.competitors ?? [];
 
   return (
     <div className="flex w-full flex-col gap-6">
@@ -130,11 +131,11 @@ export function ValidationReport({ result, title }: ValidationReportProps) {
         </div>
       )}
 
-      {result.competitors && result.competitors.length > 0 && (
+      {competitors.length > 0 && (
         <div className="mt-4 flex flex-col gap-4 border-t border-border/50 pt-8">
           <SectionHeading>Competitors</SectionHeading>
           <div className="grid items-start gap-3 sm:grid-cols-2">
-            {result.competitors.map((competitor) => (
+            {competitors.map((competitor) => (
               <CompetitorInsightBlock
                 key={competitor.name}
                 competitor={{
