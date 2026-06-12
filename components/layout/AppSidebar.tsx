@@ -11,6 +11,7 @@ import {
   Gauge,
   History,
   LayoutGrid,
+  Loader2,
   LogIn,
   PanelLeftClose,
   Plus,
@@ -77,6 +78,11 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const renameLocalValidation = useValidateStore(
     (s) => s.renameLocalValidation
   );
+  const validationPhase = useValidateStore((s) => s.phase);
+  const validationIsActive =
+    validationPhase === 'thinking' ||
+    validationPhase === 'researching' ||
+    validationPhase === 'analyzing';
   const { data: dbValidations } = useGetValidations(user?.id);
   const recentValidations = user
     ? (dbValidations ?? []).map((v) => ({
@@ -96,12 +102,14 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   }
 
   function handleNewValidation() {
-    useValidateStore.getState().resetSession();
+    if (!validationIsActive) {
+      useValidateStore.getState().resetSession();
+    }
     onNavigate?.();
     setOpenMobile(false);
     startTransition(() => {
       router.push('/validate');
-      router.refresh();
+      if (!validationIsActive) router.refresh();
     });
   }
 
@@ -196,20 +204,36 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               onClick={handleNewValidation}
               className={cn(
                 'flex w-full items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm font-medium transition-colors',
-                pathname === '/validate'
-                  ? 'bg-white/8 text-foreground'
+                pathname === '/validate' || validationIsActive
+                  ? 'bg-white/8 text-primary'
                   : 'text-foreground/60 hover:bg-white/5 hover:text-foreground/90'
               )}
             >
               <span
                 className={cn(
                   'flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors',
-                  pathname === '/validate' ? 'bg-white/10' : 'bg-white/6'
+                  pathname === '/validate' || validationIsActive
+                    ? 'bg-primary/12'
+                    : 'bg-white/6'
                 )}
               >
-                <Gauge className="h-3.5 w-3.5" />
+                {validationIsActive ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin motion-reduce:animate-none" />
+                ) : (
+                  <Gauge className="h-3.5 w-3.5" />
+                )}
               </span>
-              New Validation
+              {validationIsActive ? (
+                <span className="flex items-center gap-2">
+                  Validation running
+                  <span className="relative flex h-1.5 w-1.5 shrink-0">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-70 motion-reduce:animate-none" />
+                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+                  </span>
+                </span>
+              ) : (
+                'New Validation'
+              )}
             </button>
 
             {/* Nav items */}
@@ -412,20 +436,35 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                 onClick={handleNewValidation}
                 className={cn(
                   'justify-center rounded-2xl px-0 py-0',
-                  pathname === '/validate'
+                  pathname === '/validate' || validationIsActive
                     ? 'bg-primary/14 text-primary shadow-[0_14px_34px_var(--brand-hi)]'
                     : 'text-muted-foreground hover:bg-background/55 hover:text-foreground'
                 )}
-                aria-label="New Validation"
-                title="New Validation"
+                aria-label={
+                  validationIsActive ? 'Validation running' : 'New Validation'
+                }
+                title={
+                  validationIsActive ? 'Validation running' : 'New Validation'
+                }
               >
-                <span className="flex h-12 w-12 items-center justify-center">
-                  <Gauge
-                    className={cn(
-                      'h-4 w-4 transition-colors duration-300 ease-out',
-                      pathname === '/validate' ? 'text-primary' : 'text-muted-foreground'
-                    )}
-                  />
+                <span className="relative flex h-12 w-12 items-center justify-center">
+                  {validationIsActive ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin text-primary motion-reduce:animate-none" />
+                      <span className="absolute right-2.5 top-2.5 h-1.5 w-1.5 rounded-full bg-primary">
+                        <span className="absolute inset-0 animate-ping rounded-full bg-primary opacity-70 motion-reduce:animate-none" />
+                      </span>
+                    </>
+                  ) : (
+                    <Gauge
+                      className={cn(
+                        'h-4 w-4 transition-colors duration-300 ease-out',
+                        pathname === '/validate'
+                          ? 'text-primary'
+                          : 'text-muted-foreground'
+                      )}
+                    />
+                  )}
                 </span>
               </SidebarMenuButton>
             </SidebarMenuItem>

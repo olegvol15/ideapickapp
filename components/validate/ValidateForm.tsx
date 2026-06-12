@@ -27,8 +27,15 @@ export function ValidateForm() {
   const [problem, setProblem] = useState('');
 
   const { result, sources } = useValidateStore();
-  const { phase, error, isActive, cancel, handleSubmit, resetSession } =
-    useValidateWorkflow();
+  const {
+    phase,
+    error,
+    activeRequest,
+    isActive,
+    cancel,
+    handleSubmit,
+    resetSession,
+  } = useValidateWorkflow();
 
   const canSubmit = description.trim().length > 0 && productType.length > 0 && !isActive;
 
@@ -36,9 +43,21 @@ export function ValidateForm() {
   const router = useRouter();
 
   useEffect(() => {
+    if (!activeRequest) return;
+    setDescription(activeRequest.description);
+    setProductType(activeRequest.productType);
+    setAudience(activeRequest.audience ?? '');
+    setProblem(activeRequest.problem ?? '');
+  }, [activeRequest]);
+
+  useEffect(() => {
     const desc = searchParams.get('description');
     const pt = searchParams.get('productType');
     if (!desc || !pt) return;
+    if (isActive) {
+      router.replace('/validate');
+      return;
+    }
     const aud = searchParams.get('audience') ?? undefined;
     const prob = searchParams.get('problem') ?? undefined;
     setDescription(desc);

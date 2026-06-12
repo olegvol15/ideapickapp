@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
 import { AuthProvider } from '@/context/auth';
+import { ValidationRunnerProvider } from '@/context/validation-runner';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 
 const ThemedToaster = dynamic(
@@ -44,7 +45,9 @@ export function Providers({
           disableTransitionOnChange
           nonce={nonce}
         >
-          <ErrorBoundary>{children}</ErrorBoundary>
+          <ValidationRunnerProvider>
+            <ErrorBoundary>{children}</ErrorBoundary>
+          </ValidationRunnerProvider>
           <ThemedToaster />
         </ThemeProvider>
       </AuthProvider>

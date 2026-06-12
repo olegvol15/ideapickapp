@@ -1,7 +1,10 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { PainEvidenceResult } from '@/lib/schemas';
-import type { EvidenceSource } from '@/types/validate.types';
+import type {
+  EvidenceSource,
+  ValidateRequest,
+} from '@/types/validate.types';
 
 export type ValidationPhase =
   | 'idle'
@@ -38,6 +41,7 @@ interface ValidateState {
   result: PainEvidenceResult | null;
   prevResult: PainEvidenceResult | null;
   sources: EvidenceSource[];
+  activeRequest: ValidateRequest | null;
   currentId: string | null;
   version: number;
   setPhase: (phase: ValidationPhase) => void;
@@ -45,6 +49,7 @@ interface ValidateState {
   setResult: (result: PainEvidenceResult | null) => void;
   setPrevResult: (result: PainEvidenceResult | null) => void;
   setSources: (sources: EvidenceSource[]) => void;
+  setActiveRequest: (request: ValidateRequest | null) => void;
   setCurrentId: (id: string | null) => void;
   incrementVersion: () => void;
   resetSession: () => void;
@@ -91,6 +96,7 @@ export const useValidateStore = create<ValidateState>()(
       result: null,
       prevResult: null,
       sources: [],
+      activeRequest: null,
       currentId: null,
       version: 1,
 
@@ -99,9 +105,20 @@ export const useValidateStore = create<ValidateState>()(
       setResult: (result) => set({ result }),
       setPrevResult: (prevResult) => set({ prevResult }),
       setSources: (sources) => set({ sources }),
+      setActiveRequest: (activeRequest) => set({ activeRequest }),
       setCurrentId: (currentId) => set({ currentId }),
       incrementVersion: () => set((s) => ({ version: s.version + 1 })),
-      resetSession: () => set({ phase: 'idle', error: '', result: null, prevResult: null, sources: [], currentId: null, version: 1 }),
+      resetSession: () =>
+        set({
+          phase: 'idle',
+          error: '',
+          result: null,
+          prevResult: null,
+          sources: [],
+          activeRequest: null,
+          currentId: null,
+          version: 1,
+        }),
     }),
     {
       name: 'ideapick:validations',
