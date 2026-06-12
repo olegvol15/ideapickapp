@@ -1,4 +1,4 @@
-import type { PainEvidenceResult } from '@/lib/schemas';
+import type { CompetitorBullet, PainEvidenceResult } from '@/lib/schemas';
 
 export const isPainEvidenceResult = (
   result: unknown
@@ -10,4 +10,29 @@ export const isPainEvidenceResult = (
     typeof candidate.summary === 'string' &&
     typeof candidate.totalQuotes === 'number'
   );
+};
+
+// Competitor bullets were plain strings before sources were attached.
+// Saved rows from that window normalize to bullets without sources.
+export const normalizeCompetitorBullets = (
+  bullets: unknown
+): CompetitorBullet[] => {
+  if (!Array.isArray(bullets)) return [];
+  return bullets.flatMap((bullet) => {
+    if (typeof bullet === 'string') return [{ text: bullet, sources: [] }];
+    if (
+      typeof bullet === 'object' &&
+      bullet !== null &&
+      typeof (bullet as CompetitorBullet).text === 'string'
+    ) {
+      const candidate = bullet as CompetitorBullet;
+      return [
+        {
+          text: candidate.text,
+          sources: Array.isArray(candidate.sources) ? candidate.sources : [],
+        },
+      ];
+    }
+    return [];
+  });
 };

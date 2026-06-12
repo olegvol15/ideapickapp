@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { CompetitorInsightBlock } from './CompetitorInsightBlock';
+import { normalizeCompetitorBullets } from '@/lib/validate/legacy';
 import { PainScoreBlock } from './PainScoreBlock';
 import { PainThemeBlock } from './PainThemeBlock';
 import { SectionHeading } from './SectionHeading';
@@ -125,6 +127,24 @@ export function ValidationReport({ result, title }: ValidationReportProps) {
               ? `We collected ${result.totalQuotes} excerpts, but none were reliable complaints about “${result.problem}”. Try narrowing or rewording the problem.`
               : `We searched for “${result.problem}” and found no real complaints. That itself is a signal — either the pain is rare, or people describe it differently. Try rewording the problem and validating again.`}
           </p>
+        </div>
+      )}
+
+      {result.competitors && result.competitors.length > 0 && (
+        <div className="mt-4 flex flex-col gap-4 border-t border-border/50 pt-8">
+          <SectionHeading>Competitors</SectionHeading>
+          <div className="grid items-start gap-3 sm:grid-cols-2">
+            {result.competitors.map((competitor) => (
+              <CompetitorInsightBlock
+                key={competitor.name}
+                competitor={{
+                  ...competitor,
+                  likes: normalizeCompetitorBullets(competitor.likes),
+                  dislikes: normalizeCompetitorBullets(competitor.dislikes),
+                }}
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>

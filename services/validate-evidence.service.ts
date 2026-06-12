@@ -22,6 +22,7 @@ import {
   validateQuoteAccounting,
 } from '@/lib/evidence/quote-pool';
 import { computeIdeaScore } from '@/lib/evidence/score';
+import { analyzeCompetitors } from '@/services/validate-competitors.service';
 import { AppError } from '@/lib/errors/app-error';
 import type { EvidenceSource } from '@/types/validate.types';
 
@@ -187,6 +188,9 @@ async function generatePainQueries(
 export async function runPainEvidenceValidation(
   params: PainEvidenceParams
 ): Promise<{ result: PainEvidenceResult; sources: EvidenceSource[] }> {
+  // Independent of the evidence flow — runs alongside it.
+  const competitorsPromise = analyzeCompetitors(params);
+
   const queries = await generatePainQueries(params);
   const web = await searchPainQuotes(
     queries.webQueries,
@@ -198,7 +202,14 @@ export async function runPainEvidenceValidation(
   params.onSources(sources);
 
   if (pool.length === 0) {
-    return { result: emptyResult(queries.problemStatement), sources };
+    const competitors = await competitorsPromise;
+    return {
+      result: {
+        ...emptyResult(queries.problemStatement),
+        competitors: competitors.length > 0 ? competitors : undefined,
+      },
+      sources,
+    };
   }
 
   const batches: ReturnType<typeof buildQuotePool>[] = [];
@@ -224,9 +235,15 @@ export async function runPainEvidenceValidation(
     assembled,
     Boolean(params.audience?.trim())
   );
+  const competitors = await competitorsPromise;
 
   return {
-    result: { ...assembled, score, scoreBreakdown },
+    result: {
+      ...assembled,
+      score,
+      scoreBreakdown,
+      competitors: competitors.length > 0 ? competitors : undefined,
+    },
     sources,
   };
 }

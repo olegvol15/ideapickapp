@@ -27,6 +27,31 @@ export const ScoreBreakdownSchema = z.object({
 });
 export type ScoreBreakdown = z.infer<typeof ScoreBreakdownSchema>;
 
+export const CompetitorBulletSourceSchema = z.object({
+  text: z.string(),
+  label: z.string(),
+  url: z.string().optional(),
+});
+export type CompetitorBulletSource = z.infer<
+  typeof CompetitorBulletSourceSchema
+>;
+
+export const CompetitorBulletSchema = z.object({
+  text: z.string(),
+  sources: z.array(CompetitorBulletSourceSchema),
+});
+export type CompetitorBullet = z.infer<typeof CompetitorBulletSchema>;
+
+export const CompetitorInsightSchema = z.object({
+  name: z.string(),
+  url: z.string().optional(),
+  description: z.string(),
+  likes: z.array(CompetitorBulletSchema),
+  dislikes: z.array(CompetitorBulletSchema),
+  edge: z.string().optional(),
+});
+export type CompetitorInsight = z.infer<typeof CompetitorInsightSchema>;
+
 export const PainEvidenceResultSchema = z.object({
   problem: z.string(),
   summary: z.string(),
@@ -34,6 +59,7 @@ export const PainEvidenceResultSchema = z.object({
   themes: z.array(PainThemeSchema),
   score: z.number().min(0).max(100).optional(),
   scoreBreakdown: ScoreBreakdownSchema.optional(),
+  competitors: z.array(CompetitorInsightSchema).optional(),
 });
 export type PainEvidenceResult = z.infer<typeof PainEvidenceResultSchema>;
 
@@ -70,3 +96,28 @@ export const ThemeClusterLLMSchema = z.object({
   ),
 });
 export type ThemeClusterLLM = z.infer<typeof ThemeClusterLLMSchema>;
+
+export const CompetitorListLLMSchema = z.object({
+  competitors: z
+    .array(
+      z.object({
+        name: z.string().min(1),
+        url: z.string().optional(),
+        description: z.string().min(3),
+      })
+    )
+    .max(4),
+});
+export type CompetitorListLLM = z.infer<typeof CompetitorListLLMSchema>;
+
+const OpinionBulletLLMSchema = z.object({
+  text: z.string().min(3),
+  materialIds: z.array(z.string().min(1)).min(1).max(3),
+});
+
+export const CompetitorOpinionLLMSchema = z.object({
+  likes: z.array(OpinionBulletLLMSchema).max(4),
+  dislikes: z.array(OpinionBulletLLMSchema).max(4),
+  edge: z.string().min(3),
+});
+export type CompetitorOpinionLLM = z.infer<typeof CompetitorOpinionLLMSchema>;
