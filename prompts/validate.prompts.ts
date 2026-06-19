@@ -17,7 +17,7 @@ export function buildPainQueryMessages(
     .filter(Boolean)
     .join('\n');
 
-  const queryCount = isMobile ? 4 : 6;
+  const queryCount = isMobile ? 5 : 6;
   const redditQueryCount = 1;
 
   return [
@@ -40,8 +40,8 @@ WEB QUERY RULES:
 - Exactly ${redditQueryCount} query must start with "site:reddit.com ".
 - At least one query must target a non-Reddit discussion ecosystem appropriate to the problem, such as Stack Exchange, Hacker News, a specialist forum, or a vendor support community.
 - At least one query must target an independent forum, Q&A site, or support community.
-- Every query that does not explicitly target Reddit must end with "-site:reddit.com" so Reddit cannot dominate general results.
-- Cover different angles of the problem across queries (different symptoms, audiences, or situations) — do not repeat the same words.
+- Most non-Reddit queries should end with "-site:reddit.com" so Reddit cannot dominate, but leave 1-2 broad complaint queries with NO site filter at all to widen the net.
+- Cover distinct angles across queries — include at least one for each: (a) an unmet need or wish ("is there an app that", "anything that can"), (b) frustration with an existing tool or competitor for this job, (c) a manual workaround people resort to. Do not repeat the same words.
 - Queries describe the PROBLEM people have, never the product idea or its features.
 - BAD: "best time tracking app for freelancers" (finds listicles, not complaints)
 - GOOD: "site:reddit.com freelance time tracking sync between devices frustrating"
@@ -264,10 +264,11 @@ Return a JSON object with exactly this shape:
 RULES:
 - Group quotes that describe the same underlying complaint about THIS problem: "${problemStatement}"
 - EVERY numeric quote ID must appear exactly once: either in one theme's quotes or once in excluded.
-- severity rates how intense the pain expressed in THAT excerpt is: 1 = mild gripe or passing annoyance; 2 = real recurring pain that affects their work or life; 3 = severe — they built their own workaround, mention paying or money, or use desperate language. Quotes in "related" themes are not complaints: always give them severity 1.
+- severity rates how intense the pain expressed in THAT excerpt is. Decide it from the actual language, do not default: 1 = mild gripe or passing annoyance; 2 = real recurring pain that affects their work or life; 3 = severe — they built their own workaround, mention paying or money, or use desperate language. Quotes in "related" themes are not complaints: always give them severity 1.
 - Never duplicate an ID, omit an ID, or invent an ID.
-- Use evidenceType "complaint" when excerpts explicitly express difficulty, frustration, failed attempts, unmet needs, or negative consequences.
-- Use evidenceType "related" for relevant advice, workarounds, neutral experiences, existing workflows, tool usage, questions, or discussion of the same problem.
+- Use evidenceType "complaint" when excerpts express difficulty, frustration, failed attempts, unmet needs, or negative consequences — including IMPLICIT ones. A person who built or cobbled together their own workaround IS complaining (severity 3). A person asking whether a solution exists ("is there any way to...", "why is it so hard to...", "does anything exist that...") IS expressing an unmet need (severity 2). Classify these as "complaint", not "related".
+- Use evidenceType "related" for relevant advice, neutral experiences, existing workflows that are working fine, tool usage, or general discussion of the same problem with no pain expressed.
+- A clearly satisfied or praising excerpt ("works great", "love it", "exactly what I want", "makes it so much easier") is NEVER a complaint. Put it in a "related" theme if it is on-topic, or exclude it as "not_complaint". Do not let a positive excerpt land in a complaint theme.
 - If an excerpt is relevant to the stated problem, it MUST appear in a theme. Do not exclude it merely because it is not a complaint.
 - Product recommendations, product links, testimonials, and descriptions of how a tool solves the problem are "promo", even when posted from a Reddit account.
 - Page excerpts without an author require especially clear first-person complaint language. Exclude navigation, thread-title, or search-result text as "junk".

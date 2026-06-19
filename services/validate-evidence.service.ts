@@ -284,18 +284,19 @@ export async function runPainEvidenceValidation(
   ]);
 
   const assembled = assembleResult(pool, clusters, queries.problemStatement);
+  // Competitors are pain/demand evidence, so they must be present before
+  // scoring — their source-backed dislikes feed the score.
+  const scored: PainEvidenceResult = {
+    ...assembled,
+    competitors: competitors.length > 0 ? competitors : undefined,
+  };
   const { score, scoreBreakdown } = computeIdeaScore(
-    assembled,
+    scored,
     Boolean(params.audience?.trim())
   );
 
   return {
-    result: {
-      ...assembled,
-      score,
-      scoreBreakdown,
-      competitors: competitors.length > 0 ? competitors : undefined,
-    },
+    result: { ...scored, score, scoreBreakdown },
     sources,
   };
 }

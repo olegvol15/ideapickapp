@@ -104,3 +104,53 @@ describe('isQuotable editorial filtering', () => {
     ).toBe(true);
   });
 });
+
+describe('isQuotable relaxed filtering', () => {
+  const base = (content: string, url = 'https://forum.example.com/t/1') => ({
+    title: 'Forum discussion',
+    url,
+    content,
+    cleaned: content,
+  });
+
+  it('keeps short but substantive complaints', () => {
+    expect(isQuotable(base('App keeps crashing on every export, useless.'))).toBe(
+      true
+    );
+  });
+
+  it('still rejects snippets below the floor', () => {
+    expect(isQuotable(base('too short'))).toBe(false);
+  });
+
+  it('keeps review pages — complaints live there', () => {
+    expect(
+      isQuotable(
+        base(
+          'Updated and now sync is completely broken, I have lost three days of entries.',
+          'https://someapp.com/reviews/sync-broken'
+        )
+      )
+    ).toBe(true);
+  });
+
+  it('tolerates a single promo phrase inside a complaint', () => {
+    expect(
+      isQuotable(
+        base(
+          'The free trial ended and the app still crashes constantly, total waste.'
+        )
+      )
+    ).toBe(true);
+  });
+
+  it('rejects snippets dominated by sales copy', () => {
+    expect(
+      isQuotable(
+        base(
+          'Sign up today and start your free trial — no credit card required, book a demo now.'
+        )
+      )
+    ).toBe(false);
+  });
+});

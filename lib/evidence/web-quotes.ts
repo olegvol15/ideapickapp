@@ -14,7 +14,9 @@ import {
 
 const TAVILY_URL = 'https://api.tavily.com/search';
 const MAX_RESULTS_PER_QUERY = 10;
-const MIN_SNIPPET_LENGTH = 60;
+// Short, sharp complaints ("App keeps crashing, useless") are real evidence,
+// so keep the floor low — junk is caught by the other filters below.
+const MIN_SNIPPET_LENGTH = 40;
 // Stored/displayed quote length. The LLM prompt truncates separately
 // (buildThemeClusterMessages), so longer storage costs no tokens.
 const MAX_QUOTE_LENGTH = 1000;
@@ -22,9 +24,10 @@ const MAX_REDDIT_THREADS = 12;
 const MAX_REDDIT_COMMENT_QUOTES = 35;
 
 // Blog-style paths on arbitrary domains are vendor/editorial content
-// (dragonflyai.co/blog/…), not people complaining.
+// (dragonflyai.co/blog/…), not people complaining. Review paths are kept
+// OUT of this list — review pages are exactly where complaints live.
 const BLOG_PATH_RE =
-  /\/(blog|blogs|article|articles|post|posts|news|insights|resources|guide|guides|review|reviews)\b/i;
+  /\/(blog|blogs|article|articles|post|posts|news|insights|resources|guide|guides)\b/i;
 
 // Titles shaped like articles or listicles rather than discussions.
 const EDITORIAL_TITLE_RE =
@@ -140,7 +143,9 @@ export function isQuotable(result: CleanedResult): boolean {
   if (matchesDomainSuffix(host, BLOCKED_DOMAINS)) return false;
   if (result.cleaned.length < MIN_SNIPPET_LENGTH) return false;
   const lower = result.cleaned.toLowerCase();
-  if (PROMO_SIGNALS.some((s) => lower.includes(s))) return false;
+  // A genuine complaint can mention one promo phrase ("the free trial ended
+  // and it still crashes"); only reject when sales copy clearly dominates.
+  if (PROMO_SIGNALS.filter((s) => lower.includes(s)).length >= 2) return false;
 
   const isReddit = host.endsWith('reddit.com');
   if (
@@ -168,7 +173,7 @@ async function searchOne(query: string): Promise<TavilyResult[]> {
       body: JSON.stringify({
         api_key: key,
         query,
-        search_depth: 'basic',
+        search_depth: 'advanced',
         max_results: MAX_RESULTS_PER_QUERY,
         include_answer: false,
         include_raw_content: false,

@@ -15,6 +15,18 @@ describe('validation query contract', () => {
     expect(prompt).toContain('support community');
   });
 
+  it('requests five web queries for mobile ideas', () => {
+    const prompt = buildPainQueryMessages(
+      'A mobile app for tracking water consumption',
+      'Mobile App'
+    )
+      .map((message) => message.content)
+      .join('\n');
+
+    expect(prompt).toContain('"<query 5>"');
+    expect(prompt).not.toContain('"<query 6>"');
+  });
+
   it('accepts the web-only query response shape', () => {
     expect(
       PainQueryResponseSchema.safeParse({
