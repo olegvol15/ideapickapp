@@ -31,14 +31,10 @@ export function IdeaPickMascot({ className, background = true }: IdeaPickMascotP
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 64 64"
       role="img"
-      aria-labelledby="ipm-title ipm-desc"
+      aria-label="IdeaPick mascot"
       shapeRendering="crispEdges"
       className={cn('block', className)}
     >
-      <title id="ipm-title">IdeaPick mascot</title>
-      <desc id="ipm-desc">
-        A light blue pixel-art creature with a glowing idea bulb on a dark background.
-      </desc>
       <style>{STYLES}</style>
 
       {background && <rect className="ipm-bg" width="64" height="64" />}

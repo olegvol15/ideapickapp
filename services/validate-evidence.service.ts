@@ -1,9 +1,11 @@
 import { openai } from '@/lib/openai';
 import {
+  buildIdeaAssessmentMessages,
   buildPainQueryMessages,
   buildThemeClusterMessages,
 } from '@/prompts/validate.prompts';
 import {
+  IdeaAssessmentLLMSchema,
   PainQueryResponseSchema,
   ThemeClusterLLMSchema,
 } from '@/lib/schemas';
@@ -22,6 +24,7 @@ import {
   validateQuoteAccounting,
 } from '@/lib/evidence/quote-pool';
 import { computeIdeaScore } from '@/lib/evidence/score';
+import { buildEvidenceDigest } from '@/lib/validate/assessment-digest';
 import {
   mergeCompetitorCandidates,
   pickCompetitorCandidates,
@@ -195,6 +198,41 @@ async function generatePainQueries(
   return parsed.data;
 }
 
+// Idy's idea-level critique, grounded in the evidence we gathered (score,
+// complaint themes/quotes, competitors). Runs after the evidence is assembled.
+// Non-critical: returns null on failure so the report still renders without it.
+async function generateIdeaAssessment(
+  params: PainEvidenceParams,
+  result: PainEvidenceResult
+): Promise<string | null> {
+  try {
+    const evidenceDigest = buildEvidenceDigest(
+      result,
+      Boolean(params.audience?.trim())
+    );
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: buildIdeaAssessmentMessages({
+        description: params.description,
+        productType: params.productType,
+        audience: params.audience,
+        problem: params.problem,
+        evidenceDigest,
+      }),
+      temperature: 0.7,
+      max_tokens: 400,
+      response_format: { type: 'json_object' },
+    });
+
+    const parsed = IdeaAssessmentLLMSchema.safeParse(
+      JSON.parse(completion.choices[0]?.message?.content ?? '{}')
+    );
+    return parsed.success ? parsed.data.assessment : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function runPainEvidenceValidation(
   params: PainEvidenceParams
 ): Promise<{ result: PainEvidenceResult; sources: EvidenceSource[] }> {
@@ -231,10 +269,14 @@ export async function runPainEvidenceValidation(
       params,
       pool
     );
+    const emptyScored: PainEvidenceResult = {
+      ...emptyResult(queries.problemStatement),
+      competitors: competitors.length > 0 ? competitors : undefined,
+    };
     return {
       result: {
-        ...emptyResult(queries.problemStatement),
-        competitors: competitors.length > 0 ? competitors : undefined,
+        ...emptyScored,
+        assessment: (await generateIdeaAssessment(params, emptyScored)) ?? undefined,
       },
       sources,
     };
@@ -294,9 +336,13 @@ export async function runPainEvidenceValidation(
     scored,
     Boolean(params.audience?.trim())
   );
+  const finalResult: PainEvidenceResult = { ...scored, score, scoreBreakdown };
 
   return {
-    result: { ...scored, score, scoreBreakdown },
+    result: {
+      ...finalResult,
+      assessment: (await generateIdeaAssessment(params, finalResult)) ?? undefined,
+    },
     sources,
   };
 }

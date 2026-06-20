@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { CompetitorInsightBlock } from './CompetitorInsightBlock';
+import { IdyAssessment } from './IdyAssessment';
 import { normalizeCompetitorBullets } from '@/lib/validate/legacy';
 import { PainScoreBlock } from './PainScoreBlock';
 import { PainThemeBlock } from './PainThemeBlock';
@@ -11,6 +12,7 @@ import {
   matchedQuoteCount,
   matchedSourceCounts,
 } from '@/lib/evidence/quote-pool';
+import { capitalizeFirst } from '@/lib/utils';
 import type { PainEvidenceResult } from '@/lib/schemas';
 
 interface ValidationReportProps {
@@ -43,15 +45,17 @@ export function ValidationReport({ result, title }: ValidationReportProps) {
   );
   const competitors = result.competitors ?? [];
 
+  const formattedTitle = title ? capitalizeFirst(title) : '';
+
   return (
     <div className="flex w-full flex-col gap-6">
-      <header className="space-y-3">
-        <SectionHeading>Pain Evidence</SectionHeading>
+      <header className="space-y-6">
         {title && (
-          <h1 className="text-2xl font-bold leading-snug tracking-tight text-foreground">
-            {title}
+          <h1 className="text-center text-3xl font-bold leading-tight tracking-tight text-foreground sm:text-4xl">
+            {formattedTitle}
           </h1>
         )}
+        {result.assessment && <IdyAssessment assessment={result.assessment} />}
         {result.score != null && (
           <PainScoreBlock
             score={result.score}

@@ -57,6 +57,7 @@ export type CompetitorInsight = z.infer<typeof CompetitorInsightSchema>;
 export const PainEvidenceResultSchema = z.object({
   problem: z.string(),
   summary: z.string(),
+  assessment: z.string().optional(),
   totalQuotes: z.number().int().min(0),
   themes: z.array(PainThemeSchema),
   score: z.number().min(0).max(100).optional(),
@@ -64,6 +65,11 @@ export const PainEvidenceResultSchema = z.object({
   competitors: z.array(CompetitorInsightSchema).optional(),
 });
 export type PainEvidenceResult = z.infer<typeof PainEvidenceResultSchema>;
+
+export const IdeaAssessmentLLMSchema = z.object({
+  assessment: z.string().min(3),
+});
+export type IdeaAssessmentLLM = z.infer<typeof IdeaAssessmentLLMSchema>;
 
 export const PainQueryResponseSchema = z.object({
   problemStatement: z.string().min(3),

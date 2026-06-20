@@ -6,3 +6,8 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const wait = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
+
+export function capitalizeFirst(value: string): string {
+  const trimmed = value.trimStart();
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+}
