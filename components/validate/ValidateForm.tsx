@@ -162,7 +162,7 @@ export function ValidateForm() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="mx-auto w-full max-w-xl"
+            className="mx-auto w-full max-w-4xl"
           >
             <ValidationProgress
               phase={phase}
