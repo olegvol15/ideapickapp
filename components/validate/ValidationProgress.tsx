@@ -32,7 +32,7 @@ export function ValidationProgress({
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.3 }}
-        className="mb-8 inline-flex max-w-full self-center rounded-full border border-border/40 bg-muted/30 px-4 py-2"
+        className="mb-4 inline-flex max-w-full self-center rounded-full border border-border/40 bg-muted/30 px-4 py-2"
       >
         <p className="truncate text-base leading-snug text-muted-foreground/60">
           {description.trim().slice(0, 90)}
@@ -48,7 +48,7 @@ export function ValidationProgress({
         variant="ghost"
         size="sm"
         onClick={onCancel}
-        className="mx-auto mt-8 text-xs text-muted-foreground/30 hover:bg-transparent hover:text-muted-foreground/60"
+        className="mx-auto mt-6 text-xs text-muted-foreground/30 hover:bg-transparent hover:text-muted-foreground/60"
       >
         Cancel
       </Button>

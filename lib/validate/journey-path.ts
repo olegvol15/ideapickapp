@@ -1,8 +1,9 @@
 import type { StepId } from '@/lib/validate/progress';
 
-// The journey map lives in a 100 x 70 coordinate space (matches the SVG viewBox
-// and the rendered container's aspect ratio, so nothing is distorted).
-export const JOURNEY_VIEWBOX = { width: 100, height: 70 } as const;
+// The journey map lives in a wide, short coordinate space (matches the SVG
+// viewBox and the rendered container's aspect ratio, so nothing is distorted).
+// Kept short so the loader fits the viewport without scrolling.
+export const JOURNEY_VIEWBOX = { width: 100, height: 48 } as const;
 
 export type JourneyNodeId = 'idea' | StepId;
 
@@ -34,15 +35,15 @@ export interface JourneyNode extends Point {
 // pronounced bows. Stage markers sit at the turning points; bends bow the
 // segments. Labels are offset into clear zones away from the road.
 const TRAIL_POINTS: TrailPoint[] = [
-  { kind: 'stage', id: 'idea', label: 'Your idea', x: 9, y: 16, labelDx: 3, labelDy: 6 },
-  { kind: 'bend', x: 40, y: 6 },
-  { kind: 'stage', id: 'queries', label: 'Complaint searches', x: 70, y: 13, labelDx: 0, labelDy: -6 },
-  { kind: 'bend', x: 96, y: 26 },
-  { kind: 'bend', x: 64, y: 36 },
-  { kind: 'stage', id: 'research', label: 'Searching Reddit & forums', x: 30, y: 38, labelDx: 0, labelDy: -7 },
-  { kind: 'bend', x: 4, y: 50 },
-  { kind: 'bend', x: 44, y: 60 },
-  { kind: 'stage', id: 'scoring', label: 'Grouping into themes', x: 88, y: 56, labelDx: -3, labelDy: 6 },
+  { kind: 'stage', id: 'idea', label: 'Your idea', x: 9, y: 14, labelDx: 3, labelDy: 6 },
+  { kind: 'bend', x: 40, y: 5 },
+  { kind: 'stage', id: 'queries', label: 'Complaint searches', x: 70, y: 9, labelDx: 0, labelDy: 6 },
+  { kind: 'bend', x: 96, y: 18 },
+  { kind: 'bend', x: 64, y: 25 },
+  { kind: 'stage', id: 'research', label: 'Searching Reddit & forums', x: 30, y: 26, labelDx: 0, labelDy: 6 },
+  { kind: 'bend', x: 5, y: 35 },
+  { kind: 'bend', x: 44, y: 42 },
+  { kind: 'stage', id: 'scoring', label: 'Grouping into themes', x: 88, y: 38, labelDx: -3, labelDy: 6 },
 ];
 
 interface Segment {

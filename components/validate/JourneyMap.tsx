@@ -75,7 +75,7 @@ export function JourneyMap({ phase }: JourneyMapProps) {
   );
 
   return (
-    <div className="relative mx-auto aspect-[100/70] w-full max-w-3xl">
+    <div className="relative mx-auto aspect-[100/48] max-h-[40vh] w-full max-w-3xl">
       <svg
         viewBox={`0 0 ${JOURNEY_VIEWBOX.width} ${JOURNEY_VIEWBOX.height}`}
         preserveAspectRatio="xMidYMid meet"
@@ -119,9 +119,9 @@ export function JourneyMap({ phase }: JourneyMapProps) {
           mask="url(#journey-traveled)"
         />
 
-        {/* Node markers */}
+        {/* Stage flags */}
         {JOURNEY_PATH.nodes.map((node) => (
-          <NodeMarker
+          <Flag
             key={node.id}
             x={node.x}
             y={node.y}
@@ -169,38 +169,47 @@ export function JourneyMap({ phase }: JourneyMapProps) {
   );
 }
 
-interface NodeMarkerProps {
+interface FlagProps {
   x: number;
   y: number;
   status: StepStatus;
 }
 
-function NodeMarker({ x, y, status }: NodeMarkerProps) {
-  if (status === 'done') {
-    return <circle cx={x} cy={y} r={2.2} className="fill-emerald-400" />;
-  }
-  if (status === 'active') {
-    return (
-      <g>
+const POLE_HEIGHT = 4.5;
+
+// A planted treasure-map flag: a pole rising from the trail point with a
+// triangular pennant, colored by status.
+function Flag({ x, y, status }: FlagProps) {
+  const poleTop = y - POLE_HEIGHT;
+  const pennant = status === 'done' ? 'fill-emerald-400' : status === 'active' ? 'fill-primary' : 'fill-muted-foreground/30';
+  const nub = status === 'pending' ? 'fill-muted-foreground/40' : pennant;
+
+  return (
+    <g>
+      {status === 'active' && (
         <motion.circle
           cx={x}
           cy={y}
           className="fill-primary/30"
-          initial={{ r: 2.2, opacity: 0.6 }}
-          animate={{ r: [2.2, 5.5, 2.2], opacity: [0.6, 0, 0.6] }}
+          initial={{ r: 2, opacity: 0.6 }}
+          animate={{ r: [2, 5.5, 2], opacity: [0.6, 0, 0.6] }}
           transition={{ repeat: Infinity, duration: 1.6, ease: 'easeOut' }}
         />
-        <circle cx={x} cy={y} r={2.4} className="fill-primary" />
-      </g>
-    );
-  }
-  return (
-    <circle
-      cx={x}
-      cy={y}
-      r={2}
-      className="fill-none stroke-muted-foreground/30"
-      strokeWidth={0.6}
-    />
+      )}
+      <line
+        x1={x}
+        y1={y}
+        x2={x}
+        y2={poleTop}
+        className="stroke-muted-foreground/50"
+        strokeWidth={0.6}
+        strokeLinecap="round"
+      />
+      <path
+        d={`M ${x} ${poleTop} L ${x + 5} ${poleTop + 1.6} L ${x} ${poleTop + 3.2} Z`}
+        className={pennant}
+      />
+      <circle cx={x} cy={y} r={1} className={nub} />
+    </g>
   );
 }

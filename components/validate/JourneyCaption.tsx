@@ -41,7 +41,7 @@ export function JourneyCaption({ phase, sources, description }: JourneyCaptionPr
   const hiddenCount = webSources.length - visibleSources.length;
 
   return (
-    <div className="mt-8 min-h-[6.5rem]">
+    <div className="mt-4 min-h-[6.5rem]">
       <AnimatePresence mode="wait">
         <motion.div
           key={phase}
