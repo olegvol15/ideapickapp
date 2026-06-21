@@ -14,12 +14,14 @@ export function PainThemeBlock({ theme }: PainThemeBlockProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [canScrollBack, setCanScrollBack] = useState(false);
   const [canScrollForward, setCanScrollForward] = useState(false);
+  const [hasOverflow, setHasOverflow] = useState(false);
 
   const updateScrollControls = useCallback(() => {
     const track = trackRef.current;
     if (!track) return;
 
     const maxScrollLeft = track.scrollWidth - track.clientWidth;
+    setHasOverflow(maxScrollLeft > 1);
     setCanScrollBack(track.scrollLeft > 1);
     setCanScrollForward(track.scrollLeft < maxScrollLeft - 1);
   }, []);
@@ -67,10 +69,12 @@ export function PainThemeBlock({ theme }: PainThemeBlockProps) {
           )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold tabular-nums text-primary">
-            {theme.mentionCount} mention{theme.mentionCount !== 1 ? 's' : ''}
-          </span>
-          {theme.quotes.length > 1 && (
+          {theme.mentionCount > 3 && (
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold tabular-nums text-primary">
+              {theme.mentionCount} mentions
+            </span>
+          )}
+          {hasOverflow && (
             <div className="flex items-center gap-1">
               <button
                 type="button"
