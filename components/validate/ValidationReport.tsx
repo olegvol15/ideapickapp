@@ -9,7 +9,6 @@ import { PainThemeBlock } from './PainThemeBlock';
 import { SectionHeading } from './SectionHeading';
 import {
   evidenceTypeCounts,
-  matchedQuoteCount,
   matchedSourceCounts,
 } from '@/lib/evidence/quote-pool';
 import { capitalizeFirst } from '@/lib/utils';
@@ -23,16 +22,19 @@ interface ValidationReportProps {
 export function ValidationReport({ result, title }: ValidationReportProps) {
   const [relatedOpen, setRelatedOpen] = useState(false);
   const hasEvidence = result.themes.length > 0;
-  const matchedQuotes = matchedQuoteCount(result);
   const evidenceCounts = evidenceTypeCounts(result);
   const sourceCounts = matchedSourceCounts(result);
-  const sourceSummary = [
-    sourceCounts.reddit > 0 ? `${sourceCounts.reddit} Reddit` : null,
-    sourceCounts.web > 0 ? `${sourceCounts.web} forum/web` : null,
-    sourceCounts.appstore > 0 ? `${sourceCounts.appstore} App Store` : null,
-  ]
-    .filter(Boolean)
-    .join(' · ');
+  const stats = [
+    `${result.totalQuotes} mention${result.totalQuotes !== 1 ? 's' : ''}`,
+    evidenceCounts.complaint > 0 &&
+      `${evidenceCounts.complaint} complaint${evidenceCounts.complaint !== 1 ? 's' : ''}`,
+    evidenceCounts.related > 0 && `${evidenceCounts.related} related`,
+    result.themes.length > 0 &&
+      `${result.themes.length} theme${result.themes.length !== 1 ? 's' : ''}`,
+    sourceCounts.reddit > 0 && `${sourceCounts.reddit} Reddit`,
+    sourceCounts.web > 0 && `${sourceCounts.web} forum/web`,
+    sourceCounts.appstore > 0 && `${sourceCounts.appstore} App Store`,
+  ].filter(Boolean) as string[];
   const complaintThemes = result.themes.filter(
     (theme) => theme.evidenceType !== 'related'
   );
@@ -66,19 +68,23 @@ export function ValidationReport({ result, title }: ValidationReportProps) {
           {result.summary}
         </p>
         {result.totalQuotes > 0 && (
-          <p className="text-xs text-muted-foreground/60">
-            {result.totalQuotes} excerpt{result.totalQuotes !== 1 ? 's' : ''}{' '}
-            reviewed · {evidenceCounts.complaint} complaint
-            {evidenceCounts.complaint !== 1 ? 's' : ''} ·{' '}
-            {evidenceCounts.related} related · {matchedQuotes} shown ·{' '}
-            {result.themes.length} theme
-            {result.themes.length !== 1 ? 's' : ''} · searched for: &ldquo;
-            {result.problem}&rdquo;
-          </p>
+          <div className="flex flex-wrap gap-2">
+            {stats.map((stat) => (
+              <span
+                key={stat}
+                className="inline-flex items-center rounded-full border border-border/60 bg-muted/30 px-2.5 py-1 text-xs tabular-nums text-muted-foreground/70"
+              >
+                {stat}
+              </span>
+            ))}
+          </div>
         )}
-        {sourceSummary && (
-          <p className="text-xs text-muted-foreground/45">
-            Matched source mix: {sourceSummary}
+        {result.problem && (
+          <p className="text-xs text-muted-foreground/50">
+            Searched for:{' '}
+            <span className="text-muted-foreground/75">
+              &ldquo;{result.problem}&rdquo;
+            </span>
           </p>
         )}
       </header>

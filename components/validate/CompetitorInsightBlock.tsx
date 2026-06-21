@@ -27,6 +27,12 @@ function competitorDomain(url?: string): string {
   }
 }
 
+// App/Play store domains resolve to the same generic store favicon for every
+// app, so we skip the favicon and show a letter monogram instead.
+function isGenericStoreDomain(domain: string): boolean {
+  return /(^|\.)apple\.com$/.test(domain) || domain === 'play.google.com';
+}
+
 export function CompetitorInsightBlock({
   competitor,
 }: CompetitorInsightBlockProps) {
@@ -62,7 +68,7 @@ export function CompetitorInsightBlock({
     <article className="flex h-full min-w-0 flex-col gap-3 rounded-xl border border-border bg-card/60 p-4">
       <div className="flex min-w-0 items-center gap-2.5">
         <Avatar className="h-7 w-7 rounded-full">
-          {domain && (
+          {domain && !isGenericStoreDomain(domain) && (
             <AvatarImage
               src={`https://icons.duckduckgo.com/ip3/${domain}.ico`}
               alt=""
@@ -124,7 +130,7 @@ export function CompetitorInsightBlock({
                             setExpandedBullet(expanded ? null : bulletKey)
                           }
                           aria-expanded={expanded}
-                          className="flex items-start gap-1.5 text-left text-sm text-foreground/80 hover:text-foreground"
+                          className="group flex items-start gap-1.5 text-left text-sm text-foreground/80 hover:text-foreground"
                         >
                           <Icon
                             className={cn(
@@ -135,8 +141,8 @@ export function CompetitorInsightBlock({
                           <span className="min-w-0 flex-1">{bullet.text}</span>
                           <ChevronDown
                             className={cn(
-                              'mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/40 transition-transform',
-                              expanded && 'rotate-180'
+                              'mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/40 opacity-0 transition-all group-hover:opacity-100 group-focus-visible:opacity-100',
+                              expanded && 'rotate-180 opacity-100'
                             )}
                           />
                         </button>
