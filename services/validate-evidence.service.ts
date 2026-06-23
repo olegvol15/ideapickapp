@@ -34,6 +34,7 @@ import {
 import {
   buildCompetitorInsights,
   extractMentionedProducts,
+  gateRelevantCompetitors,
   identifyKnownCompetitors,
 } from '@/services/validate-competitors.service';
 import { AppError } from '@/lib/errors/app-error';
@@ -304,7 +305,10 @@ export async function runPainEvidenceValidation(
     return mergeClusterBatches(clusteredBatches, offsets);
   })();
   const competitorsPromise = (async () => {
-    const mentioned = await extractMentionedProducts(pool);
+    const mentioned = await extractMentionedProducts(pool, {
+      productType: params.productType,
+      problem: queries.problemStatement,
+    });
     const candidates = mergeCompetitorCandidates({
       mentioned,
       searched: await searchPromise,
@@ -314,8 +318,12 @@ export async function runPainEvidenceValidation(
       candidates,
       params.productType
     );
+    const gated = await gateRelevantCompetitors(verified, {
+      productType: params.productType,
+      problem: queries.problemStatement,
+    });
     return buildCompetitorInsights(
-      pickCompetitorCandidates(verified),
+      pickCompetitorCandidates(gated),
       params,
       pool
     );

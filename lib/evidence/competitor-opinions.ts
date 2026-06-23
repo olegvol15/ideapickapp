@@ -162,16 +162,21 @@ export async function collectOpinionMaterials(
 
 // Maps LLM bullets back to the materials they cite. Bullets citing no
 // valid material are dropped — every rendered bullet is provably backed.
+// A material backs at most one bullet: the LLM sometimes splits a single
+// source into several bullets, which would render the same excerpt under
+// each. Claiming materials greedily collapses that padding into one bullet.
 export function resolveOpinionBullets(
   llmBullets: CompetitorOpinionLLM['likes'],
   materials: OpinionMaterial[]
 ): CompetitorBullet[] {
   const byId = new Map(materials.map((m) => [m.id, m]));
+  const claimed = new Set<string>();
 
   return llmBullets.flatMap((bullet) => {
     const sources = bullet.materialIds.flatMap((id) => {
       const material = byId.get(id);
-      if (!material) return [];
+      if (!material || claimed.has(id)) return [];
+      claimed.add(id);
       return [{ text: material.text, label: material.label, url: material.url }];
     });
     if (sources.length === 0) return [];

@@ -38,13 +38,20 @@ export function extractTrackId(trackViewUrl: string): number | null {
   return m ? parseInt(m[1], 10) : null;
 }
 
-export async function fetchAppStoreReviews(
+// Apple's per-app review RSS feed is empty for some apps on a given
+// storefront even when the app has millions of ratings (e.g. PictureThis
+// returns nothing on `us` but plenty on `gb`/`au`). Fall back across English
+// storefronts so a popular incumbent never shows zero reviews.
+const REVIEW_STOREFRONTS = ['us', 'gb', 'au', 'ca'] as const;
+
+async function fetchReviewsFromStorefront(
+  country: string,
   trackId: number,
-  limit = 20
+  limit: number
 ): Promise<AppStoreReview[]> {
   try {
     const res = await fetch(
-      `https://itunes.apple.com/us/rss/customerreviews/id=${trackId}/sortBy=mostHelpful/json`
+      `https://itunes.apple.com/${country}/rss/customerreviews/id=${trackId}/sortBy=mostHelpful/json`
     );
     if (!res.ok) return [];
     const data = await res.json();
@@ -70,6 +77,17 @@ export async function fetchAppStoreReviews(
   } catch {
     return [];
   }
+}
+
+export async function fetchAppStoreReviews(
+  trackId: number,
+  limit = 20
+): Promise<AppStoreReview[]> {
+  for (const country of REVIEW_STOREFRONTS) {
+    const reviews = await fetchReviewsFromStorefront(country, trackId, limit);
+    if (reviews.length > 0) return reviews;
+  }
+  return [];
 }
 
 export async function fetchAppStoreApps(

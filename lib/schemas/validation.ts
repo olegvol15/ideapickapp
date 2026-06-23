@@ -140,9 +140,22 @@ export const MentionedProductsLLMSchema = z.object({
     .array(
       z.object({
         name: z.string().min(2),
+        relevant: z.boolean(),
         quoteIds: z.array(z.number().int().min(0)).min(1).max(5),
       })
     )
     .max(6),
 });
 export type MentionedProductsLLM = z.infer<typeof MentionedProductsLLMSchema>;
+
+export const CompetitorRelevanceLLMSchema = z.object({
+  products: z
+    .array(
+      z.object({
+        name: z.string(),
+        relevant: z.boolean(),
+      })
+    )
+    .max(8),
+});
+export type CompetitorRelevanceLLM = z.infer<typeof CompetitorRelevanceLLMSchema>;

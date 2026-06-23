@@ -2,11 +2,13 @@ import { openai } from '@/lib/openai';
 import {
   buildCompetitorListMessages,
   buildCompetitorOpinionMessages,
+  buildCompetitorRelevanceMessages,
   buildMentionedProductsMessages,
 } from '@/prompts/validate.prompts';
 import {
   CompetitorListLLMSchema,
   CompetitorOpinionLLMSchema,
+  CompetitorRelevanceLLMSchema,
   MentionedProductsLLMSchema,
 } from '@/lib/schemas';
 import type { CompetitorInsight } from '@/lib/schemas';
@@ -73,13 +75,15 @@ export async function identifyKnownCompetitors(
 }
 
 export async function extractMentionedProducts(
-  pool: PooledQuote[]
+  pool: PooledQuote[],
+  domain: { productType: string; problem: string }
 ): Promise<CompetitorCandidate[]> {
   if (pool.length === 0) return [];
   try {
     const json = await completeJson(
       buildMentionedProductsMessages(
-        pool.map((quote) => ({ id: quote.id, text: quote.text }))
+        pool.map((quote) => ({ id: quote.id, text: quote.text })),
+        domain
       ),
       0.2,
       400
@@ -87,7 +91,10 @@ export async function extractMentionedProducts(
     const parsed = MentionedProductsLLMSchema.safeParse(json);
     if (!parsed.success) return [];
 
+    // Relevance gate: a horizontal tool named in passing (e.g. ChatGPT for a
+    // gardening idea) is not a competitor for this problem — drop it.
     return parsed.data.products.flatMap((product) => {
+      if (!product.relevant) return [];
       const quoteIds = product.quoteIds.filter(
         (id) => pool[id] && pool[id].id === id
       );
@@ -96,6 +103,50 @@ export async function extractMentionedProducts(
     });
   } catch {
     return [];
+  }
+}
+
+// A product named in a quote can resolve to a same-named App Store app from a
+// different category (e.g. "Tended" → a health symptom tracker for a gardening
+// idea). Drop those off-domain matches using the resolved description/category.
+// Only the mentioned lane is at risk — search/known lanes use domain queries.
+// Fail-open: any failure keeps the candidates rather than emptying the section.
+export async function gateRelevantCompetitors(
+  candidates: CompetitorCandidate[],
+  domain: { productType: string; problem: string }
+): Promise<CompetitorCandidate[]> {
+  const mentioned = candidates.filter(
+    (candidate) => candidate.lane === 'mentioned'
+  );
+  if (mentioned.length === 0) return candidates;
+
+  try {
+    const json = await completeJson(
+      buildCompetitorRelevanceMessages(
+        domain,
+        mentioned.map((candidate) => ({
+          name: candidate.name,
+          description: candidate.description,
+          category: candidate.category,
+        }))
+      ),
+      0.2,
+      300
+    );
+    const parsed = CompetitorRelevanceLLMSchema.safeParse(json);
+    if (!parsed.success) return candidates;
+
+    const irrelevant = new Set(
+      parsed.data.products
+        .filter((product) => !product.relevant)
+        .map((product) => product.name)
+    );
+    return candidates.filter(
+      (candidate) =>
+        candidate.lane !== 'mentioned' || !irrelevant.has(candidate.name)
+    );
+  } catch {
+    return candidates;
   }
 }
 

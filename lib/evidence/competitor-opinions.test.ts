@@ -122,4 +122,37 @@ describe('resolveOpinionBullets', () => {
     expect(bullets[0].text).toBe('Partially backed');
     expect(bullets[0].sources).toHaveLength(1);
   });
+
+  it('claims each material once so a single source backs one bullet', () => {
+    const bullets = resolveOpinionBullets(
+      [
+        { text: 'First take', materialIds: ['M0'] },
+        { text: 'Padded duplicate', materialIds: ['M0'] },
+      ],
+      materials
+    );
+
+    expect(bullets).toHaveLength(1);
+    expect(bullets[0].text).toBe('First take');
+  });
+
+  it('keeps a later bullet when it still has a distinct source', () => {
+    const bullets = resolveOpinionBullets(
+      [
+        { text: 'Backed by C0', materialIds: ['C0'] },
+        { text: 'Backed by M0', materialIds: ['C0', 'M0'] },
+      ],
+      materials
+    );
+
+    expect(bullets.map((b) => b.text)).toEqual(['Backed by C0', 'Backed by M0']);
+    // The second bullet keeps only M0 — C0 was already claimed by the first.
+    expect(bullets[1].sources).toEqual([
+      {
+        text: 'I moved away from it because the price doubled.',
+        label: 'reddit.com',
+        url: 'https://reddit.com/r/x/comments/1',
+      },
+    ]);
+  });
 });

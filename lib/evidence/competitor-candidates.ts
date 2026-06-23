@@ -25,6 +25,8 @@ export interface CompetitorCandidate {
   iconUrl?: string;
   // App Store rating count — entrenchment signal for the saturation penalty.
   reviewCount?: number;
+  // App Store primary genre — domain signal for the relevance gate.
+  category?: string;
 }
 
 export function normalizeCompetitorName(name: string): string {
@@ -60,6 +62,7 @@ async function searchMobileCandidates(
         : undefined,
       iconUrl: app.artworkUrl100 ?? app.artworkUrl60,
       reviewCount: app.userRatingCount,
+      category: app.primaryGenreName,
       lane: 'search' as const,
     }));
 }
@@ -148,6 +151,7 @@ async function enrichOnAppStore(
     trackId: candidate.trackId ?? app.trackId ?? extractTrackId(app.trackViewUrl) ?? undefined,
     iconUrl: candidate.iconUrl ?? app.artworkUrl100 ?? app.artworkUrl60,
     reviewCount: candidate.reviewCount ?? app.userRatingCount,
+    category: candidate.category ?? app.primaryGenreName,
     description:
       candidate.description ??
       (app.description
