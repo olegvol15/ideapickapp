@@ -7,7 +7,7 @@ interface PainScoreBlockProps {
 }
 
 const COMPONENTS: Array<{
-  key: keyof ScoreBreakdown;
+  key: 'problemStrength' | 'complaintFrequency' | 'audienceReachability';
   label: string;
   weight: string;
 }> = [
@@ -34,6 +34,13 @@ function valueColor(value: number): string {
   return 'text-red-400';
 }
 
+// Saturation is inverted: a crowded market is bad, an open one is good.
+function saturationColor(value: number): string {
+  if (value >= 70) return 'text-red-400';
+  if (value >= 40) return 'text-amber-400';
+  return 'text-emerald-400';
+}
+
 export function PainScoreBlock({ score, breakdown }: PainScoreBlockProps) {
   const verdict = scoreVerdict(score);
 
@@ -57,9 +64,9 @@ export function PainScoreBlock({ score, breakdown }: PainScoreBlockProps) {
         </span>
       </div>
 
-      {/* Driver tiles — how the score is weighted */}
+      {/* Driver tiles — how the score is weighted, plus the market saturation */}
       {breakdown && (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           {COMPONENTS.map(({ key, label, weight }) => {
             const value = breakdown[key];
             return (
@@ -84,6 +91,23 @@ export function PainScoreBlock({ score, breakdown }: PainScoreBlockProps) {
               </div>
             );
           })}
+
+          <div className="flex flex-col gap-1 rounded-xl border border-border bg-card/60 p-4">
+            <span
+              className={cn(
+                'text-2xl font-bold tabular-nums',
+                saturationColor(breakdown.marketSaturation ?? 0)
+              )}
+            >
+              {breakdown.marketSaturation ?? 0}
+            </span>
+            <span className="text-xs leading-tight text-muted-foreground/60">
+              Market saturation
+            </span>
+            <span className="text-[10px] text-muted-foreground/40">
+              how crowded
+            </span>
+          </div>
         </div>
       )}
     </div>

@@ -16,10 +16,14 @@ function quote(overrides: Partial<PainQuote> = {}): PainQuote {
   };
 }
 
-function competitor(dislikeCount: number): CompetitorInsight {
+function competitor(
+  dislikeCount: number,
+  reviewCount?: number
+): CompetitorInsight {
   return {
     name: `Competitor ${dislikeCount}`,
     description: 'An existing product in the space.',
+    reviewCount,
     likes: [],
     dislikes: Array.from({ length: dislikeCount }, (_, i) => ({
       text: `People dislike thing ${i}`,
@@ -124,6 +128,47 @@ describe('computeIdeaScore', () => {
     // market cannot flood the score with bullet volume.
     expect(flooded.scoreBreakdown).toEqual(capped.scoreBreakdown);
     expect(flooded.score).toBe(capped.score);
+  });
+
+  it('discounts the score for a market crowded with entrenched incumbents', () => {
+    const themes: PainEvidenceResult['themes'] = [
+      {
+        label: 'Communication breaks down',
+        evidenceType: 'complaint',
+        mentionCount: 6,
+        quotes: Array.from({ length: 6 }, (_, i) =>
+          quote({ intensity: 3, sourceLabel: `Reddit r/dating${i % 4}` })
+        ),
+      },
+    ];
+
+    // Identical competitor structure (same dislikes/count) — only the review
+    // counts differ, so the market saturation is the sole moving part.
+    const niche = computeIdeaScore(
+      result(themes, [
+        competitor(3, 200),
+        competitor(2, 80),
+        competitor(1, 500),
+      ]),
+      true
+    );
+    const saturated = computeIdeaScore(
+      result(themes, [
+        competitor(3, 2_000_000),
+        competitor(2, 900_000),
+        competitor(1, 120_000),
+      ]),
+      true
+    );
+
+    // Three incumbents over the review threshold → 24% discount → 96/100 level.
+    expect(saturated.scoreBreakdown.marketSaturation).toBe(96);
+    expect(saturated.score).toBeLessThan(niche.score);
+    // The driver components themselves are unchanged — only the total is docked.
+    expect(niche.scoreBreakdown.marketSaturation).toBe(0);
+    expect(saturated.scoreBreakdown.problemStrength).toBe(
+      niche.scoreBreakdown.problemStrength
+    );
   });
 
   it('caps frequency and reachability at 100', () => {

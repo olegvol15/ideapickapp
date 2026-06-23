@@ -23,6 +23,7 @@ export interface AppStoreApp {
   currentVersionReleaseDate?: string;
   trackSubtitle?: string;
   artworkUrl60?: string;
+  artworkUrl100?: string;
 }
 
 export interface AppStoreReview {

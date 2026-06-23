@@ -40,6 +40,14 @@ const AUDIENCE_INPUT_BONUS = 10;
 const COMPETITOR_REACH_BONUS_PER = 5;
 const MAX_COMPETITOR_REACH_BONUS = 5;
 
+// Saturation penalty: entrenched incumbents make a market hard to win, so a
+// crowded field of established apps discounts the final score. Review count is
+// the entrenchment signal — a popular category with several heavily-reviewed
+// incumbents (e.g. Tinder, Hinge, Bumble) is the hardest to break into.
+const STRONG_INCUMBENT_REVIEWS = 50_000;
+const SATURATION_PENALTY_PER_INCUMBENT = 0.08;
+const MAX_SATURATION_PENALTY = 0.25;
+
 const DEFAULT_INTENSITY = 2;
 // A paying user of an existing product who still complains is real,
 // recurring pain — between "recurring" (2) and "severe" (3).
@@ -70,6 +78,19 @@ function competitorSignal(competitors: CompetitorInsight[]): CompetitorSignal {
     competitorCount: competitors.length,
     dislikeCount: competitors.reduce((sum, c) => sum + c.dislikes.length, 0),
   };
+}
+
+// Fraction (0–MAX) to discount the score by, scaled by how many entrenched
+// incumbents crowd the market. Review counts come from App Store matches, so
+// web/SaaS competitors (no review signal) contribute no penalty.
+function saturationFactor(competitors: CompetitorInsight[]): number {
+  const strongCount = competitors.filter(
+    (competitor) => (competitor.reviewCount ?? 0) >= STRONG_INCUMBENT_REVIEWS
+  ).length;
+  return Math.min(
+    MAX_SATURATION_PENALTY,
+    strongCount * SATURATION_PENALTY_PER_INCUMBENT
+  );
 }
 
 function problemStrength(
@@ -184,10 +205,17 @@ export function computeIdeaScore(
     ),
   };
 
-  const score = Math.round(
+  const gross =
     WEIGHT_PROBLEM_STRENGTH * breakdown.problemStrength +
-      WEIGHT_COMPLAINT_FREQUENCY * breakdown.complaintFrequency +
-      WEIGHT_AUDIENCE_REACHABILITY * breakdown.audienceReachability
+    WEIGHT_COMPLAINT_FREQUENCY * breakdown.complaintFrequency +
+    WEIGHT_AUDIENCE_REACHABILITY * breakdown.audienceReachability;
+
+  const factor = saturationFactor(result.competitors ?? []);
+  const score = Math.round(gross * (1 - factor));
+  // Surfaced as a 0–100 saturation level (higher = more crowded). The penalty
+  // cap maps to 100, keeping the displayed level aligned with the actual discount.
+  breakdown.marketSaturation = Math.round(
+    (factor / MAX_SATURATION_PENALTY) * 100
   );
 
   return { score, scoreBreakdown: breakdown };

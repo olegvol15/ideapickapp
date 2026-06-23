@@ -145,9 +145,9 @@ export function ValidationReport({ result, title }: ValidationReportProps) {
         <div className="mt-4 flex flex-col gap-4 border-t border-border/50 pt-8">
           <SectionHeading>Competitors</SectionHeading>
           <div className="grid items-start gap-3 sm:grid-cols-2">
-            {competitors.map((competitor) => (
+            {competitors.map((competitor, index) => (
               <CompetitorInsightBlock
-                key={competitor.name}
+                key={`${competitor.name}-${index}`}
                 competitor={{
                   ...competitor,
                   likes: normalizeCompetitorBullets(competitor.likes),

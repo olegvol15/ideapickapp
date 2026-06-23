@@ -126,6 +126,8 @@ async function buildInsight(
   const base: CompetitorInsight = {
     name: candidate.name,
     url: candidate.url,
+    iconUrl: candidate.iconUrl,
+    reviewCount: candidate.reviewCount,
     description: candidate.description ?? FALLBACK_DESCRIPTION,
     likes: [],
     dislikes: [],

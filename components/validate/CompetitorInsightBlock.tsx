@@ -38,6 +38,11 @@ export function CompetitorInsightBlock({
 }: CompetitorInsightBlockProps) {
   const [expandedBullet, setExpandedBullet] = useState<string | null>(null);
   const domain = competitorDomain(competitor.url);
+  const logoSrc =
+    competitor.iconUrl ??
+    (domain && !isGenericStoreDomain(domain)
+      ? `https://icons.duckduckgo.com/ip3/${domain}.ico`
+      : undefined);
   const mentionBadge =
     competitor.mentionCount != null
       ? `Named in ${competitor.mentionCount} complaint${competitor.mentionCount !== 1 ? 's' : ''}`
@@ -68,12 +73,7 @@ export function CompetitorInsightBlock({
     <article className="flex h-full min-w-0 flex-col gap-3 rounded-xl border border-border bg-card/60 p-4">
       <div className="flex min-w-0 items-center gap-2.5">
         <Avatar className="h-7 w-7 rounded-full">
-          {domain && !isGenericStoreDomain(domain) && (
-            <AvatarImage
-              src={`https://icons.duckduckgo.com/ip3/${domain}.ico`}
-              alt=""
-            />
-          )}
+          {logoSrc && <AvatarImage src={logoSrc} alt="" />}
           <AvatarFallback className="rounded-full text-[10px]">
             {competitor.name[0]?.toUpperCase() ?? '?'}
           </AvatarFallback>

@@ -21,6 +21,10 @@ export interface CompetitorCandidate {
   quoteIds?: number[];
   // Verified App Store match (Mobile App) — reused for review fetching.
   trackId?: number;
+  // App Store artwork URL — shown as the card logo when present.
+  iconUrl?: string;
+  // App Store rating count — entrenchment signal for the saturation penalty.
+  reviewCount?: number;
 }
 
 export function normalizeCompetitorName(name: string): string {
@@ -54,6 +58,8 @@ async function searchMobileCandidates(
       description: app.description
         ? `${app.description.slice(0, MAX_DESCRIPTION_LENGTH).trim()}…`
         : undefined,
+      iconUrl: app.artworkUrl100 ?? app.artworkUrl60,
+      reviewCount: app.userRatingCount,
       lane: 'search' as const,
     }));
 }
@@ -121,7 +127,13 @@ export function matchesCandidateName(
   return resultHost.toLowerCase().replace(/[^a-z0-9]/g, '').includes(compact);
 }
 
-async function verifyOnAppStore(
+// Resolve a candidate against the App Store and merge in its review count,
+// icon, and trackId. A mobile validation only surfaces real App Store apps, so
+// a candidate without a strict match is dropped — even if it already carries a
+// URL (a web-native tool like MixPanel/Segment is not a mobile competitor).
+// This also guarantees every surviving competitor has a review count for the
+// saturation signal.
+async function enrichOnAppStore(
   candidate: CompetitorCandidate
 ): Promise<CompetitorCandidate | null> {
   const apps = await fetchAppStoreApps(candidate.name, 5);
@@ -129,9 +141,13 @@ async function verifyOnAppStore(
   if (!app) return null;
   return {
     ...candidate,
-    name: app.trackName,
-    url: app.trackViewUrl,
-    trackId: app.trackId ?? extractTrackId(app.trackViewUrl) ?? undefined,
+    // Keep the candidate's own name when it already resolved a product;
+    // canonicalize to the store listing only when we just discovered it.
+    name: candidate.url ? candidate.name : app.trackName,
+    url: candidate.url ?? app.trackViewUrl,
+    trackId: candidate.trackId ?? app.trackId ?? extractTrackId(app.trackViewUrl) ?? undefined,
+    iconUrl: candidate.iconUrl ?? app.artworkUrl100 ?? app.artworkUrl60,
+    reviewCount: candidate.reviewCount ?? app.userRatingCount,
     description:
       candidate.description ??
       (app.description
@@ -158,20 +174,26 @@ async function verifyOnWeb(
 }
 
 // Candidates without a URL must resolve to a real product (App Store
-// match or competitor web result) or they don't render at all.
+// match or competitor web result) or they don't render at all. Mobile App
+// candidates always go through the App Store so even URL-bearing incumbents
+// pick up a review count for the saturation signal.
 export async function verifyCompetitorCandidates(
   candidates: CompetitorCandidate[],
   productType: string
 ): Promise<CompetitorCandidate[]> {
   const verified = await Promise.all(
     candidates.map(async (candidate) => {
-      if (candidate.url) return candidate;
       try {
-        return productType === 'Mobile App'
-          ? await verifyOnAppStore(candidate)
-          : await verifyOnWeb(candidate);
+        if (productType === 'Mobile App') {
+          // Already enriched (App Store search lane) — no extra lookup needed.
+          if (candidate.reviewCount != null) return candidate;
+          return await enrichOnAppStore(candidate);
+        }
+        if (candidate.url) return candidate;
+        return await verifyOnWeb(candidate);
       } catch {
-        return null;
+        // Mobile validations never keep an unverified web competitor.
+        return productType !== 'Mobile App' && candidate.url ? candidate : null;
       }
     })
   );
@@ -220,6 +242,8 @@ export function mergeCompetitorCandidates(lanes: {
 
     if (existing) {
       existing.url ??= candidate.url;
+      existing.iconUrl ??= candidate.iconUrl;
+      existing.reviewCount ??= candidate.reviewCount;
       existing.description ??= candidate.description;
       if (candidate.quoteIds?.length) {
         existing.quoteIds = [

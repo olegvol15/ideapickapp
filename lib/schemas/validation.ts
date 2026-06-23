@@ -24,6 +24,7 @@ export const ScoreBreakdownSchema = z.object({
   problemStrength: z.number().min(0).max(100),
   complaintFrequency: z.number().min(0).max(100),
   audienceReachability: z.number().min(0).max(100),
+  marketSaturation: z.number().min(0).max(100).optional(),
 });
 export type ScoreBreakdown = z.infer<typeof ScoreBreakdownSchema>;
 
@@ -45,6 +46,8 @@ export type CompetitorBullet = z.infer<typeof CompetitorBulletSchema>;
 export const CompetitorInsightSchema = z.object({
   name: z.string(),
   url: z.string().optional(),
+  iconUrl: z.string().optional(),
+  reviewCount: z.number().int().min(0).optional(),
   description: z.string(),
   likes: z.array(CompetitorBulletSchema),
   dislikes: z.array(CompetitorBulletSchema),
