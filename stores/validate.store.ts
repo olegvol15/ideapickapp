@@ -35,6 +35,10 @@ interface ValidateState {
   ) => void;
   updateLocalValidationId: (oldId: string, newId: string) => void;
 
+  // persisted — report ids whose Idy reveal has already played once
+  seenReveals: string[];
+  markRevealSeen: (id: string) => void;
+
   // session — active validation (not persisted)
   phase: ValidationPhase;
   error: string;
@@ -100,6 +104,14 @@ export const useValidateStore = create<ValidateState>()(
       currentId: null,
       version: 1,
 
+      seenReveals: [],
+      markRevealSeen: (id) =>
+        set((state) =>
+          state.seenReveals.includes(id)
+            ? state
+            : { seenReveals: [...state.seenReveals, id].slice(-200) }
+        ),
+
       setPhase: (phase) => set({ phase }),
       setError: (error) => set({ error }),
       setResult: (result) => set({ result }),
@@ -122,7 +134,10 @@ export const useValidateStore = create<ValidateState>()(
     }),
     {
       name: 'ideapick:validations',
-      partialize: (state) => ({ localValidations: state.localValidations }),
+      partialize: (state) => ({
+        localValidations: state.localValidations,
+        seenReveals: state.seenReveals,
+      }),
     }
   )
 );

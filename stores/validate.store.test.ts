@@ -33,4 +33,22 @@ describe('validation session state', () => {
     expect(useValidateStore.getState().activeRequest).toBeNull();
     expect(useValidateStore.getState().phase).toBe('idle');
   });
+
+  it('records a reveal as seen once and ignores duplicates', () => {
+    const before = useValidateStore.getState().seenReveals.length;
+
+    useValidateStore.getState().markRevealSeen('report-1');
+    useValidateStore.getState().markRevealSeen('report-1');
+
+    const { seenReveals } = useValidateStore.getState();
+    expect(seenReveals.filter((id) => id === 'report-1')).toHaveLength(1);
+    expect(seenReveals.length).toBe(before + 1);
+  });
+
+  it('survives a session reset (durable history)', () => {
+    useValidateStore.getState().markRevealSeen('report-2');
+    useValidateStore.getState().resetSession();
+
+    expect(useValidateStore.getState().seenReveals).toContain('report-2');
+  });
 });

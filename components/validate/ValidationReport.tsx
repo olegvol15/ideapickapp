@@ -17,9 +17,14 @@ import type { PainEvidenceResult } from '@/lib/schemas';
 interface ValidationReportProps {
   result: PainEvidenceResult;
   title?: string;
+  revealId?: string;
 }
 
-export function ValidationReport({ result, title }: ValidationReportProps) {
+export function ValidationReport({
+  result,
+  title,
+  revealId,
+}: ValidationReportProps) {
   const [relatedOpen, setRelatedOpen] = useState(false);
   const hasEvidence = result.themes.length > 0;
   const evidenceCounts = evidenceTypeCounts(result);
@@ -57,7 +62,13 @@ export function ValidationReport({ result, title }: ValidationReportProps) {
             {formattedTitle}
           </h1>
         )}
-        {result.assessment && <IdyAssessment assessment={result.assessment} />}
+        {result.assessment && (
+          <IdyAssessment
+            assessment={result.assessment}
+            score={result.score}
+            revealId={revealId}
+          />
+        )}
         {result.score != null && (
           <PainScoreBlock
             score={result.score}

@@ -76,7 +76,11 @@ export default function ValidationDetailPage({ params }: PageProps) {
 
   return (
     <main className="mx-auto max-w-5xl px-5 pb-24 pt-14 sm:px-8">
-      <ValidationReport result={current.result} title={current.description} />
+      <ValidationReport
+        result={current.result}
+        title={current.description}
+        revealId={id}
+      />
     </main>
   );
 }
