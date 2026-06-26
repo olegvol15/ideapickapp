@@ -40,3 +40,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# supabase local CLI state
+supabase/.temp/
+
+# local notes (not committed)
+.claude/competitor-research.md
+.claude/report-roadmap.md

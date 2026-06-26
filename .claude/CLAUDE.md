@@ -4,6 +4,9 @@ Here is the same version, cleaned up and without any emojis or decorative elemen
 
 # ideapickapp — Development Rules
 
+> Competitor report research (local, gitignored): `.claude/competitor-research.md` — reference when discussing validation-report features.
+> Report roadmap (local, gitignored): `.claude/report-roadmap.md` — our prioritized plan to beat competitors on evidence depth.
+
 ## Core Principle
 
 > If a file becomes hard to read — it’s already wrong.
