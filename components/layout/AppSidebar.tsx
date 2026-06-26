@@ -83,6 +83,10 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     validationPhase === 'thinking' ||
     validationPhase === 'researching' ||
     validationPhase === 'analyzing';
+  const brainstormRouteActive =
+    pathname === '/' || pathname.startsWith('/brainstorms');
+  const validationRouteActive =
+    pathname === '/validate' || pathname.startsWith('/validate/');
   const { data: dbValidations } = useGetValidations(user?.id);
   const recentValidations = user
     ? (dbValidations ?? []).map((v) => ({
@@ -190,10 +194,25 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             <button
               type="button"
               onClick={handleNewBrainstorm}
-              className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-white/6 hover:text-foreground"
+              className={cn(
+                'flex w-full items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm font-medium transition-colors',
+                brainstormRouteActive
+                  ? 'bg-white/6 text-primary'
+                  : 'text-foreground/80 hover:bg-white/6 hover:text-foreground'
+              )}
             >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/8">
-                <Plus className="h-3.5 w-3.5" />
+              <span
+                className={cn(
+                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors',
+                  brainstormRouteActive ? 'bg-primary/10' : 'bg-white/8'
+                )}
+              >
+                <Plus
+                  className={cn(
+                    'h-3.5 w-3.5',
+                    brainstormRouteActive && 'text-primary'
+                  )}
+                />
               </span>
               New Brainstorm
             </button>
@@ -204,16 +223,16 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               onClick={handleNewValidation}
               className={cn(
                 'flex w-full items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm font-medium transition-colors',
-                pathname === '/validate' || validationIsActive
-                  ? 'bg-white/8 text-primary'
+                validationRouteActive
+                  ? 'bg-white/6 text-primary'
                   : 'text-foreground/60 hover:bg-white/5 hover:text-foreground/90'
               )}
             >
               <span
                 className={cn(
-                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors',
-                  pathname === '/validate' || validationIsActive
-                    ? 'bg-primary/12'
+                    'flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors',
+                  validationRouteActive
+                    ? 'bg-primary/10'
                     : 'bg-white/6'
                 )}
               >
@@ -250,14 +269,14 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                   className={cn(
                     'flex w-full items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm font-medium transition-colors',
                     item.active
-                      ? 'bg-white/8 text-foreground'
+                      ? 'bg-white/6 text-primary'
                       : 'text-foreground/60 hover:bg-white/5 hover:text-foreground/90'
                   )}
                 >
                   <span
                     className={cn(
                       'flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors',
-                      item.active ? 'bg-white/10' : 'bg-white/6'
+                      item.active ? 'bg-primary/10' : 'bg-white/6'
                     )}
                   >
                     <Icon className="h-3.5 w-3.5" />
@@ -432,12 +451,12 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           <SidebarMenu className="space-y-2 px-0">
             <SidebarMenuItem className="flex justify-center">
               <SidebarMenuButton
-                isActive={pathname === '/validate'}
+                isActive={validationRouteActive}
                 onClick={handleNewValidation}
                 className={cn(
-                  'justify-center rounded-2xl px-0 py-0',
-                  pathname === '/validate' || validationIsActive
-                    ? 'bg-primary/14 text-primary shadow-[0_14px_34px_var(--brand-hi)]'
+                  'relative justify-center rounded-2xl px-0 py-0',
+                  validationRouteActive
+                    ? 'text-primary'
                     : 'text-muted-foreground hover:bg-background/55 hover:text-foreground'
                 )}
                 aria-label={
@@ -447,6 +466,9 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                   validationIsActive ? 'Validation running' : 'New Validation'
                 }
               >
+                {validationRouteActive && (
+                  <span className="absolute left-1 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary" />
+                )}
                 <span className="relative flex h-12 w-12 items-center justify-center">
                   {validationIsActive ? (
                     <>
@@ -459,7 +481,7 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                     <Gauge
                       className={cn(
                         'h-4 w-4 transition-colors duration-300 ease-out',
-                        pathname === '/validate'
+                        validationRouteActive
                           ? 'text-primary'
                           : 'text-muted-foreground'
                       )}
@@ -479,9 +501,9 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                     asChild
                     isActive={item.active}
                     className={cn(
-                      'justify-center rounded-2xl px-0 py-0',
+                      'relative justify-center rounded-2xl px-0 py-0',
                       item.active
-                        ? 'bg-primary/14 text-primary shadow-[0_14px_34px_var(--brand-hi)]'
+                        ? 'text-primary'
                         : 'text-muted-foreground hover:bg-background/55 hover:text-foreground'
                     )}
                   >
@@ -495,6 +517,9 @@ function AppSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                       }}
                       className="flex h-12 w-12 items-center justify-center"
                     >
+                      {item.active && (
+                        <span className="absolute left-1 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary" />
+                      )}
                       <Icon
                         className={cn(
                           'h-4 w-4 transition-colors duration-300 ease-out',

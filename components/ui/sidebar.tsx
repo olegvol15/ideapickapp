@@ -12,6 +12,9 @@ type SidebarContextValue = {
   setOpenMobile: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
+const SIDEBAR_OPEN_KEY = 'ideapick:sidebar-open';
+const SIDEBAR_OPEN_EVENT = 'ideapick:sidebar-open-change';
+
 const SidebarContext = React.createContext<SidebarContextValue | null>(null);
 
 function useSidebar() {
@@ -24,8 +27,27 @@ function useSidebar() {
 }
 
 function SidebarProvider({ children, className }: React.ComponentProps<'div'>) {
-  const [openDesktop, setOpenDesktop] = React.useState(true);
+  const openDesktop = React.useSyncExternalStore(
+    (onStoreChange) => {
+      window.addEventListener('storage', onStoreChange);
+      window.addEventListener(SIDEBAR_OPEN_EVENT, onStoreChange);
+      return () => {
+        window.removeEventListener('storage', onStoreChange);
+        window.removeEventListener(SIDEBAR_OPEN_EVENT, onStoreChange);
+      };
+    },
+    () => localStorage.getItem(SIDEBAR_OPEN_KEY) !== 'false',
+    () => true
+  );
   const [openMobile, setOpenMobile] = React.useState(false);
+  const setOpenDesktop = React.useCallback<
+    React.Dispatch<React.SetStateAction<boolean>>
+  >((value) => {
+    const current = localStorage.getItem(SIDEBAR_OPEN_KEY) !== 'false';
+    const next = typeof value === 'function' ? value(current) : value;
+    localStorage.setItem(SIDEBAR_OPEN_KEY, String(next));
+    window.dispatchEvent(new Event(SIDEBAR_OPEN_EVENT));
+  }, []);
 
   return (
     <SidebarContext.Provider
@@ -235,7 +257,7 @@ function SidebarMenuButton({
       className: cn(
         'group flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition-all',
         isActive
-          ? 'bg-primary text-primary-foreground shadow-[0_14px_34px_var(--brand-hi)]'
+          ? 'text-foreground'
           : 'text-foreground/88 hover:bg-background/60 hover:text-foreground',
         child.props.className,
         className
@@ -249,7 +271,7 @@ function SidebarMenuButton({
       className={cn(
         'group flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition-all',
         isActive
-          ? 'bg-primary text-primary-foreground shadow-[0_14px_34px_var(--brand-hi)]'
+          ? 'text-foreground'
           : 'text-foreground/88 hover:bg-background/60 hover:text-foreground',
         className
       )}

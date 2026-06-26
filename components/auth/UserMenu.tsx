@@ -86,7 +86,7 @@ export function UserMenu({ variant = 'compact' }: UserMenuProps) {
   }
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative overflow-visible">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
@@ -134,22 +134,43 @@ export function UserMenu({ variant = 'compact' }: UserMenuProps) {
             className={cn(
               'absolute z-50 overflow-hidden rounded-xl border border-border bg-card shadow-[0_8px_32px_rgba(0,0,0,0.15)]',
               variant === 'compact'
-                ? 'right-0 top-10 w-52'
+                ? 'bottom-[calc(100%+0.75rem)] left-0 w-60 max-w-[calc(100vw-2rem)]'
                 : 'bottom-[calc(100%+0.75rem)] left-0 w-full min-w-[240px]'
             )}
           >
-            <div className="border-b border-border px-3 py-2.5">
-              <p className="truncate text-[11px] text-muted-foreground">
-                {email}
-              </p>
-            </div>
+            {variant === 'compact' ? (
+              <div className="flex items-center gap-3 border-b border-border px-4 py-3.5">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/12 text-xs font-bold text-primary">
+                  {initials}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold leading-none text-foreground">
+                    {displayName}
+                  </span>
+                  <span className="mt-1 block truncate text-xs text-muted-foreground">
+                    {email}
+                  </span>
+                </span>
+              </div>
+            ) : (
+              <div className="border-b border-border px-3 py-2.5">
+                <p className="truncate text-[11px] text-muted-foreground">
+                  {email}
+                </p>
+              </div>
+            )}
 
             <div className="p-1">
               <Button
                 type="button"
                 variant="ghost"
                 onClick={handleToggleTheme}
-                className="w-full justify-start gap-3 rounded-lg px-3 py-2 h-auto font-normal normal-case tracking-normal hover:bg-muted"
+                className={cn(
+                  'w-full rounded-lg px-3 h-auto font-normal normal-case tracking-normal hover:bg-muted',
+                  variant === 'compact'
+                    ? 'justify-start gap-3 py-3 text-left'
+                    : 'justify-start gap-3 py-2'
+                )}
               >
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                   {isDark ? (
@@ -158,7 +179,12 @@ export function UserMenu({ variant = 'compact' }: UserMenuProps) {
                     <Moon className="h-4 w-4" />
                   )}
                 </span>
-                <span className="min-w-0 flex-1 text-left">
+                <span
+                  className={cn(
+                    'min-w-0 flex-1',
+                    variant === 'compact' ? 'text-left' : 'text-left'
+                  )}
+                >
                   <span className="block text-sm font-medium text-foreground">
                     Appearance
                   </span>
@@ -174,7 +200,12 @@ export function UserMenu({ variant = 'compact' }: UserMenuProps) {
                 type="button"
                 variant="ghost"
                 onClick={handleSignOut}
-                className="w-full justify-start gap-2.5 rounded-lg px-3 py-2 h-auto text-xs font-medium normal-case tracking-normal text-red-500 hover:bg-red-500/5 hover:text-red-500"
+                className={cn(
+                  'w-full rounded-lg px-3 h-auto font-medium normal-case tracking-normal text-red-500 hover:bg-red-500/5 hover:text-red-500',
+                  variant === 'compact'
+                    ? 'justify-start gap-3 py-3 text-sm'
+                    : 'justify-start gap-2.5 py-2 text-xs'
+                )}
               >
                 <LogOut className="h-3.5 w-3.5" />
                 Sign out
