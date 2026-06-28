@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { PainQueryResponseSchema } from '@/lib/schemas';
-import { buildPainQueryMessages } from './validate.prompts';
+import {
+  buildActionPlanMessages,
+  buildPainQueryMessages,
+} from './validate.prompts';
 
 describe('validation query contract', () => {
   it('does not request App Store evidence for mobile ideas', () => {
@@ -41,5 +44,21 @@ describe('validation query contract', () => {
         competitorQuery: 'water intake tracker',
       }).success
     ).toBe(true);
+  });
+});
+
+describe('action plan contract', () => {
+  it('embeds the evidence digest and grounds interview questions in themes', () => {
+    const prompt = buildActionPlanMessages({
+      description: 'A water tracking app',
+      productType: 'Mobile App',
+      evidenceDigest: 'DIGEST_SENTINEL: idea score 62/100, theme "sync fails".',
+    })
+      .map((message) => message.content)
+      .join('\n');
+
+    expect(prompt).toContain('DIGEST_SENTINEL');
+    expect(prompt).toContain('interviewQuestions');
+    expect(prompt).toMatch(/derived from the ACTUAL complaint themes/i);
   });
 });

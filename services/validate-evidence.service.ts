@@ -25,6 +25,7 @@ import {
 } from '@/lib/evidence/quote-pool';
 import { computeIdeaScore } from '@/lib/evidence/score';
 import { buildEvidenceDigest } from '@/lib/validate/assessment-digest';
+import { generateActionPlan } from '@/services/validate-action-plan.service';
 import {
   mergeCompetitorCandidates,
   pickCompetitorCandidates,
@@ -274,10 +275,15 @@ export async function runPainEvidenceValidation(
       ...emptyResult(queries.problemStatement),
       competitors: competitors.length > 0 ? competitors : undefined,
     };
+    const [emptyAssessment, emptyActionPlan] = await Promise.all([
+      generateIdeaAssessment(params, emptyScored),
+      generateActionPlan(params, emptyScored),
+    ]);
     return {
       result: {
         ...emptyScored,
-        assessment: (await generateIdeaAssessment(params, emptyScored)) ?? undefined,
+        assessment: emptyAssessment ?? undefined,
+        actionPlan: emptyActionPlan ?? undefined,
       },
       sources,
     };
@@ -346,10 +352,16 @@ export async function runPainEvidenceValidation(
   );
   const finalResult: PainEvidenceResult = { ...scored, score, scoreBreakdown };
 
+  const [assessment, actionPlan] = await Promise.all([
+    generateIdeaAssessment(params, finalResult),
+    generateActionPlan(params, finalResult),
+  ]);
+
   return {
     result: {
       ...finalResult,
-      assessment: (await generateIdeaAssessment(params, finalResult)) ?? undefined,
+      assessment: assessment ?? undefined,
+      actionPlan: actionPlan ?? undefined,
     },
     sources,
   };

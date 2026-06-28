@@ -57,6 +57,20 @@ export const CompetitorInsightSchema = z.object({
 });
 export type CompetitorInsight = z.infer<typeof CompetitorInsightSchema>;
 
+export const ActionExperimentSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+});
+export type ActionExperiment = z.infer<typeof ActionExperimentSchema>;
+
+export const ActionPlanSchema = z.object({
+  nextMoves: z.array(z.string()),
+  unknowns: z.array(z.string()),
+  experiments: z.array(ActionExperimentSchema),
+  interviewQuestions: z.array(z.string()),
+});
+export type ActionPlan = z.infer<typeof ActionPlanSchema>;
+
 export const PainEvidenceResultSchema = z.object({
   problem: z.string(),
   summary: z.string(),
@@ -66,8 +80,27 @@ export const PainEvidenceResultSchema = z.object({
   score: z.number().min(0).max(100).optional(),
   scoreBreakdown: ScoreBreakdownSchema.optional(),
   competitors: z.array(CompetitorInsightSchema).optional(),
+  actionPlan: ActionPlanSchema.optional(),
 });
 export type PainEvidenceResult = z.infer<typeof PainEvidenceResultSchema>;
+
+// LLM-facing shape with bounds so a malformed/over-long response is rejected
+// and the action-plan step degrades to null rather than rendering junk.
+export const ActionPlanLLMSchema = z.object({
+  nextMoves: z.array(z.string().min(3)).min(3).max(5),
+  unknowns: z.array(z.string().min(3)).min(2).max(4),
+  experiments: z
+    .array(
+      z.object({
+        title: z.string().min(3),
+        description: z.string().min(3),
+      })
+    )
+    .min(2)
+    .max(3),
+  interviewQuestions: z.array(z.string().min(3)).min(5).max(7),
+});
+export type ActionPlanLLM = z.infer<typeof ActionPlanLLMSchema>;
 
 export const IdeaAssessmentLLMSchema = z.object({
   assessment: z.string().min(3),
