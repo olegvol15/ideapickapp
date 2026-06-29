@@ -12,6 +12,8 @@ import {
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { SectionHeading } from './SectionHeading';
+import { PlanSectionHeader } from './PlanSectionHeader';
+import { NextMovesRoadmap } from './NextMovesRoadmap';
 import { InterviewSourcesBlock } from './InterviewSourcesBlock';
 import {
   buildIdeaFromValidation,
@@ -51,41 +53,36 @@ export function ActionPlanSection({
 
   return (
     <div className="mt-4 flex flex-col gap-8">
-      <SectionHeading>Your Action Plan</SectionHeading>
+      <div className="flex flex-col gap-1">
+        <SectionHeading>Your Action Plan</SectionHeading>
+        <p className="text-sm text-muted-foreground/70">
+          Turn the evidence into your next steps.
+        </p>
+      </div>
 
       {plan.nextMoves.length > 0 && (
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <ListChecks className="h-4 w-4 text-brand" />
-            Your next moves
-          </div>
-          <div className="flex flex-col gap-2">
-            {plan.nextMoves.map((move, index) => (
-              <div
-                key={move}
-                className="flex gap-3 rounded-xl border border-border bg-card/60 p-4 text-[15px] leading-relaxed text-foreground/85"
-              >
-                <span className="shrink-0 font-bold tabular-nums text-brand">
-                  {index + 1}
-                </span>
-                <span>{move}</span>
-              </div>
-            ))}
-          </div>
+        <div className="flex flex-col gap-4">
+          <PlanSectionHeader
+            icon={ListChecks}
+            label="Your next moves"
+            accent="brand"
+          />
+          <NextMovesRoadmap moves={plan.nextMoves} />
         </div>
       )}
 
       {plan.unknowns.length > 0 && (
         <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <HelpCircle className="h-4 w-4 text-amber-400" />
-            Unknowns to close
-          </div>
+          <PlanSectionHeader
+            icon={HelpCircle}
+            label="Unknowns to close"
+            accent="amber"
+          />
           <div className="flex flex-col gap-2">
             {plan.unknowns.map((unknown) => (
               <div
                 key={unknown}
-                className="flex gap-3 rounded-xl border border-border bg-card/60 p-4 text-[15px] leading-relaxed text-foreground/85"
+                className="flex gap-3 rounded-xl border border-border bg-card/60 p-4 text-[15px] leading-relaxed text-foreground/85 transition-colors hover:bg-card"
               >
                 <HelpCircle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/40" />
                 <span>{unknown}</span>
@@ -97,15 +94,16 @@ export function ActionPlanSection({
 
       {plan.experiments.length > 0 && (
         <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <FlaskConical className="h-4 w-4 text-emerald-400" />
-            Validate before building
-          </div>
+          <PlanSectionHeader
+            icon={FlaskConical}
+            label="Validate before building"
+            accent="emerald"
+          />
           <div className="grid gap-3 sm:grid-cols-2">
             {plan.experiments.map((experiment) => (
               <div
                 key={experiment.title}
-                className="flex flex-col gap-1.5 rounded-xl border border-border bg-card/60 p-4"
+                className="flex flex-col gap-1.5 rounded-xl border border-border bg-card/60 p-4 transition-colors hover:bg-card"
               >
                 <p className="text-sm font-semibold text-foreground">
                   {experiment.title}
@@ -121,15 +119,16 @@ export function ActionPlanSection({
 
       {plan.interviewQuestions.length > 0 && (
         <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <MessagesSquare className="h-4 w-4 text-brand" />
-            Talk to customers
-          </div>
+          <PlanSectionHeader
+            icon={MessagesSquare}
+            label="Talk to customers"
+            accent="brand"
+          />
           <div className="flex flex-col gap-2">
             {plan.interviewQuestions.map((question) => (
               <div
                 key={question}
-                className="flex gap-3 rounded-xl border border-border bg-card/60 p-4 text-[15px] leading-relaxed text-foreground/85"
+                className="flex gap-3 rounded-xl border border-border bg-card/60 p-4 text-[15px] leading-relaxed text-foreground/85 transition-colors hover:bg-card"
               >
                 <span className="shrink-0 font-semibold text-muted-foreground/40">
                   &ldquo;
@@ -142,7 +141,7 @@ export function ActionPlanSection({
         </div>
       )}
 
-      <div className="flex flex-col items-center gap-2 pt-8">
+      <div className="flex flex-col items-center gap-2 pt-4 text-center">
         <Button
           onClick={handleGenerateWorkspace}
           disabled={!title.trim()}
