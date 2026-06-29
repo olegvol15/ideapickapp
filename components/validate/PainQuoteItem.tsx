@@ -13,6 +13,7 @@ interface PainQuoteItemProps {
 function avatarDomain(quote: PainQuote): string {
   if (quote.source === 'reddit') return 'reddit.com';
   if (quote.source === 'appstore') return 'apps.apple.com';
+  if (quote.source === 'x') return 'x.com';
   try {
     return new URL(quote.url ?? '').hostname.replace(/^www\./, '');
   } catch {
@@ -22,12 +23,15 @@ function avatarDomain(quote: PainQuote): string {
 
 function displayName(quote: PainQuote): string {
   if (!quote.author) return quote.sourceLabel;
-  return quote.source === 'reddit' ? `u/${quote.author}` : quote.author;
+  if (quote.source === 'reddit') return `u/${quote.author}`;
+  if (quote.source === 'x') return `@${quote.author}`;
+  return quote.author;
 }
 
 function linkLabel(quote: PainQuote): string {
   if (quote.source === 'reddit') return quote.sourceLabel.replace(/^Reddit /, '');
   if (quote.source === 'appstore') return `App Store · ${quote.appName ?? ''}`;
+  if (quote.source === 'x') return 'X';
   return quote.sourceLabel;
 }
 

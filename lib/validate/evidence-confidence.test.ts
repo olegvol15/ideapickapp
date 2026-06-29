@@ -33,13 +33,14 @@ describe('computeEvidenceConfidence', () => {
           quote({ source: 'reddit', sourceLabel: 'Reddit r/a' }),
           quote({ source: 'web', sourceLabel: 'example.com' }),
           quote({ source: 'appstore', sourceLabel: 'App Store, X' }),
+          quote({ source: 'x', sourceLabel: 'X' }),
         ]),
       ])
     );
 
-    expect(confidence.distinctSources).toBe(3);
-    expect(confidence.sourceKinds).toBe(3);
-    expect(confidence.excerptsReviewed).toBe(3);
+    expect(confidence.distinctSources).toBe(4);
+    expect(confidence.sourceKinds).toBe(4);
+    expect(confidence.excerptsReviewed).toBe(4);
   });
 
   it('rates broad, multi-source, competitor-backed evidence as high', () => {

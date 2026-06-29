@@ -103,6 +103,7 @@ export function matchedSourceCounts(
     reddit: 0,
     web: 0,
     appstore: 0,
+    x: 0,
   };
   result.themes.forEach((theme) => {
     theme.quotes.forEach((quote) => {
@@ -129,6 +130,7 @@ export function buildQuotePool(
   const lanes = [
     webQuotes.filter((quote) => quote.source === 'reddit'),
     webQuotes.filter((quote) => quote.source === 'web'),
+    webQuotes.filter((quote) => quote.source === 'x'),
     reviewQuotes,
   ].filter((lane) => lane.length > 0);
   const laneIndexes = lanes.map(() => 0);

@@ -90,6 +90,7 @@ describe('result assembly', () => {
       reddit: 3,
       web: 0,
       appstore: 0,
+      x: 0,
     });
   });
 
@@ -150,6 +151,31 @@ describe('pool source balance', () => {
     expect(pool.filter((quote) => quote.source === 'web')).toHaveLength(10);
     expect(pool.slice(0, 20).filter((quote) => quote.source === 'web')).toHaveLength(
       10
+    );
+  });
+
+  it('gives X its own round-robin lane alongside Reddit and web', () => {
+    const reddit = Array.from({ length: 30 }, (_, id) => ({
+      text: `Reddit complaint ${id}`,
+      source: 'reddit' as const,
+      sourceLabel: 'Reddit',
+      url: `https://reddit.com/${id}`,
+    }));
+    const x = Array.from({ length: 6 }, (_, id) => ({
+      text: `X complaint ${id}`,
+      source: 'x' as const,
+      sourceLabel: 'X',
+      author: `user${id}`,
+      url: `https://x.com/user${id}/status/${id}`,
+    }));
+
+    const pool = buildQuotePool([...reddit, ...x], []);
+
+    // Every X quote survives — the dedicated lane keeps Reddit from crowding
+    // it out within the pool budget.
+    expect(pool.filter((quote) => quote.source === 'x')).toHaveLength(6);
+    expect(pool.slice(0, 6).filter((quote) => quote.source === 'x').length).toBeGreaterThan(
+      0
     );
   });
 });

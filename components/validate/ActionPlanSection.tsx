@@ -12,6 +12,7 @@ import {
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { SectionHeading } from './SectionHeading';
+import { InterviewSourcesBlock } from './InterviewSourcesBlock';
 import {
   buildIdeaFromValidation,
   buildWorkspaceTasks,
@@ -49,7 +50,7 @@ export function ActionPlanSection({
   }
 
   return (
-    <div className="mt-4 flex flex-col gap-8 border-t border-border/50 pt-8">
+    <div className="mt-4 flex flex-col gap-8">
       <SectionHeading>Your Action Plan</SectionHeading>
 
       {plan.nextMoves.length > 0 && (
@@ -137,14 +138,15 @@ export function ActionPlanSection({
               </div>
             ))}
           </div>
+          <InterviewSourcesBlock result={result} />
         </div>
       )}
 
-      <div className="flex flex-col items-center gap-2 border-t border-border/50 pt-8">
+      <div className="flex flex-col items-center gap-2 pt-8">
         <Button
           onClick={handleGenerateWorkspace}
           disabled={!title.trim()}
-          className="gap-2"
+          className="gap-2 shadow-none hover:scale-100 hover:shadow-none active:scale-100"
         >
           <LayoutDashboard className="h-4 w-4" />
           Generate workspace

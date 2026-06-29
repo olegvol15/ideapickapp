@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const PainQuoteSchema = z.object({
   text: z.string(),
-  source: z.enum(['reddit', 'web', 'appstore']),
+  source: z.enum(['reddit', 'web', 'appstore', 'x']),
   sourceLabel: z.string(),
   author: z.string().optional(),
   url: z.string().optional(),

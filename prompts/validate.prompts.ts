@@ -193,7 +193,7 @@ export interface ClusterQuoteInput {
   id: number;
   text: string;
   sourceLabel: string;
-  source: 'reddit' | 'web' | 'appstore';
+  source: 'reddit' | 'web' | 'appstore' | 'x';
   author?: string;
 }
 

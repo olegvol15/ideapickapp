@@ -47,6 +47,7 @@ export function EvidenceConfidence({ result }: EvidenceConfidenceProps) {
       `${result.themes.length} theme${result.themes.length !== 1 ? 's' : ''}`,
     sourceCounts.reddit > 0 && `${sourceCounts.reddit} Reddit`,
     sourceCounts.web > 0 && `${sourceCounts.web} forum/web`,
+    sourceCounts.x > 0 && `${sourceCounts.x} X`,
     sourceCounts.appstore > 0 && `${sourceCounts.appstore} App Store`,
   ].filter(Boolean) as string[];
 

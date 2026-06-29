@@ -61,6 +61,7 @@ const MAX_SEVERE_BONUS = 15;
 function communityKey(quote: PainQuote): string | null {
   if (quote.source === 'reddit') return quote.sourceLabel.toLowerCase();
   if (quote.source === 'appstore') return `app:${quote.appName ?? 'unknown'}`;
+  if (quote.source === 'x') return `x:${quote.author ?? 'unknown'}`;
   const host = quote.sourceLabel.toLowerCase();
   if (quote.author || matchesDomainSuffix(host, COMMUNITY_DOMAINS)) {
     return host;

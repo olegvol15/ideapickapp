@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cleanSnippet, isQuotable } from './web-quotes';
+import { cleanSnippet, isQuotable, isXPostUrl, xSnippetQuote } from './web-quotes';
 
 describe('cleanSnippet', () => {
   it('removes headings, navigation junk, and repeated titles', () => {
@@ -152,5 +152,51 @@ describe('isQuotable relaxed filtering', () => {
         )
       )
     ).toBe(false);
+  });
+});
+
+describe('xSnippetQuote', () => {
+  const xResult = (url: string, cleaned = 'This tool keeps logging me out, infuriating.') => ({
+    title: 'A post on X',
+    url,
+    content: cleaned,
+    cleaned,
+  });
+
+  it('tags the source as x with an X label', () => {
+    const quote = xSnippetQuote(xResult('https://x.com/janedev/status/123'));
+    expect(quote.source).toBe('x');
+    expect(quote.sourceLabel).toBe('X');
+  });
+
+  it('parses the handle from x.com and twitter.com URLs', () => {
+    expect(
+      xSnippetQuote(xResult('https://x.com/janedev/status/123')).author
+    ).toBe('janedev');
+    expect(
+      xSnippetQuote(xResult('https://twitter.com/AnotherDev/status/9')).author
+    ).toBe('anotherdev');
+  });
+
+  it('does not treat feature routes as handles', () => {
+    expect(
+      xSnippetQuote(xResult('https://x.com/search?q=broken+app')).author
+    ).toBeUndefined();
+    expect(
+      xSnippetQuote(xResult('https://x.com/i/web/status/5')).author
+    ).toBeUndefined();
+  });
+});
+
+describe('isXPostUrl', () => {
+  it('accepts real post (status) URLs', () => {
+    expect(isXPostUrl('https://x.com/janedev/status/123')).toBe(true);
+    expect(isXPostUrl('https://twitter.com/AnotherDev/status/9?s=20')).toBe(true);
+  });
+
+  it('rejects profile, bio, and search pages', () => {
+    expect(isXPostUrl('https://x.com/ClementTV_')).toBe(false);
+    expect(isXPostUrl('https://x.com/ashleyptaplin')).toBe(false);
+    expect(isXPostUrl('https://x.com/search?q=math+app+broken')).toBe(false);
   });
 });

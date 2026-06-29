@@ -22,6 +22,20 @@ const MIN_SNIPPET_LENGTH = 40;
 const MAX_QUOTE_LENGTH = 1000;
 const MAX_REDDIT_THREADS = 12;
 const MAX_REDDIT_COMMENT_QUOTES = 35;
+// X (Twitter) is index-limited on Tavily, so spend a small, fixed budget:
+// only the sharpest queries, constrained to X domains.
+const X_DOMAINS = ['x.com', 'twitter.com'];
+const MAX_X_QUERIES = 3;
+// First-path segments that are X features, not user handles.
+const X_RESERVED_SEGMENTS = new Set([
+  'i',
+  'search',
+  'hashtag',
+  'home',
+  'explore',
+  'notifications',
+  'messages',
+]);
 
 // Blog-style paths on arbitrary domains are vendor/editorial content
 // (dragonflyai.co/blog/…), not people complaining. Review paths are kept
@@ -162,7 +176,10 @@ export function isQuotable(result: CleanedResult): boolean {
   return true;
 }
 
-async function searchOne(query: string): Promise<TavilyResult[]> {
+async function searchOne(
+  query: string,
+  opts?: { includeDomains?: string[] }
+): Promise<TavilyResult[]> {
   const key = process.env.TAVILY_API_KEY;
   if (!key) return [];
 
@@ -177,6 +194,9 @@ async function searchOne(query: string): Promise<TavilyResult[]> {
         max_results: MAX_RESULTS_PER_QUERY,
         include_answer: false,
         include_raw_content: false,
+        ...(opts?.includeDomains
+          ? { include_domains: opts.includeDomains }
+          : {}),
       }),
     });
     if (!res.ok) return [];
@@ -194,6 +214,63 @@ function snippetQuote(result: CleanedResult): PainQuote {
     sourceLabel: buildSourceLabel(result.url),
     url: result.url,
   };
+}
+
+// X is the intended target of its own lane, so the standard domain/editorial
+// gates (which block x.com) don't apply — only length and promo checks remain.
+function isXQuotable(result: CleanedResult): boolean {
+  if (result.cleaned.length < MIN_SNIPPET_LENGTH) return false;
+  const lower = result.cleaned.toLowerCase();
+  return PROMO_SIGNALS.filter((s) => lower.includes(s)).length < 2;
+}
+
+// First path segment of an X URL is the handle, unless it's a feature route.
+function xHandle(url: string): string | undefined {
+  const segment = urlPath(url).split('/').filter(Boolean)[0]?.toLowerCase();
+  if (!segment || X_RESERVED_SEGMENTS.has(segment)) return undefined;
+  return segment;
+}
+
+// Only real posts are evidence. Profile/bio pages (x.com/<handle>) and search
+// pages match the topic too, but their text is a bio or feed, not a complaint.
+export function isXPostUrl(url: string): boolean {
+  return /\/status\/\d+/.test(urlPath(url));
+}
+
+export function xSnippetQuote(result: CleanedResult): PainQuote {
+  return {
+    text: truncateAtWord(result.cleaned, MAX_QUOTE_LENGTH),
+    source: 'x',
+    sourceLabel: 'X',
+    author: xHandle(result.url),
+    url: result.url,
+  };
+}
+
+// Targeted X search: a small, fixed Tavily budget constrained to X domains.
+// Tavily's X index is patchy, so an empty result is expected and fine.
+async function collectXQuotes(queries: string[]): Promise<PainQuote[]> {
+  const batches = await Promise.all(
+    queries
+      .slice(0, MAX_X_QUERIES)
+      .map((query) => searchOne(query, { includeDomains: X_DOMAINS }))
+  );
+
+  const seen = new Set<string>();
+  const quotes: PainQuote[] = [];
+  for (const batch of batches) {
+    for (const raw of batch) {
+      if (seen.has(raw.url)) continue;
+      seen.add(raw.url);
+      if (!isXPostUrl(raw.url)) continue;
+      const result: CleanedResult = {
+        ...raw,
+        cleaned: cleanSnippet(raw.content, raw.title),
+      };
+      if (isXQuotable(result)) quotes.push(xSnippetQuote(result));
+    }
+  }
+  return quotes;
 }
 
 function commentQuote(comment: RedditComment): PainQuote {
@@ -247,7 +324,10 @@ export async function searchPainQuotes(
   queries: string[],
   commentQuery?: string
 ): Promise<{ quotes: PainQuote[]; sources: EvidenceSource[] }> {
-  const batches = await Promise.all(queries.map(searchOne));
+  const [batches, xQuotes] = await Promise.all([
+    Promise.all(queries.map((query) => searchOne(query))),
+    collectXQuotes(queries),
+  ]);
 
   const seen = new Set<string>();
   const redditThreads: CleanedResult[] = [];
@@ -278,8 +358,22 @@ export async function searchPainQuotes(
     }
   }
 
+  for (const quote of xQuotes) {
+    if (!quote.url) continue;
+    sources.push({
+      name: quote.author ? `X · @${quote.author}` : 'X',
+      url: quote.url,
+      source: 'x.com',
+      kind: 'web',
+    });
+  }
+
   const redditQuotes = await collectRedditQuotes(redditThreads, commentQuery);
-  const quotes = [...redditQuotes, ...webResults.map(snippetQuote)];
+  const quotes = [
+    ...redditQuotes,
+    ...webResults.map(snippetQuote),
+    ...xQuotes,
+  ];
 
   return { quotes, sources };
 }
