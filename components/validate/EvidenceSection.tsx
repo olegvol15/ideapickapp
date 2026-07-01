@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { BuySignalsBlock } from './BuySignalsBlock';
 import { EvidenceConfidence } from './EvidenceConfidence';
 import { PainThemeBlock } from './PainThemeBlock';
 import { SectionHeading } from './SectionHeading';
@@ -66,6 +67,7 @@ export function EvidenceSection({ result }: EvidenceSectionProps) {
   return (
     <div className="flex flex-col gap-6">
       <EvidenceOverview result={result} />
+      <BuySignalsBlock result={result} />
       {complaintThemes.length > 0 && (
         <div className="flex flex-col gap-6">
           <SectionHeading>Direct Complaints</SectionHeading>

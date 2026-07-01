@@ -75,3 +75,49 @@ export function buildEvidenceDigest(
 
   return lines.join('\n');
 }
+
+const MAX_DISLIKES_PER_COMPETITOR = 4;
+
+// How crowded the market looks, in words, from the 0–100 saturation level.
+function saturationPhrase(marketSaturation: number): string {
+  if (marketSaturation >= 70) {
+    return 'The market is crowded with entrenched incumbents.';
+  }
+  if (marketSaturation >= 40) {
+    return 'The market is moderately contested.';
+  }
+  return 'The market is wide open — few entrenched players.';
+}
+
+// Focused digest for the opportunity-gap synthesis: the saturation level plus
+// EVERY competitor dislike (buildEvidenceDigest only carries the first). Returns
+// an empty string when no competitor has dislikes, so the caller can skip the
+// LLM call — there is no gap to synthesize without incumbent grievances.
+export function buildOpportunityGapDigest(result: PainEvidenceResult): string {
+  const competitors = (result.competitors ?? []).filter(
+    (c) => c.dislikes.length > 0
+  );
+  if (competitors.length === 0) return '';
+
+  const lines: string[] = [];
+  lines.push(`Problem we searched for: "${result.problem}"`);
+
+  const saturation = result.scoreBreakdown?.marketSaturation;
+  if (saturation != null) {
+    lines.push(`Market saturation: ${saturation}/100. ${saturationPhrase(saturation)}`);
+  }
+
+  const compList = competitors
+    .slice(0, MAX_COMPETITORS)
+    .map((c) => {
+      const dislikes = c.dislikes
+        .slice(0, MAX_DISLIKES_PER_COMPETITOR)
+        .map((d) => `  - ${truncateAtWord(d.text, 160)}`)
+        .join('\n');
+      return `${c.name} — users dislike:\n${dislikes}`;
+    })
+    .join('\n');
+  lines.push(`Incumbents and their weaknesses:\n${compList}`);
+
+  return lines.join('\n');
+}

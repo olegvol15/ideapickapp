@@ -25,6 +25,9 @@ export const ScoreBreakdownSchema = z.object({
   complaintFrequency: z.number().min(0).max(100),
   audienceReachability: z.number().min(0).max(100),
   marketSaturation: z.number().min(0).max(100).optional(),
+  // 0–100 strength of buy intent mined from quotes. A display stat only — the
+  // real score effect is a capped bonus (see lib/evidence/score.ts).
+  wtpSignal: z.number().min(0).max(100).optional(),
 });
 export type ScoreBreakdown = z.infer<typeof ScoreBreakdownSchema>;
 
@@ -71,6 +74,14 @@ export const ActionPlanSchema = z.object({
 });
 export type ActionPlan = z.infer<typeof ActionPlanSchema>;
 
+export const OpportunityGapSchema = z.object({
+  // One-line "the opening incumbents leave" statement.
+  headline: z.string(),
+  // 2–4 concrete gaps, each naming a real incumbent from the evidence.
+  openings: z.array(z.string()),
+});
+export type OpportunityGap = z.infer<typeof OpportunityGapSchema>;
+
 export const PainEvidenceResultSchema = z.object({
   problem: z.string(),
   summary: z.string(),
@@ -81,6 +92,7 @@ export const PainEvidenceResultSchema = z.object({
   scoreBreakdown: ScoreBreakdownSchema.optional(),
   competitors: z.array(CompetitorInsightSchema).optional(),
   actionPlan: ActionPlanSchema.optional(),
+  opportunityGap: OpportunityGapSchema.optional(),
 });
 export type PainEvidenceResult = z.infer<typeof PainEvidenceResultSchema>;
 
@@ -101,6 +113,14 @@ export const ActionPlanLLMSchema = z.object({
   interviewQuestions: z.array(z.string().min(3)).min(5).max(7),
 });
 export type ActionPlanLLM = z.infer<typeof ActionPlanLLMSchema>;
+
+// LLM-facing shape with bounds so a malformed/over-long response is rejected
+// and the opportunity-gap step degrades to null rather than rendering junk.
+export const OpportunityGapLLMSchema = z.object({
+  headline: z.string().min(10).max(240),
+  openings: z.array(z.string().min(10)).min(2).max(4),
+});
+export type OpportunityGapLLM = z.infer<typeof OpportunityGapLLMSchema>;
 
 export const IdeaAssessmentLLMSchema = z.object({
   assessment: z.string().min(3),

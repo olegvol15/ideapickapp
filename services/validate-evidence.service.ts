@@ -26,6 +26,7 @@ import {
 import { computeIdeaScore } from '@/lib/evidence/score';
 import { buildEvidenceDigest } from '@/lib/validate/assessment-digest';
 import { generateActionPlan } from '@/services/validate-action-plan.service';
+import { generateOpportunityGap } from '@/services/validate-opportunity-gap.service';
 import {
   mergeCompetitorCandidates,
   pickCompetitorCandidates,
@@ -275,15 +276,18 @@ export async function runPainEvidenceValidation(
       ...emptyResult(queries.problemStatement),
       competitors: competitors.length > 0 ? competitors : undefined,
     };
-    const [emptyAssessment, emptyActionPlan] = await Promise.all([
-      generateIdeaAssessment(params, emptyScored),
-      generateActionPlan(params, emptyScored),
-    ]);
+    const [emptyAssessment, emptyActionPlan, emptyOpportunityGap] =
+      await Promise.all([
+        generateIdeaAssessment(params, emptyScored),
+        generateActionPlan(params, emptyScored),
+        generateOpportunityGap(params, emptyScored),
+      ]);
     return {
       result: {
         ...emptyScored,
         assessment: emptyAssessment ?? undefined,
         actionPlan: emptyActionPlan ?? undefined,
+        opportunityGap: emptyOpportunityGap ?? undefined,
       },
       sources,
     };
@@ -352,9 +356,10 @@ export async function runPainEvidenceValidation(
   );
   const finalResult: PainEvidenceResult = { ...scored, score, scoreBreakdown };
 
-  const [assessment, actionPlan] = await Promise.all([
+  const [assessment, actionPlan, opportunityGap] = await Promise.all([
     generateIdeaAssessment(params, finalResult),
     generateActionPlan(params, finalResult),
+    generateOpportunityGap(params, finalResult),
   ]);
 
   return {
@@ -362,6 +367,7 @@ export async function runPainEvidenceValidation(
       ...finalResult,
       assessment: assessment ?? undefined,
       actionPlan: actionPlan ?? undefined,
+      opportunityGap: opportunityGap ?? undefined,
     },
     sources,
   };

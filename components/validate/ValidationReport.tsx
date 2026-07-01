@@ -40,7 +40,12 @@ export function ValidationReport({
       id: 'competitors',
       label: 'Competitors',
       count: competitors.length,
-      content: <CompetitorsSection competitors={competitors} />,
+      content: (
+        <CompetitorsSection
+          competitors={competitors}
+          opportunityGap={result.opportunityGap}
+        />
+      ),
     });
   }
   if (result.actionPlan) {

@@ -6,6 +6,7 @@ import type {
   ScoreBreakdown,
 } from '@/lib/schemas';
 import { COMMUNITY_DOMAINS, matchesDomainSuffix } from './domains';
+import { computeWtpSignal, wtpBonus, wtpSignalStat } from './wtp-signal';
 
 // Idea Score = 40% problem strength + 35% complaint frequency
 //            + 25% audience reachability. Buildability is deliberately
@@ -212,12 +213,19 @@ export function computeIdeaScore(
     WEIGHT_AUDIENCE_REACHABILITY * breakdown.audienceReachability;
 
   const factor = saturationFactor(result.competitors ?? []);
-  const score = Math.round(gross * (1 - factor));
+  // Buy intent is added after the saturation multiplier: a user willing to pay
+  // is valuable even in a crowded market, so the bonus must not be discounted.
+  const wtp = computeWtpSignal(result);
+  const score = Math.min(
+    100,
+    Math.round(gross * (1 - factor) + wtpBonus(wtp))
+  );
   // Surfaced as a 0–100 saturation level (higher = more crowded). The penalty
   // cap maps to 100, keeping the displayed level aligned with the actual discount.
   breakdown.marketSaturation = Math.round(
     (factor / MAX_SATURATION_PENALTY) * 100
   );
+  breakdown.wtpSignal = wtpSignalStat(wtp.level);
 
   return { score, scoreBreakdown: breakdown };
 }
